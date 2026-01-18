@@ -14,10 +14,10 @@ export default function Flashcard({
     onExposeJP,
 }) {
     const jpText = () => {
-        if(direction === "jp_vi" && !showAnswer) {
+        if (direction === "jp_vi" && !showAnswer) {
             return front
         }
-        if(direction === "vi_jp" && showAnswer) {
+        if (direction === "vi_jp" && showAnswer) {
             return back
         }
         return null
@@ -46,6 +46,7 @@ export default function Flashcard({
 
                 <FlashcardBack
                     back={back}
+                    isKanji={direction === "kanji"}
                     onSpeak={onSpeak}
                     isJP={direction === "vi_jp"}
                 />

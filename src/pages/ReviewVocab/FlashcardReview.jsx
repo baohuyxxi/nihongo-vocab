@@ -11,7 +11,7 @@ export default function FlashcardReview({ cards = [] }) {
   const [list, setList] = useState(cards)
   const [index, setIndex] = useState(0)
   const [showAnswer, setShowAnswer] = useState(false)
-  const [autoFlip, setAutoFlip] = useState(true)
+  const [autoFlip, setAutoFlip] = useState(false)
   const [flipDelay, setFlipDelay] = useState(4000)
   const [currentJP, setCurrentJP] = useState(null)
 
