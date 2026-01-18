@@ -4,8 +4,11 @@ import FlashcardProgress from "../../components/flashcard/FlashcardProgress"
 import FlashcardControls from "../../components/flashcard/FlashcardControls"
 import FlashcardNav from "../../components/flashcard/FlashcardNav"
 import FlashcardSettings from "../../components/flashcard/FlashcardSettings"
+import FlashcardTimer from "../../components/flashcard/FlashcardTimer"
+import FlashcardSummary from "../../components/flashcard/FlashcardSummary"
 import useFlashcardTouch from "../../components/flashcard/useFlashcardTouch"
 import useFlashcardKeyboard from "../../components/flashcard/useFlashcardKeyboard"
+
 
 export default function FlashcardReview({ cards = [] }) {
   const [list, setList] = useState(cards)
@@ -15,8 +18,12 @@ export default function FlashcardReview({ cards = [] }) {
   const [flipDelay, setFlipDelay] = useState(4000)
   const [currentJP, setCurrentJP] = useState(null)
 
+  const [repeatMap, setRepeatMap] = useState({})
+  const [totalTime, setTotalTime] = useState(null)
+
 
   const card = list[index]
+  const finished = list.length === 0
 
   /* ---------- navigation ---------- */
   const next = () => {
@@ -37,6 +44,13 @@ export default function FlashcardReview({ cards = [] }) {
   }
 
   const markUnknown = () => {
+    const id = list[index].id
+
+    setRepeatMap((m) => ({
+      ...m,
+      [id]: (m[id] || 0) + 1,
+    }))
+
     setList((l) => [...l.filter((_, i) => i !== index), l[index]])
     setShowAnswer(false)
   }
@@ -75,6 +89,22 @@ export default function FlashcardReview({ cards = [] }) {
     onFlip: () => setShowAnswer((s) => !s),
   })
 
+  /* ---------- FINISH ---------- */
+  if (finished) {
+    return (
+      <FlashcardSummary
+        cards={cards}
+        repeatMap={repeatMap}
+        totalTime={totalTime}
+        onRestart={() => {
+          setList(cards)
+          setIndex(0)
+          setRepeatMap({})
+          setTotalTime(null)
+        }}
+      />
+    )
+  }
 
 
   if (!card) {
@@ -83,6 +113,10 @@ export default function FlashcardReview({ cards = [] }) {
 
   return (
     <div className="flex flex-col items-center gap-6 sm:gap-10 px-3 sm:px-6">
+      <FlashcardTimer
+        isFinished={finished}
+        onFinish={setTotalTime}
+      />
 
       <FlashcardProgress
         learned={cards.length - list.length}
@@ -109,12 +143,10 @@ export default function FlashcardReview({ cards = [] }) {
         onNext={next}
       />
 
-
       <FlashcardControls
         onKnown={markKnown}
         onUnknown={markUnknown}
       />
-
 
       <FlashcardSettings
         autoFlip={autoFlip}
