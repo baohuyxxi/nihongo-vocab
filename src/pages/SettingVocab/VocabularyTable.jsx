@@ -1,7 +1,16 @@
 import { useEffect, useState } from "react";
 import { useSearchParams } from "react-router-dom";
-import { getVocabByLesson, bulkSaveVocab } from "../../services/vocab.service";
+import {
+  getVocabByLesson,
+  bulkSaveVocab,
+  bulkCreateVocab,
+} from "../../services/vocab.service";
 import VocabTable from "../../components/VocabTable";
+import {
+  ChevronLeft,
+  ChevronRight,
+  Save,
+} from "lucide-react";
 
 export default function VocabularyTable() {
   const [searchParams, setSearchParams] = useSearchParams();
@@ -29,26 +38,57 @@ export default function VocabularyTable() {
     setDirty(true);
   };
 
-  const handleSave = async () => {
-    const edited = rows.filter((r) => r._dirty);
-    if (edited.length === 0) return;
+  const handleAddRow = () => {
+    setRows((prev) => [
+      ...prev,
+      {
+        lesson,
+        hiragana: "",
+        katakana: "",
+        kanji: "",
+        hanViet: "",
+        meaning: "",
+        _new: true,
+        _dirty: true,
+      },
+    ]);
+    setDirty(true);
+  };
 
-    await bulkSaveVocab(edited);
+  const handleSave = async () => {
+    const edited = rows.filter((r) => r._dirty && !r._new);
+    const created = rows.filter((r) => r._new);
+
+    if (edited.length) await bulkSaveVocab(edited);
+    if (created.length) await bulkCreateVocab(created);
+
     loadData();
+  };
+
+  const changeLesson = (value) => {
+    const next = Math.min(50, Math.max(1, value));
+    setSearchParams({ lesson: next });
   };
 
   return (
     <div className="space-y-4">
       <h1 className="text-xl font-bold">📘 Bảng từ vựng</h1>
 
-      <div className="flex gap-2 items-center">
-        <span>Bài:</span>
+      {/* CONTROL BAR */}
+      <div className="flex items-center gap-2 flex-wrap">
+        {/* Prev */}
+        <button
+          onClick={() => changeLesson(lesson - 1)}
+          className="border px-2 py-1 rounded hover:bg-gray-100"
+        >
+          <ChevronLeft size={18} />
+        </button>
+
+        {/* Select */}
         <select
           value={lesson}
-          onChange={(e) =>
-            setSearchParams({ lesson: e.target.value })
-          }
-          className="border px-2 py-1"
+          onChange={(e) => changeLesson(Number(e.target.value))}
+          className="border px-2 py-1 rounded font-semibold"
         >
           {Array.from({ length: 50 }, (_, i) => i + 1).map((l) => (
             <option key={l} value={l}>
@@ -57,18 +97,32 @@ export default function VocabularyTable() {
           ))}
         </select>
 
+        {/* Next */}
+        <button
+          onClick={() => changeLesson(lesson + 1)}
+          className="border px-2 py-1 rounded hover:bg-gray-100"
+        >
+          <ChevronRight size={18} />
+        </button>
+
+        {/* Save */}
         <button
           onClick={handleSave}
           disabled={!dirty}
-          className={`px-4 py-1 rounded text-white ${
+          className={`ml-auto flex items-center gap-2 px-4 py-1 rounded text-white ${
             dirty ? "bg-blue-600" : "bg-gray-400"
           }`}
         >
-          💾 Lưu
+          <Save size={16} />
+          Lưu
         </button>
       </div>
 
-      <VocabTable rows={rows} onChange={handleChange} />
+      <VocabTable
+        rows={rows}
+        onChange={handleChange}
+        onAddRow={handleAddRow}
+      />
     </div>
   );
 }

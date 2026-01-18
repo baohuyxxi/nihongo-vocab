@@ -36,3 +36,7 @@ export const getVocabByLesson = (lesson) => {
 export const bulkSaveVocab = (data) => {
   return api.put("/vocab/bulk/save", data);
 }
+
+export const bulkCreateVocab = (data) => {
+  return api.post("/vocab/bulk/create", data);
+}
