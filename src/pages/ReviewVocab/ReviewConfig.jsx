@@ -29,6 +29,28 @@ export default function ReviewConfig({
   const isDragging = useRef(false)
   const dragMode = useRef("add")
 
+  useEffect(() => {
+    const saved = localStorage.getItem(STORAGE_KEY)
+    if (!saved) return
+
+    try {
+      const { lessons, mode, directions } = JSON.parse(saved)
+
+      if (lessons) {
+        setSelectedLessons(lessons)
+      }
+      if (mode) {
+        setMode(mode)
+      }
+      if (Array.isArray(directions)) {
+        setDirections(directions)
+      }
+    } catch (e) {
+      console.error("Failed to load review config", e)
+    }
+  }, [])
+
+
   const toggleLesson = (lesson, forceMode) => {
     setSelectedLessons((prev) => {
       const exists = prev.includes(lesson)
