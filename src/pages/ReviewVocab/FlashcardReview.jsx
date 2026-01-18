@@ -1,21 +1,27 @@
 import { useEffect, useState } from "react"
+import Flashcard from "../../components/flashcard/Flashcard"
+import FlashcardProgress from "../../components/flashcard/FlashcardProgress"
+import FlashcardControls from "../../components/flashcard/FlashcardControls"
+import FlashcardNav from "../../components/flashcard/FlashcardNav"
+import FlashcardSettings from "../../components/flashcard/FlashcardSettings"
+import useFlashcardTouch from "../../components/flashcard/useFlashcardTouch"
+import useFlashcardKeyboard from "../../components/flashcard/useFlashcardKeyboard"
 
 export default function FlashcardReview({ cards = [] }) {
+  const [list, setList] = useState(cards)
   const [index, setIndex] = useState(0)
   const [showAnswer, setShowAnswer] = useState(false)
+  const [autoFlip, setAutoFlip] = useState(true)
+  const [flipDelay, setFlipDelay] = useState(4000)
+  const [currentJP, setCurrentJP] = useState(null)
 
-  const total = cards.length
-  const card = cards[index]
 
-  console.log("FlashcardReview cards:", cards)
+  const card = list[index]
 
-  /* ======================
-     NAVIGATION
-  ====================== */
-
+  /* ---------- navigation ---------- */
   const next = () => {
     setShowAnswer(false)
-    setIndex((i) => Math.min(i + 1, total - 1))
+    setIndex((i) => Math.min(i + 1, list.length - 1))
   }
 
   const prev = () => {
@@ -23,150 +29,98 @@ export default function FlashcardReview({ cards = [] }) {
     setIndex((i) => Math.max(i - 1, 0))
   }
 
-  /* ======================
-     KEYBOARD
-  ====================== */
+  /* ---------- SRS ---------- */
+  const markKnown = () => {
+    setList((l) => l.filter((_, i) => i !== index))
+    setIndex((i) => Math.min(i, list.length - 2))
+    setShowAnswer(false)
+  }
 
-  useEffect(() => {
-    const handleKey = (e) => {
-      if (e.key === "ArrowRight") next()
-      if (e.key === "ArrowLeft") prev()
-      if (e.key === "ArrowUp" || e.key === "ArrowDown") {
-        setShowAnswer((s) => !s)
-      }
-    }
+  const markUnknown = () => {
+    setList((l) => [...l.filter((_, i) => i !== index), l[index]])
+    setShowAnswer(false)
+  }
 
-    window.addEventListener("keydown", handleKey)
-    return () => window.removeEventListener("keydown", handleKey)
+  /* ---------- speak ---------- */
+  const speak = (text) => {
+    const u = new SpeechSynthesisUtterance(text)
+    u.lang = "ja-JP"
+    speechSynthesis.cancel()
+    speechSynthesis.speak(u)
+  }
+
+
+  /* ---------- keyboard ---------- */
+  useFlashcardKeyboard({
+    next,
+    prev,
+    flip: () => setShowAnswer((s) => !s),
+    markKnown,
+    markUnknown,
+    speak,
+    currentJP,
   })
 
-  /* ======================
-     RESET
-  ====================== */
-
+  /* ---------- auto flip ---------- */
   useEffect(() => {
-    setIndex(0)
-    setShowAnswer(false)
-  }, [cards.length])
+    if (!autoFlip || showAnswer) return
+    const t = setTimeout(() => setShowAnswer(true), flipDelay)
+    return () => clearTimeout(t)
+  }, [index, autoFlip, flipDelay])
 
-  /* ======================
-     EMPTY
-  ====================== */
+  /* ---------- touch ---------- */
+  const touchHandlers = useFlashcardTouch({
+    onNext: next,
+    onPrev: prev,
+    onFlip: () => setShowAnswer((s) => !s),
+  })
 
-  if (!total) {
-    return (
-      <div className="text-center text-xl text-gray-500">
-        😅 Không có thẻ để ôn
-      </div>
-    )
-  }
+
 
   if (!card) {
-    return (
-      <div className="text-center text-2xl font-semibold">
-        🎉 Bạn đã ôn xong!
-      </div>
-    )
+    return <div className="text-center text-xl">🎉 Hoàn thành!</div>
   }
-
-  const { front, back, direction } = card
-
-  /* ======================
-     RENDER BACK
-  ====================== */
-
-  const renderBack = () => {
-    if (typeof back === "string") return back
-
-    return (
-      <div className="text-center space-y-2">
-        {back.hanViet && (
-          <div className="text-gray-500">
-            Hán Việt: {back.hanViet}
-          </div>
-        )}
-        <div>{back.jp}</div>
-        <div className="text-green-700 font-semibold">
-          {back.meaning}
-        </div>
-      </div>
-    )
-  }
-
-  /* ======================
-     UI
-  ====================== */
 
   return (
-    <div className="flex flex-col items-center space-y-10">
+    <div className="flex flex-col items-center gap-6 sm:gap-10 px-3 sm:px-6">
 
-      {/* MODE */}
-      <div className="text-lg italic text-gray-500">
-        Mode: <span className="font-semibold">{direction}</span>
-      </div>
+      <FlashcardProgress
+        learned={cards.length - list.length}
+        total={cards.length}
+      />
 
-      {/* CARD */}
-      <div
-        key={`${index}-${direction}`}
-        className="w-full max-w-4xl h-[26rem] perspective"
-        onClick={() => setShowAnswer((s) => !s)}
-      >
-        <div
-          className={`relative w-full h-full transition-transform duration-500
-            transform-style-preserve-3d cursor-pointer
-            ${showAnswer ? "rotate-x-180" : ""}`}
-        >
-          {/* FRONT */}
-          <div
-            className="absolute inset-0 bg-white rounded-3xl shadow-2xl
-              flex items-center justify-center
-              backface-hidden
-              text-[88px] font-bold text-center px-6"
-          >
-            {front}
-          </div>
+      <Flashcard
+        front={card.front}
+        back={card.back}
+        showAnswer={showAnswer}
+        onFlip={() => setShowAnswer((s) => !s)}
+        onSpeak={speak}
+        touchHandlers={touchHandlers}
+        direction={card.direction}
+        index={index}
+        onExposeJP={setCurrentJP}
+      />
 
-          {/* BACK */}
-          <div
-            className="absolute inset-0 bg-green-50 rounded-3xl shadow-2xl
-              flex items-center justify-center
-              rotate-x-180 backface-hidden
-              text-[72px] font-semibold text-center px-6"
-          >
-            {renderBack()}
-          </div>
-        </div>
-      </div>
+      <FlashcardNav
+        index={index}
+        total={list.length}
+        onPrev={prev}
+        onNext={next}
+      />
 
-      {/* CONTROLS */}
-      <div className="flex gap-10 items-center text-xl">
-        <button
-          onClick={prev}
-          disabled={index === 0}
-          className="px-8 py-4 bg-gray-200 rounded-xl
-            disabled:opacity-40 text-3xl"
-        >
-          ⬅
-        </button>
+      
+        <FlashcardControls
+          onKnown={markKnown}
+          onUnknown={markUnknown}
+        />
+      
 
-        <span className="text-2xl font-medium">
-          {index + 1} / {total}
-        </span>
-
-        <button
-          onClick={next}
-          disabled={index === total - 1}
-          className="px-8 py-4 bg-gray-200 rounded-xl
-            disabled:opacity-40 text-3xl"
-        >
-          ➡
-        </button>
-      </div>
-
-      {/* HINT */}
-      <p className="text-base italic text-gray-500 text-center">
-        ⬆ ⬇ lật thẻ · ⬅ ➡ chuyển thẻ · Click để lật
-      </p>
+      <FlashcardSettings
+        autoFlip={autoFlip}
+        setAutoFlip={setAutoFlip}
+        flipDelay={flipDelay}
+        setFlipDelay={setFlipDelay}
+      />
     </div>
   )
 }

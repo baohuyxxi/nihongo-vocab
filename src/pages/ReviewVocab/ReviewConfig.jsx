@@ -29,33 +29,6 @@ export default function ReviewConfig({
   const isDragging = useRef(false)
   const dragMode = useRef("add")
 
-  /* ======================
-      LOAD CONFIG
-  ====================== */
-  useEffect(() => {
-    const raw = localStorage.getItem(STORAGE_KEY)
-    if (!raw) {
-      setDirections(["jp_vi"])
-      return
-    }
-
-    try {
-      const cfg = JSON.parse(raw)
-      if (Array.isArray(cfg.lessons)) setSelectedLessons(cfg.lessons)
-      if (cfg.mode) setMode(cfg.mode)
-      if (Array.isArray(cfg.directions) && cfg.directions.length) {
-        setDirections(cfg.directions)
-      } else {
-        setDirections(["jp_vi"])
-      }
-    } catch {
-      setDirections(["jp_vi"])
-    }
-  }, [])
-
-  /* ======================
-      TOGGLES
-  ====================== */
   const toggleLesson = (lesson, forceMode) => {
     setSelectedLessons((prev) => {
       const exists = prev.includes(lesson)
@@ -79,66 +52,73 @@ export default function ReviewConfig({
     })
   }
 
-  /* ======================
-      UI
-  ====================== */
   return (
     <div className="space-y-8">
+      {/* TOP CONFIG */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* LEFT */}
-        <div className="lg:col-span-1 space-y-6">
+        <div className="space-y-6">
           {/* MODE */}
-          <section className="bg-white p-4 rounded shadow">
-            <h2 className="font-semibold mb-3">🎮 Chế độ</h2>
-            <div className="space-y-2">
+          <section className="bg-white rounded-xl shadow p-5">
+            <h2 className="font-semibold mb-4 flex items-center gap-2">
+              🎮 <span>Chế độ ôn</span>
+            </h2>
+            <div className="space-y-3">
               {REVIEW_MODES.map((m) => (
                 <label
                   key={m.key}
-                  className="flex items-center gap-2 cursor-pointer"
+                  className="flex items-center gap-3 cursor-pointer"
                 >
                   <input
                     type="radio"
+                    className="scale-110"
                     checked={mode === m.key}
                     onChange={() => setMode(m.key)}
                   />
-                  {m.label}
+                  <span>{m.label}</span>
                 </label>
               ))}
             </div>
           </section>
 
           {/* DIRECTION */}
-          <section className="bg-white p-4 rounded shadow">
-            <h2 className="font-semibold mb-3">🔁 Hướng ôn</h2>
-            <div className="space-y-2">
+          <section className="bg-white rounded-xl shadow p-5">
+            <h2 className="font-semibold mb-4 flex items-center gap-2">
+              🔁 <span>Hướng ôn</span>
+            </h2>
+            <div className="space-y-3">
               {DIRECTIONS.map((d) => (
                 <label
                   key={d.key}
-                  className="flex items-center gap-2 cursor-pointer"
+                  className="flex items-center gap-3 cursor-pointer"
                 >
                   <input
                     type="checkbox"
+                    className="scale-110"
                     checked={directions.includes(d.key)}
                     onChange={() => toggleDirection(d.key)}
                   />
-                  {d.label}
+                  <span>{d.label}</span>
                 </label>
               ))}
             </div>
-            <p className="text-xs text-gray-500 mt-2">
-              * Phải chọn ít nhất 1 hướng
-            </p>
           </section>
         </div>
 
-        {/* RIGHT */}
-        <section className="lg:col-span-2 bg-white p-4 rounded shadow">
-          <h2 className="font-semibold mb-3">
-            📚 Chọn bài (kéo chuột để chọn nhanh)
+        {/* RIGHT – LESSON GRID */}
+        <section className="lg:col-span-2 bg-white rounded-xl shadow p-5">
+          <h2 className="font-semibold mb-4 flex items-center gap-2">
+            📚 <span>Chọn bài học</span>
           </h2>
 
           <div
-            className="grid grid-cols-8 sm:grid-cols-10 gap-2 select-none"
+            className="
+              grid gap-2 select-none
+              grid-cols-4
+              sm:grid-cols-6
+              md:grid-cols-8
+              lg:grid-cols-10
+            "
             onMouseUp={() => (isDragging.current = false)}
             onMouseLeave={() => (isDragging.current = false)}
           >
@@ -149,13 +129,15 @@ export default function ReviewConfig({
                 return (
                   <div
                     key={lesson}
-                    className={`cursor-pointer text-sm px-2 py-1 rounded
-                      border text-center transition
-                      ${
-                        checked
-                          ? "bg-blue-600 text-white"
-                          : "bg-gray-100 hover:bg-gray-200"
-                      }`}
+                    className={`
+                      aspect-square flex items-center justify-center
+                      rounded-lg border cursor-pointer text-sm font-medium
+                      transition
+                      ${checked
+                        ? "bg-blue-600 text-white border-blue-600"
+                        : "bg-gray-100 hover:bg-gray-200"
+                      }
+                    `}
                     onMouseDown={() => {
                       isDragging.current = true
                       dragMode.current = checked ? "remove" : "add"
@@ -176,14 +158,18 @@ export default function ReviewConfig({
         </section>
       </div>
 
-      {/* START */}
+      {/* START BUTTON */}
       <div className="text-center">
         <button
           onClick={onStart}
           disabled={loading}
-          className="px-10 py-3 bg-blue-600 text-white
-                     rounded-lg text-lg font-semibold
-                     disabled:opacity-50"
+          className="
+            inline-flex items-center gap-2
+            px-10 py-3 rounded-xl
+            bg-blue-600 text-white text-lg font-semibold
+            hover:bg-blue-700 transition
+            disabled:opacity-50
+          "
         >
           🚀 Bắt đầu ôn
         </button>

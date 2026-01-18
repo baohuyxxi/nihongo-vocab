@@ -12,7 +12,6 @@ export default function ReviewVocabPage() {
   const [loading, setLoading] = useState(false)
 
   const startReview = () => {
-     console.log("Starting review with config:")
     const data ={
       lessons: selectedLessons,
       mode,
