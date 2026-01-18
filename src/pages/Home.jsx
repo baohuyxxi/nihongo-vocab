@@ -25,6 +25,10 @@ function Home() {
       return
     }
 
+    if (sectionIndex === 0) {
+      navigate(`/vocab-table?lesson=${selectedLesson}`)
+    }
+
    
   }
 
