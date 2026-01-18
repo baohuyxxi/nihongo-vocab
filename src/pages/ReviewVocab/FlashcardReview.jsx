@@ -90,7 +90,7 @@ export default function FlashcardReview({ cards = [] }) {
       />
 
       <Flashcard
-        key={index}
+        key={card.id}
         front={card.front}
         back={card.back}
         showAnswer={showAnswer}

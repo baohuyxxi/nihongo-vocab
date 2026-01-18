@@ -27,13 +27,17 @@ export default function useFlashcardKeyboard({
                     e.preventDefault()
                     flip()
                     break
+                case "0":
+                    e.preventDefault()
+                    flip()
+                    break
                 case "1":
                     markUnknown()
                     break
                 case "2":
                     markKnown()
                     break
-                case "3": 
+                case "3":
                     if (currentJP) {
                         speak(currentJP)
                     }
