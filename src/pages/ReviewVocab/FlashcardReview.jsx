@@ -90,6 +90,7 @@ export default function FlashcardReview({ cards = [] }) {
       />
 
       <Flashcard
+        key={index}
         front={card.front}
         back={card.back}
         showAnswer={showAnswer}
@@ -108,12 +109,12 @@ export default function FlashcardReview({ cards = [] }) {
         onNext={next}
       />
 
-      
-        <FlashcardControls
-          onKnown={markKnown}
-          onUnknown={markUnknown}
-        />
-      
+
+      <FlashcardControls
+        onKnown={markKnown}
+        onUnknown={markUnknown}
+      />
+
 
       <FlashcardSettings
         autoFlip={autoFlip}
