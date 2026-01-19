@@ -2,44 +2,58 @@ import { Plus } from "lucide-react"
 import { useEffect, useState } from "react"
 import VocabTableDesktop from "./VocabTableDesktop"
 import VocabTableMobile from "./VocabTableMobile"
+import VocabTableTablet from "./VocabTableTablet" // 👈 sẽ tạo
 import { isHiragana, isKatakana } from "../../utils/kana"
 
 export default function VocabTable({ rows, onChange, onAddRow }) {
-  const [isMobile, setIsMobile] = useState(false)
+  const [layout, setLayout] = useState("desktop")
 
   useEffect(() => {
-    const check = () => setIsMobile(window.innerWidth < 768)
+    const check = () => {
+      const w = window.innerWidth
+      if (w < 768) setLayout("mobile")
+      else if (w <= 1024) setLayout("tablet")
+      else setLayout("desktop")
+    }
     check()
     window.addEventListener("resize", check)
     return () => window.removeEventListener("resize", check)
   }, [])
 
   const handleKanaChange = (index, value, meta = {}) => {
-  if (meta.composing) return // ⛔ đang gõ IME → bỏ qua
+    if (meta.composing) return
 
-  if (isHiragana(value)) {
-    onChange(index, "hiragana", value)
-    onChange(index, "katakana", "")
-  } else if (isKatakana(value)) {
-    onChange(index, "katakana", value)
-    onChange(index, "hiragana", "")
-  } else {
-    // ⛔ KHÔNG xoá khi user gõ latin
-    onChange(index, "hiragana", value)
-    onChange(index, "katakana", "")
+    if (isHiragana(value)) {
+      onChange(index, "hiragana", value)
+      onChange(index, "katakana", "")
+    } else if (isKatakana(value)) {
+      onChange(index, "katakana", value)
+      onChange(index, "hiragana", "")
+    } else {
+      onChange(index, "hiragana", value)
+      onChange(index, "katakana", "")
+    }
   }
-}
-
 
   return (
     <div className="overflow-auto border bg-white rounded">
-      {isMobile ? (
+      {layout === "mobile" && (
         <VocabTableMobile
           rows={rows}
           onChange={onChange}
           onKanaChange={handleKanaChange}
         />
-      ) : (
+      )}
+
+      {layout === "tablet" && (
+        <VocabTableTablet
+          rows={rows}
+          onChange={onChange}
+          onKanaChange={handleKanaChange}
+        />
+      )}
+
+      {layout === "desktop" && (
         <VocabTableDesktop
           rows={rows}
           onChange={onChange}
@@ -47,7 +61,6 @@ export default function VocabTable({ rows, onChange, onAddRow }) {
         />
       )}
 
-      {/* ADD ROW */}
       <div className="border-t bg-gray-50 p-4 text-center">
         <button
           onClick={onAddRow}
