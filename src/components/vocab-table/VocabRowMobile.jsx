@@ -1,5 +1,5 @@
 import { useEffect, useRef } from "react"
-import { TdAudioM, TdInputM } from "./cells"
+import { TdAudioM, TdInputM, TdJPInputM } from "./cells"
 
 export default function VocabRowMobile({
   index,
@@ -36,9 +36,8 @@ export default function VocabRowMobile({
           >
             {/* ===== ROW 1: KANA + PHONETIC + AUDIO ===== */}
             <div className="grid grid-cols-[1fr_1fr_auto] gap-1">
-              <TdInputM
+              <TdJPInputM
                 value={row.hiragana || row.katakana}
-                placeholder="ひら / カタ"
                 onChange={(v) => onKanaChange(index, v)}
                 compact
               />

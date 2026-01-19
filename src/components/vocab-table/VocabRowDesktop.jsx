@@ -1,5 +1,5 @@
 import { useEffect, useRef } from "react"
-import { TdAudio, TdCenter, TdInput } from "./cells"
+import { TdAudio, TdCenter, TdInput, TdJPInput } from "./cells"
 
 export default function VocabRowDesktop({
   index,
@@ -21,7 +21,8 @@ export default function VocabRowDesktop({
     <tr>
       <TdCenter >{index + 1}</TdCenter>
 
-      <TdInput
+      <TdJPInput
+        index={index}
         value={row.hiragana || row.katakana}
         placeholder="ひら / カタ"
         onChange={(v) => onKanaChange(index, v)}

@@ -1,9 +1,19 @@
 import { Plus } from "lucide-react"
+import { useEffect, useState } from "react"
 import VocabTableDesktop from "./VocabTableDesktop"
 import VocabTableMobile from "./VocabTableMobile"
 import { isHiragana, isKatakana } from "../../utils/kana"
 
 export default function VocabTable({ rows, onChange, onAddRow }) {
+  const [isMobile, setIsMobile] = useState(false)
+
+  useEffect(() => {
+    const check = () => setIsMobile(window.innerWidth < 768)
+    check()
+    window.addEventListener("resize", check)
+    return () => window.removeEventListener("resize", check)
+  }, [])
+
   const handleKanaChange = (index, value) => {
     if (isHiragana(value)) {
       onChange(index, "hiragana", value)
@@ -19,17 +29,19 @@ export default function VocabTable({ rows, onChange, onAddRow }) {
 
   return (
     <div className="overflow-auto border bg-white rounded">
-      <VocabTableDesktop
-        rows={rows}
-        onChange={onChange}
-        onKanaChange={handleKanaChange}
-      />
-
-      <VocabTableMobile
-        rows={rows}
-        onChange={onChange}
-        onKanaChange={handleKanaChange}
-      />
+      {isMobile ? (
+        <VocabTableMobile
+          rows={rows}
+          onChange={onChange}
+          onKanaChange={handleKanaChange}
+        />
+      ) : (
+        <VocabTableDesktop
+          rows={rows}
+          onChange={onChange}
+          onKanaChange={handleKanaChange}
+        />
+      )}
 
       {/* ADD ROW */}
       <div className="border-t bg-gray-50 p-4 text-center">
