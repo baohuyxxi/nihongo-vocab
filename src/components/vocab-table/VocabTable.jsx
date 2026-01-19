@@ -14,18 +14,22 @@ export default function VocabTable({ rows, onChange, onAddRow }) {
     return () => window.removeEventListener("resize", check)
   }, [])
 
-  const handleKanaChange = (index, value) => {
-    if (isHiragana(value)) {
-      onChange(index, "hiragana", value)
-      onChange(index, "katakana", "")
-    } else if (isKatakana(value)) {
-      onChange(index, "katakana", value)
-      onChange(index, "hiragana", "")
-    } else {
-      onChange(index, "hiragana", "")
-      onChange(index, "katakana", "")
-    }
+  const handleKanaChange = (index, value, meta = {}) => {
+  if (meta.composing) return // ⛔ đang gõ IME → bỏ qua
+
+  if (isHiragana(value)) {
+    onChange(index, "hiragana", value)
+    onChange(index, "katakana", "")
+  } else if (isKatakana(value)) {
+    onChange(index, "katakana", value)
+    onChange(index, "hiragana", "")
+  } else {
+    // ⛔ KHÔNG xoá khi user gõ latin
+    onChange(index, "hiragana", value)
+    onChange(index, "katakana", "")
   }
+}
+
 
   return (
     <div className="overflow-auto border bg-white rounded">

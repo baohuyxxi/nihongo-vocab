@@ -1,45 +1,49 @@
 import { useEffect, useRef } from "react"
+import { bind, unbind } from "wanakana"
 
 export default function JPTableInput({
   value,
   onChange,
-  placeholder = "ひらがな / カタカナ",
   className = "",
 }) {
   const ref = useRef(null)
-
-  const autoResize = () => {
-    const el = ref.current
-    if (!el) return
-    el.style.height = "auto"
-    el.style.height = el.scrollHeight + "px"
-  }
+  const lastValueRef = useRef(value)
 
   useEffect(() => {
-    autoResize()
+    const el = ref.current
+    if (!el) return
+
+    bind(el, {
+      IMEMode: true,
+      passRomaji: false,
+    })
+
+    return () => unbind(el)
+  }, [])
+
+  // sync khi đổi bài / reload data
+  useEffect(() => {
+    if (value !== lastValueRef.current && ref.current) {
+      ref.current.value = value || ""
+      lastValueRef.current = value
+    }
   }, [value])
 
   return (
-    <textarea
+    <input
       ref={ref}
-      rows={1}
-      value={value || ""}
-      placeholder={placeholder}
-      onChange={(e) => {
-        onChange(e.target.value)
-        requestAnimationFrame(autoResize)
+      defaultValue={value}
+      lang="ja"
+      spellCheck={false}
+      autoCorrect="off"
+      autoCapitalize="off"
+      placeholder="ひら / カタ"
+      className={className}
+      onBlur={(e) => {
+        const v = e.target.value
+        lastValueRef.current = v
+        onChange(v)
       }}
-      className={`
-        w-full
-        resize-none
-        bg-transparent
-        outline-none
-        whitespace-pre-wrap
-        break-words
-        leading-7
-        focus:bg-blue-50
-        ${className}
-      `}
     />
   )
 }
