@@ -41,6 +41,7 @@ export default function Flashcard({
                 <FlashcardFront
                     text={front}
                     isJP={direction === "jp_vi"}
+                    isKanji={direction === "kanji"}
                     onSpeak={onSpeak}
                 />
 

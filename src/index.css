@@ -34,3 +34,7 @@
 .animate-slide-up {
   animation: slide-up 0.25s ease-out;
 }
+
+svg {
+  transition: opacity 0.15s ease;
+}
