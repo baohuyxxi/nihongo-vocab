@@ -16,26 +16,26 @@ export default function FlashcardBack({
             {/* ===== KANJI MODE ===== */}
             {isKanji && back ? (
                 <>
+                    {/* 🔥 HÁN VIỆT – NỔI NHẤT */}
+                    {back.hanViet && (
+                        <div className="font-bold text-gray-800
+        text-4xl sm:text-6xl md:text-[90px] leading-tight">
+                            {back.hanViet}
+                        </div>
+                    )}
+
+                    {/* 🇯🇵 KANJI / JP */}
                     <JapaneseTextWithAudio
                         text={back.jp}
                         autoPlay={false}
                         onSpeak={onSpeak}
                     />
 
-                    {/* Hán Việt */}
-                    {back.hanViet && (
-                        <div className="text-xl sm:text-5xl text-gray-700">
-                            {back.hanViet}
-                        </div>
-                    )}
-
-                    {/* Nghĩa */}
+                    {/* 🇻🇳 NGHĨA */}
                     <VietnameseTextAutoFit text={back.meaning} />
-
-
-
                 </>
             ) : isJP ? (
+
                 /* ===== JP STRING ===== */
                 <JapaneseTextWithAudio
                     text={back}
