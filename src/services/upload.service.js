@@ -12,3 +12,4 @@ export const uploadMedia = async (file, type = "image") => {
     const res = await api.post("/cloudinary/upload", formData)
     return res.data
 }
+
