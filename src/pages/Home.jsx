@@ -28,7 +28,7 @@ export default function Home() {
     }
 
     if (index === 0) {
-      navigate(`/vocab-table?lesson=${selectedLesson}`)
+      navigate(`/vocab-study?vocabId=${selectedLesson}`)
     }
   }
 
