@@ -12,6 +12,9 @@ const ReviewSession = lazy(() => import("../pages/ReviewVocab/ReviewSession"));
 
 const VocabularyTable = lazy(() => import("../pages/SettingVocab/VocabularyTable"));
 
+// VocabStudy
+const VocabularyStudy = lazy(() => import("../pages/VocabStudy/VocabularyStudy"));
+
 export default function AppRoutes() {
   return (
     <Routes>
@@ -54,6 +57,15 @@ export default function AppRoutes() {
         element={
           <Suspense fallback={<div>Loading...</div>}>
             <VocabularyTable />
+          </Suspense>
+        }
+      />
+
+      <Route
+        path="/vocab-study"
+        element={
+          <Suspense fallback={<div>Loading...</div>}>
+            <VocabularyStudy />
           </Suspense>
         }
       />
