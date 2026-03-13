@@ -6,10 +6,12 @@ export default function VocabTableDesktop({ rows, onChange, onKanaChange }) {
       <colgroup>
         <col style={{ width: "2%" }} />
         <col style={{ width: "17%" }} />
-        <col style={{ width: "17%" }} />
         <col style={{ width: "10%" }} />
-        <col style={{ width: "10%" }} />
-        <col style={{ width: "30%" }} />
+        <col style={{ width: "12%" }} />
+        <col style={{ width: "12%" }} />
+        <col style={{ width: "12%" }} />
+        <col style={{ width: "20%" }} />
+        <col style={{ width: "7%" }} />
         <col style={{ width: "4%" }} />
       </colgroup>
 
@@ -17,10 +19,12 @@ export default function VocabTableDesktop({ rows, onChange, onKanaChange }) {
         <tr>
           <Th>STT</Th>
           <Th>Hira / Kata</Th>
-          <Th>Phiên âm</Th>
+          <Th>Phiên Âm</Th>
           <Th>Kanji</Th>
           <Th>Hán Việt</Th>
+          <Th>Tiếng Anh</Th>
           <Th>Nghĩa</Th>
+          <Th>Hình Ảnh</Th>
           <Th>🔊</Th>
         </tr>
       </thead>

@@ -1,7 +1,9 @@
 import { Turtle, Rabbit } from "lucide-react"
 import { speakJP } from "../../utils/speak"
 import JPTableInput from "../JPTableInput"
-
+import { useEffect, useState } from "react"
+import { uploadMedia } from "../../services/upload.service"
+import { ImagePlus } from "lucide-react"
 export function TdJPInput({ value, onChange }) {
   return (
     <td className="border px-2 py-2 align-top">
@@ -113,5 +115,81 @@ export function TdAudioM({ row }) {
         <Rabbit size={18} />
       </button>
     </div>
+  )
+}
+
+export function TdImage({ value, onChange }) {
+  const [preview, setPreview] = useState(value || "")
+
+  useEffect(() => {
+    setPreview(value || "")
+  }, [value])
+
+  const handleFile = (e) => {
+    const file = e.target.files[0]
+    if (!file) return
+
+    const url = URL.createObjectURL(file)
+    setPreview(url)
+
+    uploadMedia(file).then((res) => {
+      onChange(res.url)
+    })
+  }
+
+  return (
+    <td className="border px-2 py-2 text-center">
+      <div className="flex justify-center">
+
+        <label className="relative cursor-pointer group">
+
+          {/* preview image */}
+          {preview ? (
+            <>
+              <img
+                src={preview}
+                alt="preview"
+                className="
+                  w-14 h-14 object-cover rounded border
+                  group-hover:opacity-70 transition
+                "
+              />
+
+              {/* hover overlay */}
+              <div
+                className="
+                  absolute inset-0
+                  flex items-center justify-center
+                  opacity-0 group-hover:opacity-100
+                  transition
+                "
+              >
+                <ImagePlus size={18} className="text-white drop-shadow" />
+              </div>
+            </>
+          ) : (
+            <div
+              className="
+                w-14 h-14
+                flex items-center justify-center
+                border rounded
+                text-gray-400
+                hover:bg-gray-100
+              "
+            >
+              <ImagePlus size={20} />
+            </div>
+          )}
+
+          <input
+            type="file"
+            accept="image/*"
+            className="hidden"
+            onChange={handleFile}
+          />
+        </label>
+
+      </div>
+    </td>
   )
 }
