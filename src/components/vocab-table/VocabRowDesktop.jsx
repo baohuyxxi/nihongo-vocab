@@ -1,5 +1,5 @@
 import { useEffect, useRef } from "react"
-import { TdAudio, TdCenter, TdInput, TdJPInput } from "./cells"
+import { TdAudio, TdCenter, TdInput, TdJPInput, TdImage } from "./cells"
 
 export default function VocabRowDesktop({
   index,
@@ -42,6 +42,10 @@ export default function VocabRowDesktop({
         value={row.hanViet}
         onChange={(v) => onChange(index, "hanViet", v)}
       />
+      <TdInput
+        value={row.english}
+        onChange={(v) => onChange(index, "english", v)}
+      />
 
       <td className="border px-2 py-2 align-top">
         <textarea
@@ -56,6 +60,7 @@ export default function VocabRowDesktop({
           onChange={(e) => onChange(index, "meaning", e.target.value)}
         />
       </td>
+      <TdImage value={row.image} onChange={(v) => onChange(index, "image", v)} />
 
       <TdAudio row={row} />
     </tr>
