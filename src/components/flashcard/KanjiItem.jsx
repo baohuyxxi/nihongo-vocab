@@ -2,7 +2,7 @@ import { useEffect, useRef } from "react"
 import HanziWriter from "hanzi-writer"
 import { RotateCcw } from "lucide-react"
 
-export default function KanjiItem({ kanji, size, active, onDone }) {
+export default function KanjiItem({ kanji, isKanji, size, active, onDone }) {
   const ref = useRef(null)
   const writerRef = useRef(null)
   const hasAnimatedRef = useRef(false)
@@ -14,6 +14,20 @@ export default function KanjiItem({ kanji, size, active, onDone }) {
     ref.current.innerHTML = ""
     writerRef.current = null
     hasAnimatedRef.current = false
+
+    // ❌ KHÔNG phải kanji → chỉ render text
+    if (!isKanji) {
+      ref.current.innerText = kanji
+      ref.current.style.fontSize = `${size * 0.7}px`
+      ref.current.style.display = "flex"
+      ref.current.style.alignItems = "center"
+      ref.current.style.justifyContent = "center"
+
+      // vẫn cho chạy sequence
+      if (active) onDone?.()
+
+      return
+    }
 
     HanziWriter.loadCharacterData(kanji)
       .then(() => {
@@ -64,23 +78,25 @@ export default function KanjiItem({ kanji, size, active, onDone }) {
     <div className="flex flex-col items-center gap-2">
       <div ref={ref} />
 
-      {/* 🔁 viết lại – chỉ hoạt động khi có writer */}
-      <button
-        onClick={(e) => {
-          e.stopPropagation()
-          if (!writerRef.current) return
+      {/* 🔁 chỉ hiện khi là kanji */}
+      {isKanji && (
+        <button
+          onClick={(e) => {
+            e.stopPropagation()
+            if (!writerRef.current) return
 
-          writerRef.current.hideCharacter()
-          writerRef.current.animateCharacter({
-            onComplete: () => {
-              writerRef.current.setCharacter(kanji)
-            },
-          })
-        }}
-        className="w-12 h-12 rounded-full bg-gray-200 hover:bg-gray-300 flex items-center justify-center"
-      >
-        <RotateCcw size={26} />
-      </button>
+            writerRef.current.hideCharacter()
+            writerRef.current.animateCharacter({
+              onComplete: () => {
+                writerRef.current.setCharacter(kanji)
+              },
+            })
+          }}
+          className="w-12 h-12 rounded-full bg-gray-200 hover:bg-gray-300 flex items-center justify-center"
+        >
+          <RotateCcw size={26} />
+        </button>
+      )}
     </div>
   )
 }
