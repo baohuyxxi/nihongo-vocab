@@ -1,10 +1,10 @@
 import { useMemo, useState } from "react"
 import KanjiItem from "./KanjiItem"
 
-function extractKanji(text) {
-  if (!text) return []
-  return [...text].filter((c) => /[\u4e00-\u9faf]/.test(c))
-}
+// function extractKanji(text) {
+//   if (!text) return []
+//   return [...text].filter((c) => /[\u4e00-\u9faf]/.test(c))
+// }
 
 export default function KanjiStrokePlayer({ kanji, size = 180 }) {
   const kanjiList = useMemo(() => extractKanji(kanji), [kanji])

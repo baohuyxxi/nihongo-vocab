@@ -15,6 +15,8 @@ const VocabularyTable = lazy(() => import("../pages/SettingVocab/VocabularyTable
 // VocabStudy
 const VocabularyStudy = lazy(() => import("../pages/VocabStudy/VocabularyStudy"));
 
+const MindMapPage = lazy(() => import("../pages/MindMap/MindMapPage"));
+
 export default function AppRoutes() {
   return (
     <Routes>
@@ -66,6 +68,15 @@ export default function AppRoutes() {
         element={
           <Suspense fallback={<div>Loading...</div>}>
             <VocabularyStudy />
+          </Suspense>
+        }
+      />
+
+      <Route
+        path="/mind-map"
+        element={
+          <Suspense fallback={<div>Loading...</div>}>
+            <MindMapPage />
           </Suspense>
         }
       />
