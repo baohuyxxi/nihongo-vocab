@@ -1,6 +1,9 @@
 import { useEffect, useRef } from "react"
+import { TOPICS } from "../../constants/topics"
 
 const LESSON_COUNT = 50
+
+
 
 const REVIEW_MODES = [
   { key: "typing", label: "✍️ Điền từ" },
@@ -19,6 +22,8 @@ const STORAGE_KEY = "reviewConfig"
 export default function ReviewConfig({
   selectedLessons,
   setSelectedLessons,
+  selectedTopics,
+  setSelectedTopics,
   mode,
   setMode,
   directions,
@@ -34,10 +39,13 @@ export default function ReviewConfig({
     if (!saved) return
 
     try {
-      const { lessons, mode, directions } = JSON.parse(saved)
+      const { lessons, topics, mode, directions } = JSON.parse(saved)
 
       if (lessons) {
         setSelectedLessons(lessons)
+      }
+      if (topics) {
+        setSelectedTopics(topics)
       }
       if (mode) {
         setMode(mode)
@@ -127,55 +135,85 @@ export default function ReviewConfig({
           </section>
         </div>
 
-        {/* RIGHT – LESSON GRID */}
-        <section className="lg:col-span-2 bg-white rounded-xl shadow p-5">
-          <h2 className="font-semibold mb-4 flex items-center gap-2">
-            📚 <span>Chọn bài học</span>
+        {/* LESSON + EXTRA */}
+        <section className="lg:col-span-2 bg-white rounded-xl shadow p-5 space-y-6">
+          <h2 className="font-semibold flex items-center gap-2">
+            📚 <span>Chọn nội dung ôn</span>
           </h2>
 
-          <div
-            className="
-              grid gap-2 select-none
-              grid-cols-4
-              sm:grid-cols-6
-              md:grid-cols-8
-              lg:grid-cols-10
-            "
-            onMouseUp={() => (isDragging.current = false)}
-            onMouseLeave={() => (isDragging.current = false)}
-          >
-            {Array.from({ length: LESSON_COUNT }, (_, i) => i + 1).map(
-              (lesson) => {
-                const checked = selectedLessons.includes(lesson)
+          {/* LESSONS */}
+          <div>
+            <h3 className="text-sm font-medium mb-2 text-gray-600">
+              Bài Minna (1–50)
+            </h3>
+
+            <div
+              className="
+        grid gap-2 select-none
+        grid-cols-4 sm:grid-cols-6 md:grid-cols-8 lg:grid-cols-10
+      "
+              onMouseUp={() => (isDragging.current = false)}
+              onMouseLeave={() => (isDragging.current = false)}
+            >
+              {Array.from({ length: LESSON_COUNT }, (_, i) => i + 1).map(
+                (lesson) => {
+                  const checked = selectedLessons.includes(lesson)
+
+                  return (
+                    <div
+                      key={lesson}
+                      className={`aspect-square flex items-center justify-center rounded-lg border cursor-pointer text-xs font-medium transition ${checked
+                        ? "bg-blue-600 text-white border-blue-600"
+                        : "bg-gray-100 hover:bg-gray-200"
+                        }
+`}
+                      onMouseDown={() => {
+                        isDragging.current = true
+                        dragMode.current = checked ? "remove" : "add"
+                        toggleLesson(lesson, dragMode.current)
+                      }}
+                      onMouseEnter={() => {
+                        if (isDragging.current) {
+                          toggleLesson(lesson, dragMode.current)
+                        }
+                      }}
+                    >
+                      {lesson}
+                    </div>
+                  )
+                }
+              )}
+            </div>
+          </div>
+
+          {/* EXTRA TOPICS */}
+          <div>
+            <h3 className="text-sm font-medium mb-2 text-gray-600">
+              Chủ đề mở rộng
+            </h3>
+
+            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-2">
+              {TOPICS.map((item) => {
+                const checked = selectedLessons.includes(item.key)
 
                 return (
                   <div
-                    key={lesson}
+                    key={item.key}
+                    onClick={() => toggleLesson(item.key)}
                     className={`
-                      aspect-square flex items-center justify-center
-                      rounded-lg border cursor-pointer text-sm font-medium
-                      transition
-                      ${checked
-                        ? "bg-blue-600 text-white border-blue-600"
+              px-3 py-2 rounded-lg border text-sm cursor-pointer
+              transition text-center
+              ${checked
+                        ? "bg-green-600 text-white border-green-600"
                         : "bg-gray-100 hover:bg-gray-200"
                       }
-                    `}
-                    onMouseDown={() => {
-                      isDragging.current = true
-                      dragMode.current = checked ? "remove" : "add"
-                      toggleLesson(lesson, dragMode.current)
-                    }}
-                    onMouseEnter={() => {
-                      if (isDragging.current) {
-                        toggleLesson(lesson, dragMode.current)
-                      }
-                    }}
+            `}
                   >
-                    {lesson}
+                    {item.label}
                   </div>
                 )
-              }
-            )}
+              })}
+            </div>
           </div>
         </section>
       </div>
