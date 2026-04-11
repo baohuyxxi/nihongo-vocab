@@ -40,3 +40,7 @@ export const bulkSaveVocab = (data) => {
 export const bulkCreateVocab = (data) => {
   return api.post("/vocab/bulk/create", data);
 }
+
+export const getVocabByTopic = (topic) => {
+  return api.get(`/vocab/topic?topics=${topic}`);
+}
