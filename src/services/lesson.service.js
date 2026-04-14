@@ -13,3 +13,11 @@ export const getLessons = () => {
 export const getLessonDetail = (lesson) => {
   return api.get(`/lessons/${lesson}`)
 }
+
+
+/**
+ * 🚀 Lấy tất cả PHÓ TỪ
+ */
+export const getAllAdverbs = () => {
+  return api.get("/lessons/adverbs/grouped")
+}
