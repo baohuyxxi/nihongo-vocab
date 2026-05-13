@@ -44,3 +44,7 @@ export const bulkCreateVocab = (data) => {
 export const getVocabByTopic = (topic) => {
   return api.get(`/vocab/topic?topics=${topic}`);
 }
+
+export const getAllVerbs = () => {
+  return api.get("/vocab/verbs")
+}

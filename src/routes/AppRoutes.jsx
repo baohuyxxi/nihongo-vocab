@@ -19,6 +19,7 @@ const MindMapPage = lazy(() => import("../pages/MindMap/MindMapPage"));
 
 const MyLessons = lazy(() => import("../pages/MyLessons/MyLessons"));
 const Adverbs = lazy(() => import("../pages/MyLessons/Adverbs"));
+const VerbConjugation = lazy(() => import("../pages/MyLessons/VerbConjugation"));
 export default function AppRoutes() {
   return (
     <Routes>
@@ -96,6 +97,14 @@ export default function AppRoutes() {
         element={
           <Suspense fallback={<div>Loading...</div>}>
             <Adverbs />
+          </Suspense>
+        }
+      />
+      <Route
+        path="/my-lessons/verb-conjugation"
+        element={
+          <Suspense fallback={<div>Loading...</div>}>
+            <VerbConjugation />
           </Suspense>
         }
       />

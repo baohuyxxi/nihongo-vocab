@@ -14,6 +14,11 @@ export default function MyLessons() {
       title: "Học phó từ",
       desc: "Luyện các phó từ thường dùng",
     },
+    {
+      id: "verb-conjugation",
+      title: "Chia động từ",
+      desc: "Luyện chia các động từ ",
+    }
   ]
 
   return (
