@@ -21,3 +21,7 @@ export const getLessonDetail = (lesson) => {
 export const getAllAdverbs = () => {
   return api.get("/lessons/adverbs/grouped")
 }
+
+export const getDuplicateHiragana = () => {
+  return api.get("/lessons/duplicate-hiragana")
+}

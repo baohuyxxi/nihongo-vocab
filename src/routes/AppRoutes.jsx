@@ -20,6 +20,8 @@ const MindMapPage = lazy(() => import("../pages/MindMap/MindMapPage"));
 const MyLessons = lazy(() => import("../pages/MyLessons/MyLessons"));
 const Adverbs = lazy(() => import("../pages/MyLessons/Adverbs"));
 const VerbConjugation = lazy(() => import("../pages/MyLessons/VerbConjugation"));
+const Homophones = lazy(() => import("../pages/MyLessons/Homophones"))
+const VocabStudied  = lazy(() => import("../pages/MyLessons/VocabStudied/index"))
 export default function AppRoutes() {
   return (
     <Routes>
@@ -109,6 +111,22 @@ export default function AppRoutes() {
         }
       />
 
+      <Route
+        path="/my-lessons/homophones"
+        element={
+          <Suspense fallback={<div>Loading...</div>}>
+            <Homophones />
+          </Suspense>
+        }
+      />
+      <Route
+        path="/my-lessons/vocab-studied"
+        element={
+          <Suspense fallback={<div>Loading...</div>}>
+            <VocabStudied />
+          </Suspense>
+        }
+      />
     </Routes>
   );
 }
