@@ -5,6 +5,11 @@ export default function MyLessons() {
 
   const options = [
     {
+      id: "vocab-studied",
+      title: "Tổng hợp từ vựng",
+      desc: "Tất cả từ vựng đã học"
+    },
+    {
       id: "mind-map",
       title: "Bản đồ tư duy",
       desc: "Xem mối liên hệ giữa các từ",
@@ -18,6 +23,11 @@ export default function MyLessons() {
       id: "verb-conjugation",
       title: "Chia động từ",
       desc: "Luyện chia các động từ ",
+    },
+    {
+      id: "homophones",
+      title: "Các từ đồng âm",
+      desc: "Luyện tập các từ có cách phát âm giống nhau nhưng nghĩa khác nhau",
     }
   ]
 
