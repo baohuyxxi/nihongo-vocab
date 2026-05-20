@@ -19,11 +19,13 @@ export default function ReviewSession() {
   useEffect(() => {
     if (!reviewConfig) return
 
-    const { lessons, mode, directions } = reviewConfig
+    const { lessons, topics, partsOfSpeech, mode, directions } = reviewConfig
 
     setLoading(true)
     getReviewSession({
       lessons: lessons.join(","),
+      topics: topics.join(","),
+      partsOfSpeech: partsOfSpeech.join(","),
       mode,
       directions: directions.join(","),
     })
