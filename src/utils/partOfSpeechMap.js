@@ -20,3 +20,7 @@ export const partOfSpeechMap = {
   prefix: "Tiền tố",
   suffix: "Hậu tố",
 }
+
+export const  getPartOfSpeechLabel = (key) => {
+  return partOfSpeechMap[key] || key
+}

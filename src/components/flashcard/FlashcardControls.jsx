@@ -1,18 +1,109 @@
-export default function FlashcardControls({ onKnown, onUnknown }) {
+// FlashcardControls.jsx
+
+export default function FlashcardControls({
+  onKnown,
+  onUnknown,
+}) {
+
   return (
-    <div className="flex gap-4">
+
+    <div
+      className="
+        w-full
+
+        flex
+        items-center
+        justify-center
+
+        gap-2
+        sm:gap-4
+
+        px-2
+      "
+    >
+
       <button
         onClick={onUnknown}
-        className="px-5 py-3 bg-red-200 rounded-xl"
+
+        className="
+          flex-1
+          sm:flex-none
+
+          min-w-[140px]
+
+          px-3
+          sm:px-5
+
+          py-3
+          sm:py-4
+
+          rounded-xl
+
+          bg-red-200
+          hover:bg-red-300
+
+          transition
+
+          text-sm
+          sm:text-base
+          md:text-lg
+
+          font-medium
+        "
       >
-        ❌ Chưa nhớ (Phím 1)
+        ❌ Chưa nhớ
+
+        <span
+          className="
+            hidden sm:inline
+          "
+        >
+          {" "}
+          (1)
+        </span>
       </button>
+
       <button
         onClick={onKnown}
-        className="px-5 py-3 bg-green-200 rounded-xl"
+
+        className="
+          flex-1
+          sm:flex-none
+
+          min-w-[140px]
+
+          px-3
+          sm:px-5
+
+          py-3
+          sm:py-4
+
+          rounded-xl
+
+          bg-green-200
+          hover:bg-green-300
+
+          transition
+
+          text-sm
+          sm:text-base
+          md:text-lg
+
+          font-medium
+        "
       >
-        ✅ Đã nhớ (Phím 2)
+        ✅ Đã nhớ
+
+        <span
+          className="
+            hidden sm:inline
+          "
+        >
+          {" "}
+          (2)
+        </span>
       </button>
+
     </div>
   )
 }
