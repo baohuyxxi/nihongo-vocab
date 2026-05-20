@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react"
 import axios from "axios"
 import { ChevronDown, ChevronRight } from "lucide-react"
+import getDuplicateHiragana from "../../services/lessons/getDuplicateHiragana"
 
 export default function HomophonesPage() {
     const [data, setData] = useState([])
@@ -16,10 +17,7 @@ export default function HomophonesPage() {
         try {
             setLoading(true)
 
-            const res = await axios.get(
-                "http://localhost:5000/api/lessons/duplicate-hiragana"
-            )
-
+            const res = await getDuplicateHiragana()
             setData(res.data.data || [])
         } catch (err) {
             console.error(err)
