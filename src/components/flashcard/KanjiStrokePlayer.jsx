@@ -1,47 +1,117 @@
-import { useMemo, useState } from "react"
-import KanjiItem from "./KanjiItem"
+// KanjiStrokePlayer.jsx
+
+import { useMemo, useState }
+  from "react"
+
+import KanjiItem
+  from "./KanjiItem"
 
 function extractChars(text) {
+
   if (!text) return []
 
   return [...text].map((c) => ({
     char: c,
-    isKanji: /[\u4e00-\u9faf]/.test(c),
+    isKanji:
+      /[\u4e00-\u9faf]/.test(c),
   }))
 }
 
-export default function KanjiStrokePlayer({ kanji, size = 180 }) {
-  const list = useMemo(() => extractChars(kanji), [kanji])
-  const [activeIndex, setActiveIndex] = useState(0)
+export default function KanjiStrokePlayer({
+  kanji,
+  size = 180,
+}) {
 
-  if (list.length === 0) return null
+  const list = useMemo(
+    () => extractChars(kanji),
+    [kanji]
+  )
+
+  const [activeIndex, setActiveIndex]
+    = useState(0)
+
+  if (list.length === 0) {
+    return null
+  }
 
   const dynamicSize = useMemo(() => {
+
     const base = size
     const length = list.length
 
-    if (length <= 3) return base
-    if (length <= 5) return base * 0.8
-    if (length <= 8) return base * 0.65
+    if (window.innerWidth < 640) {
+
+      if (length <= 2) {
+        return base * 0.55
+      }
+
+      if (length <= 4) {
+        return base * 0.42
+      }
+
+      return base * 0.32
+    }
+
+    if (length <= 3) {
+      return base
+    }
+
+    if (length <= 5) {
+      return base * 0.8
+    }
+
+    if (length <= 8) {
+      return base * 0.65
+    }
+
     return base * 0.5
+
   }, [list, size])
 
   return (
-    <div className="flex gap-6">
+
+    <div
+      className="
+        w-full
+
+        flex
+        items-center
+        justify-center
+
+        gap-2
+        sm:gap-4
+        md:gap-6
+
+        flex-wrap
+      "
+    >
+
       {list.map((item, i) => (
+
         <KanjiItem
           key={`${item.char}-${i}`}
+
           kanji={item.char}
-          isKanji={item.isKanji} // 🔥 thêm dòng này
+
+          isKanji={item.isKanji}
+
           size={dynamicSize}
+
           active={i === activeIndex}
+
           onDone={() => {
+
             if (i === activeIndex) {
-              setActiveIndex((prev) => prev + 1)
+
+              setActiveIndex(
+                (prev) => prev + 1
+              )
             }
           }}
         />
+
       ))}
+
     </div>
   )
 }

@@ -1,21 +1,24 @@
-import React, { useCallback } from "react";
+import React from "react"
 import ReactFlow, {
   Background,
   Controls,
   MiniMap,
   ReactFlowProvider,
   useReactFlow,
-} from "reactflow";
-import "reactflow/dist/style.css";
+} from "reactflow"
+import "reactflow/dist/style.css"
 
-import useMindmap from "./useMindmap";
-import CustomNode from "./CustomNode";
-import TableNode from "./TableNode";
+import useMindmap from "./useMindmap"
+
+import ConceptNode from "./ConceptNode"
+import GrammarNode from "./GrammarNode"
+import ExampleNode from "./ExampleNode"
 
 const nodeTypes = {
-  custom: CustomNode,
-  table: TableNode,
-};
+  concept: ConceptNode,
+  grammar: GrammarNode,
+  example: ExampleNode,
+}
 
 function FlowContent() {
   const {
@@ -24,27 +27,29 @@ function FlowContent() {
     onNodesChange,
     onEdgesChange,
     onConnect,
-    addNode,
-    addTableNode,
-  } = useMindmap();
+    addConcept,
+    addGrammar,
+    addExample,
+  } = useMindmap()
 
-  const { zoomIn, zoomOut } = useReactFlow();
-
-  const handleWheel = useCallback((e) => {
-    if (e.ctrlKey) {
-      e.preventDefault();
-      e.deltaY < 0 ? zoomIn() : zoomOut();
-    }
-  }, []);
+  const { zoomIn, zoomOut } = useReactFlow()
 
   return (
-    <div
-      style={{ width: "100%", height: "100vh" }}
-      onWheel={handleWheel}
-    >
-      <div style={{ position: "absolute", top: 10, left: 10, zIndex: 10 }}>
-        <button onClick={addNode}>+ Node</button>
-        <button onClick={addTableNode}>+ Table</button>
+    <div className="w-full h-screen bg-gray-50">
+
+      {/* TOP TOOLBAR */}
+      <div className="absolute top-3 left-3 z-10 flex gap-2">
+        <button onClick={addConcept} className="px-3 py-1 bg-blue-500 text-white rounded-lg">
+          + Concept
+        </button>
+
+        <button onClick={addGrammar} className="px-3 py-1 bg-green-500 text-white rounded-lg">
+          + Grammar
+        </button>
+
+        <button onClick={addExample} className="px-3 py-1 bg-orange-500 text-white rounded-lg">
+          + Example
+        </button>
       </div>
 
       <ReactFlow
@@ -54,17 +59,23 @@ function FlowContent() {
         onNodesChange={onNodesChange}
         onEdgesChange={onEdgesChange}
         onConnect={onConnect}
-        zoomOnScroll={false}
-        panOnScroll
-        panOnScrollMode="vertical"
         fitView
+        panOnScroll
+        zoomOnScroll={false}
       >
-        <MiniMap />
+        <MiniMap
+          nodeColor={(node) => {
+            if (node.type === "concept") return "#3b82f6"
+            if (node.type === "grammar") return "#10b981"
+            if (node.type === "example") return "#f97316"
+            return "#999"
+          }}
+        />
         <Controls />
-        <Background />
+        <Background gap={16} />
       </ReactFlow>
     </div>
-  );
+  )
 }
 
 export default function MindMapPage() {
@@ -72,5 +83,5 @@ export default function MindMapPage() {
     <ReactFlowProvider>
       <FlowContent />
     </ReactFlowProvider>
-  );
+  )
 }

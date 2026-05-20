@@ -49,10 +49,19 @@ export default function JapaneseTextWithAudio({
   if (!text) return null
 
   return (
-    <div className="flex items-center justify-center gap-4 w-full">
+    <div className="relative w-full h-full flex items-center justify-center">
+
       <span
         ref={textRef}
-        className="font-bold whitespace-nowrap overflow-hidden"
+        className="
+      font-bold
+      whitespace-nowrap
+      overflow-hidden
+      text-center
+
+      px-4
+      sm:px-8
+    "
         style={{ fontSize }}
       >
         {text}
@@ -63,11 +72,25 @@ export default function JapaneseTextWithAudio({
           e.stopPropagation()
           onSpeak(text)
         }}
-        className="text-4xl hover:scale-110 transition"
+        className="
+      absolute
+      top-2
+      right-2
+
+      sm:top-4
+      sm:right-4
+
+      text-2xl
+      sm:text-3xl
+
+      hover:scale-110
+      transition
+    "
         aria-label="Phát âm tiếng Nhật"
       >
         🔊
       </button>
+
     </div>
   )
 }

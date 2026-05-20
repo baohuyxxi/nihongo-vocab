@@ -1,5 +1,3 @@
-// src/pages/VerbConjugation/VerbConjugation.jsx
-
 import { useEffect, useMemo, useState } from "react"
 
 import JPTableInput from "../../components/JPTableInput"
@@ -17,131 +15,121 @@ export default function VerbConjugation() {
   const [group2, setGroup2] = useState([])
   const [group3, setGroup3] = useState([])
 
-  // =====================
-  // LOAD DATA
-  // =====================
   useEffect(() => {
     const fetchVerbs = async () => {
-      try {
-        const res = await getAllVerbs()
-        const data = res.data || []
+      const res = await getAllVerbs()
+      const data = res.data || []
 
-        const mapped = data.map((v) => {
-          const g = detectVerbGroup({
-            kanji: v.kanji,
-            hiragana: v.hiragana,
-          })
-
-          return {
-            ...v,
-            group: g,
-            conjugated: conjugateVerb(v.hiragana, g),
-          }
+      const mapped = data.map((v) => {
+        const g = detectVerbGroup({
+          kanji: v.kanji,
+          hiragana: v.hiragana,
         })
 
-        setVerbs(mapped)
+        return {
+          ...v,
+          group: g,
+          conjugated: conjugateVerb(v.hiragana, g),
+        }
+      })
 
-        setGroup1(mapped.filter((v) => v.group === 1))
-        setGroup2(mapped.filter((v) => v.group === 2))
-        setGroup3(mapped.filter((v) => v.group === 3))
-
-        localStorage.setItem("verbs", JSON.stringify(mapped))
-      } catch (err) {
-        console.error(err)
-      }
+      setVerbs(mapped)
+      setGroup1(mapped.filter((v) => v.group === 1))
+      setGroup2(mapped.filter((v) => v.group === 2))
+      setGroup3(mapped.filter((v) => v.group === 3))
     }
 
     fetchVerbs()
   }, [])
 
-  // =====================
-  // FIND INPUT VERB
-  // =====================
   const found = useMemo(() => {
-    if (!verb || !verbs.length) return null
-
-    return verbs.find((v) => {
-      const c = v.conjugated
-      if (!c) return false
-
-      return Object.values(c).includes(verb)
-    })
+    if (!verb) return null
+    return verbs.find((v) =>
+      Object.values(v.conjugated || {}).includes(verb)
+    )
   }, [verb, verbs])
 
-  const group = found?.group
   const conjugated = found?.conjugated
+  const group = found?.group
 
   return (
-    <div className="max-w-6xl mx-auto p-5 space-y-6">
+    <div className="max-w-6xl mx-auto px-3 sm:px-5 md:px-8 py-4 space-y-6">
 
-      <h1 className="text-3xl font-bold">
-        Tra cứu chia động từ
+      {/* TITLE */}
+      <h1 className="text-xl sm:text-2xl md:text-3xl font-bold">
+        🔥 Tra cứu chia động từ
       </h1>
 
       {/* INPUT */}
-      <div className="bg-white border rounded p-4">
-        <div className="font-semibold mb-2">
+      <div className="bg-white border rounded-xl p-3 sm:p-4 space-y-2">
+        <div className="font-semibold text-sm sm:text-base">
           Nhập động từ
         </div>
 
         <JPTableInput
           value={verb}
           onChange={setVerb}
-          className="text-3xl leading-10"
+          className="text-xl sm:text-2xl md:text-3xl leading-8"
           placeholder="たべます / のみます / します"
         />
       </div>
 
       {/* RESULT */}
       {verb && (
-        <div className="bg-white border rounded p-5 space-y-3">
+        <div className="bg-white border rounded-xl p-4 sm:p-5 space-y-3">
 
-          <div className="text-xl">
-            Động từ:
-            <span className="ml-2 font-bold text-blue-600">
-              {verb} | {found?.kanji || "Không có kanji"} | {found?.meaning || "Không có nghĩa"}
-            </span>
-          </div>
-          <div className="text-xl">
-            Nhóm:
-            <span className="ml-2 font-bold text-green-600">
-              {group || "Không xác định"}
-            </span>
-          </div>
-          <div className="text-xl">
-            Bài:
-            <span className="ml-2 font-bold text-purple-600">
-              {found?.lesson || "Không xác định"}
-            </span>
+          {/* BASIC INFO */}
+          <div className="grid sm:grid-cols-2 gap-2 text-sm sm:text-base">
+
+            <div>
+              <span className="text-gray-500">Động từ:</span>{" "}
+              <span className="font-bold text-blue-600">
+                {verb}
+              </span>
+            </div>
+
+            <div>
+              <span className="text-gray-500">Nhóm:</span>{" "}
+              <span className="font-bold text-green-600">
+                {group || "?"}
+              </span>
+            </div>
+
+            <div>
+              <span className="text-gray-500">Kanji:</span>{" "}
+              <span className="font-bold">
+                {found?.kanji || "—"}
+              </span>
+            </div>
+
+            <div>
+              <span className="text-gray-500">Bài:</span>{" "}
+              <span className="font-bold text-purple-600">
+                {found?.lesson || "—"}
+              </span>
+            </div>
           </div>
 
-          {/* =====================
-              CONJUGATION DISPLAY
-          ===================== */}
+          {/* CONJUGATION */}
           {conjugated && (
-            <div className="border-t pt-3 space-y-1">
+            <div className="border-t pt-3 grid sm:grid-cols-2 gap-2 text-sm sm:text-base">
 
-              <div className="font-semibold text-gray-700">
-                Các thể:
-              </div>
-
-              <div>📘 Thể từ điển: <b>{conjugated.dictionary}</b></div>
-              <div>💬 Thể lịch sự: <b>{conjugated.masu}</b></div>
-              <div>🔥 Thể て: <b>{conjugated.te}</b></div>
-              <div>⏪ Thể quá khứ: <b>{conjugated.ta}</b></div>
-              <div>❌ Thể phủ định: <b>{conjugated.nai}</b></div>
-              <div>⚡ Thể khả năng: <b>{conjugated.potential}</b></div>
-              <div>🎯 Thể ý định: <b>{conjugated.volitional}</b></div>
-              <div>📢 Thể mệnh lệnh: <b>{conjugated.imperative}</b></div>
+              <Item label="📘 Từ điển" value={conjugated.dictionary} />
+              <Item label="💬 Lịch sự" value={conjugated.masu} />
+              <Item label="🔥 て" value={conjugated.te} />
+              <Item label="⏪ Quá khứ" value={conjugated.ta} />
+              <Item label="❌ Phủ định" value={conjugated.nai} />
+              <Item label="⚡ Khả năng" value={conjugated.potential} />
+              <Item label="🎯 Ý định" value={conjugated.volitional} />
+              <Item label="📢 Mệnh lệnh" value={conjugated.imperative} />
 
             </div>
           )}
-
         </div>
       )}
 
       {/* GROUPS */}
-      <div className="grid md:grid-cols-3 gap-5">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
 
         <GroupCard title="Nhóm 1" color="text-red-600" data={group1} />
         <GroupCard title="Nhóm 2" color="text-blue-600" data={group2} />
@@ -152,39 +140,47 @@ export default function VerbConjugation() {
   )
 }
 
-// =====================
-// GROUP CARD
-// =====================
+/* ===================== ITEM ===================== */
+function Item({ label, value }) {
+  return (
+    <div className="flex justify-between gap-2">
+      <span className="text-gray-500">{label}</span>
+      <span className="font-semibold">{value}</span>
+    </div>
+  )
+}
+
+/* ===================== GROUP CARD ===================== */
 function GroupCard({ title, color, data }) {
   return (
-    <div className="bg-white border rounded p-4">
+    <div className="bg-white border rounded-xl p-3 sm:p-4">
 
-      <div className={`text-2xl font-bold mb-4 ${color}`}>
+      <div className={`text-lg sm:text-xl font-bold mb-3 ${color}`}>
         {title}
-        <span className="ml-2 text-lg text-gray-500">
+        <span className="ml-2 text-sm text-gray-500">
           ({data.length})
         </span>
       </div>
 
-      <div className="space-y-2 max-h-[600px] overflow-auto">
+      <div className="space-y-2 max-h-[400px] overflow-y-auto pr-1">
 
         {data.map((v) => (
           <div
             key={v._id}
-            className="border rounded px-3 py-2 hover:bg-gray-50"
+            className="border rounded-lg px-3 py-2 hover:bg-gray-50"
           >
-            <div className="text-xl font-semibold">
+            <div className="text-base sm:text-lg font-semibold">
               {v.hiragana}
             </div>
 
             {v.kanji && (
-              <div className="text-gray-600">
+              <div className="text-gray-600 text-sm">
                 {v.kanji}
               </div>
             )}
 
             {v.meaning && (
-              <div className="text-sm text-gray-500">
+              <div className="text-xs sm:text-sm text-gray-500">
                 {v.meaning}
               </div>
             )}

@@ -1,61 +1,210 @@
+// ReviewSession.jsx
+
 import { useEffect, useState } from "react"
 import { useNavigate } from "react-router-dom"
 
 import FlashcardReview from "./FlashcardReview"
 import QuizReview from "./QuizReview"
 import TypingReview from "./TypingReview"
-import { getReviewSession } from "../../services/vocab.service"
+
+import { getReviewSession }
+  from "../../services/vocab.service"
+
+const SESSION_STORAGE_KEY =
+  "reviewSessionData"
+
+const FLASHCARD_PROGRESS_KEY =
+  "flashcardProgress"
 
 export default function ReviewSession() {
+
   const navigate = useNavigate()
 
   const reviewConfig =
-    JSON.parse(localStorage.getItem("reviewConfig")) || null
+    JSON.parse(
+      localStorage.getItem(
+        "reviewConfig"
+      )
+    ) || null
 
-  const [session, setSession] = useState(null)
-  const [loading, setLoading] = useState(true)
-  const [error, setError] = useState(null)
+  const [session, setSession]
+    = useState(null)
+
+  const [loading, setLoading]
+    = useState(true)
+
+  const [error, setError]
+    = useState(null)
 
   useEffect(() => {
-    if (!reviewConfig) return
 
-    const { lessons, topics, partsOfSpeech, mode, directions } = reviewConfig
+    if (!reviewConfig) {
+
+      setLoading(false)
+
+      return
+    }
+
+    /* ======================
+        CHECK SAVED SESSION
+    ====================== */
+
+    const savedRaw =
+      localStorage.getItem(
+        SESSION_STORAGE_KEY
+      )
+
+    if (savedRaw) {
+
+      try {
+
+        const saved =
+          JSON.parse(savedRaw)
+
+        const isSameConfig =
+          JSON.stringify(saved.config)
+          === JSON.stringify(reviewConfig)
+
+        /* ======================
+            RESUME SESSION
+        ====================== */
+
+        if (isSameConfig) {
+
+          setSession(saved.session)
+
+          setLoading(false)
+
+          return
+        }
+
+      } catch {
+
+        localStorage.removeItem(
+          SESSION_STORAGE_KEY
+        )
+      }
+    }
+
+    /* ======================
+        CREATE NEW SESSION
+    ====================== */
+
+    const {
+      lessons,
+      topics,
+      partsOfSpeech,
+      mode,
+      directions,
+    } = reviewConfig
 
     setLoading(true)
+
+    /* ======================
+        CLEAR OLD PROGRESS
+    ====================== */
+
+    localStorage.removeItem(
+      FLASHCARD_PROGRESS_KEY
+    )
+
     getReviewSession({
-      lessons: lessons.join(","),
-      topics: topics.join(","),
-      partsOfSpeech: partsOfSpeech.join(","),
+
+      lessons:
+        lessons.join(","),
+
+      topics:
+        topics.join(","),
+
+      partsOfSpeech:
+        partsOfSpeech.join(","),
+
       mode,
-      directions: directions.join(","),
+
+      directions:
+        directions.join(","),
     })
+
       .then((res) => {
-        setSession(res.data)
+
+        const data = res.data
+
+        setSession(data)
+
+        /* ======================
+            SAVE SESSION
+        ====================== */
+
+        localStorage.setItem(
+
+          SESSION_STORAGE_KEY,
+
+          JSON.stringify({
+            config: reviewConfig,
+            session: data,
+          })
+        )
       })
+
       .catch(() => {
-        setError("Không tải được phiên ôn tập")
+
+        setError(
+          "Không tải được phiên ôn tập"
+        )
       })
-      .finally(() => setLoading(false))
+
+      .finally(() => {
+
+        setLoading(false)
+      })
+
   }, [])
+
+  /* ======================
+      EXIT SESSION
+  ====================== */
+
+  const handleExit = () => {
+
+    localStorage.removeItem(
+      SESSION_STORAGE_KEY
+    )
+
+    localStorage.removeItem(
+      FLASHCARD_PROGRESS_KEY
+    )
+
+    navigate("/vocabulary")
+  }
 
   /* ======================
       STATES
   ====================== */
+
   if (!reviewConfig) {
+
     return (
       <div className="bg-white p-6 rounded shadow text-center">
-        <p className="mb-4">⚠️ Không có cấu hình ôn tập</p>
+
+        <p className="mb-4">
+          ⚠️ Không có cấu hình ôn tập
+        </p>
+
         <button
-          onClick={() => navigate("/vocabulary")}
+          onClick={() =>
+            navigate("/vocabulary")
+          }
           className="text-blue-600 underline"
         >
           ← Quay lại chọn bài
         </button>
+
       </div>
     )
   }
 
   if (loading) {
+
     return (
       <div className="bg-white p-6 rounded shadow text-center">
         ⏳ Đang tạo phiên ôn tập...
@@ -64,51 +213,79 @@ export default function ReviewSession() {
   }
 
   if (error) {
+
     return (
       <div className="bg-white p-6 rounded shadow text-center">
-        <p className="text-red-600 mb-4">{error}</p>
+
+        <p className="text-red-600 mb-4">
+          {error}
+        </p>
+
         <button
-          onClick={() => navigate("/vocabulary")}
+          onClick={() =>
+            navigate("/vocabulary")
+          }
           className="text-blue-600 underline"
         >
           ← Quay lại
         </button>
+
       </div>
     )
   }
 
-  /* ======================
-      UI
-  ====================== */
   return (
     <div className="bg-white p-6 rounded shadow space-y-4">
-      {/* TOP BAR */}
+
       <div className="flex items-center justify-between border-b pb-3">
+
         <button
-          onClick={() => navigate("/vocabulary")}
-          className="text-sm text-blue-600 hover:underline"
+          onClick={handleExit}
+          className="
+            text-sm text-blue-600
+            hover:underline
+          "
         >
-          ← Quay lại
+          ← Thoát phiên
         </button>
 
         <div className="text-sm text-gray-500">
-          🧠 {session.mode} • 📚 {reviewConfig.lessons.length} bài • 🔁{" "}
-          {reviewConfig.directions.join(", ")}
+
+          🧠 {session.mode}
+
+          {" • "}
+
+          📚 {reviewConfig.lessons.length} bài
+
+          {" • "}
+
+          🔁 {
+            reviewConfig.directions
+              .join(", ")
+          }
+
         </div>
+
       </div>
 
-      {/* CONTENT */}
       {session.mode === "flashcard" && (
-        <FlashcardReview cards={session.cards} />
+        <FlashcardReview
+          cards={session.cards}
+        />
       )}
 
       {session.mode === "quiz" && (
-        <QuizReview questions={session.questions} />
+        <QuizReview
+          questions={session.questions}
+        />
       )}
 
       {session.mode === "typing" && (
-        <TypingReview questions={session.questions} />
+        <TypingReview
+          questions={session.questions}
+        />
       )}
+
     </div>
   )
 }

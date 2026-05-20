@@ -1,7 +1,8 @@
 import { useEffect, useState } from "react"
-import axios from "axios"
-import { ChevronDown, ChevronRight } from "lucide-react"
+import { ChevronDown, ChevronRight, Search } from "lucide-react"
 import { getDuplicateHiragana } from "../../services/lesson.service"
+import { getPartOfSpeechLabel } from "../../utils/partOfSpeechMap"
+
 export default function HomophonesPage() {
     const [data, setData] = useState([])
     const [loading, setLoading] = useState(true)
@@ -15,128 +16,187 @@ export default function HomophonesPage() {
     const fetchData = async () => {
         try {
             setLoading(true)
-
             const res = await getDuplicateHiragana()
-            setData(res.data.data || [])
-        } catch (err) {
-            console.error(err)
+            setData(res.data || [])
         } finally {
             setLoading(false)
         }
     }
 
     const toggleGroup = (key) => {
-        setOpenGroups((prev) => ({
-            ...prev,
-            [key]: !prev[key],
+        setOpenGroups((p) => ({
+            ...p,
+            [key]: !p[key],
         }))
     }
 
-    const filteredData = data.filter((group) =>
-        group._id.includes(search)
+    const filteredData = data.filter((g) =>
+        g._id.includes(search.trim())
     )
 
     return (
-        <div className="p-4 max-w-5xl mx-auto">
+        <div className="max-w-6xl mx-auto px-3 sm:px-5 md:px-8 py-4 space-y-6">
+
             {/* HEADER */}
-            <h2 className="text-2xl font-bold">
-                Các từ đồng âm
-            </h2>
+            <div className="space-y-3">
+                <h2 className="
+                    text-xl sm:text-2xl md:text-3xl
+                    font-bold
+                ">
+                    🔤 Từ đồng âm (Hiragana)
+                </h2>
 
-            <p className="text-gray-600 mt-1">
-                Những từ có cùng hiragana nhưng khác nghĩa
-            </p>
+                <p className="text-gray-500 text-sm sm:text-base">
+                    Các từ phát âm giống nhau nhưng khác nghĩa
+                </p>
 
-            <div className="mt-2 inline-flex items-center gap-2 px-3 py-1 rounded-full bg-blue-100 text-blue-700 text-sm font-medium">
-                {data.length} từ đồng âm
+                <div className="inline-flex px-3 py-1 rounded-full bg-blue-100 text-blue-700 text-xs sm:text-sm">
+                    {data.length} nhóm
+                </div>
+
+                {/* SEARCH */}
+                <div className="relative max-w-md">
+                    <Search
+                        className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400"
+                        size={16}
+                    />
+                    <input
+                        value={search}
+                        onChange={(e) => setSearch(e.target.value)}
+                        placeholder="Tìm hiragana..."
+                        className="
+                            w-full
+                            pl-9 pr-3 py-2
+                            text-sm sm:text-base
+                            border rounded-xl
+                            focus:outline-none focus:ring-2 focus:ring-blue-200
+                        "
+                    />
+                </div>
             </div>
-
 
             {/* LOADING */}
             {loading && (
                 <div className="text-center py-10 text-gray-500">
-                    Đang tải dữ liệu...
-                </div>
-            )}
-
-            {/* EMPTY */}
-            {!loading && filteredData.length === 0 && (
-                <div className="text-center py-10 text-gray-500">
-                    Không có dữ liệu
+                    Đang tải...
                 </div>
             )}
 
             {/* LIST */}
-            <div className="space-y-4">
+            <div className="space-y-3">
+
                 {filteredData.map((group) => {
                     const isOpen = openGroups[group._id]
 
                     return (
                         <div
                             key={group._id}
-                            className="border rounded-2xl bg-white shadow-sm overflow-hidden"
+                            className="
+                                border rounded-2xl
+                                bg-white shadow-sm
+                                overflow-hidden
+                            "
                         >
-                            {/* HEADER */}
+
+                            {/* GROUP HEADER */}
                             <button
                                 onClick={() => toggleGroup(group._id)}
-                                className="w-full flex items-center justify-between px-4 py-4 hover:bg-gray-50 transition"
+                                className="
+                                    w-full flex items-center justify-between
+                                    px-3 sm:px-4 py-3
+                                    hover:bg-gray-50
+                                "
                             >
-                                <div className="flex items-center gap-3">
+                                <div className="flex items-center gap-2 sm:gap-3">
+
                                     {isOpen ? (
                                         <ChevronDown size={18} />
                                     ) : (
                                         <ChevronRight size={18} />
                                     )}
 
-                                    <h2 className="text-lg font-bold text-blue-600">
+                                    <span className="
+                                        text-base sm:text-lg md:text-xl
+                                        font-bold text-blue-600
+                                    ">
                                         {group._id}
-                                    </h2>
+                                    </span>
 
-                                    <span className="text-sm text-gray-500">
+                                    <span className="
+                                        text-xs sm:text-sm text-gray-500
+                                    ">
                                         {group.count} từ
                                     </span>
                                 </div>
                             </button>
 
-                            {/* CONTENT */}
+                            {/* ITEMS */}
                             {isOpen && (
                                 <div className="border-t divide-y">
+
                                     {group.items.map((item) => (
                                         <div
                                             key={item._id}
-                                            className="px-4 py-3 hover:bg-gray-50 transition"
+                                            className="
+                                                px-3 sm:px-4 py-3
+                                                flex flex-col md:flex-row
+                                                md:items-center md:justify-between
+                                                gap-2
+                                                hover:bg-gray-50
+                                            "
                                         >
+
+                                            {/* LEFT */}
                                             <div className="flex flex-wrap items-center gap-2">
-                                                {/* KANJI */}
-                                                <span className="font-semibold text-lg">
-                                                    {item.kanji && item.kanji.trim() !== ""
+
+                                                <span className="
+                                                    font-semibold
+                                                    text-base sm:text-lg
+                                                    max-w-[120px] sm:max-w-none
+                                                    break-words
+                                                ">
+                                                    {item.kanji?.trim()
                                                         ? item.kanji
-                                                        : "Không có kanji"}
+                                                        : "—"}
                                                 </span>
 
-                                                {/* MEANING */}
-                                                <span className="text-gray-700">
-                                                    — {item.meaning}
+                                                <span className="
+                                                    text-gray-600
+                                                    text-sm sm:text-base
+                                                ">
+                                                    {item.meaning}
                                                 </span>
+                                            </div>
 
-                                                {/* LESSON */}
+                                            {/* RIGHT */}
+                                            <div className="flex flex-wrap gap-2">
+
                                                 {item.lesson && (
-                                                    <span className="text-xs bg-blue-100 text-blue-700 px-2 py-1 rounded-full">
+                                                    <span className="
+                                                        text-[10px] sm:text-xs
+                                                        bg-blue-100 text-blue-700
+                                                        px-2 py-1 rounded-full
+                                                    ">
                                                         Bài {item.lesson}
                                                     </span>
                                                 )}
 
-                                                {/* TYPE */}
                                                 {item.partOfSpeech && (
-                                                    <span className="text-xs bg-gray-100 text-gray-700 px-2 py-1 rounded-full">
-                                                        {item.partOfSpeech}
+                                                    <span className="
+                                                        text-[10px] sm:text-xs
+                                                        bg-gray-100 text-gray-700
+                                                        px-2 py-1 rounded-full
+                                                    ">
+                                                        {getPartOfSpeechLabel(item.partOfSpeech)}
                                                     </span>
                                                 )}
                                             </div>
+
                                         </div>
                                     ))}
                                 </div>
                             )}
+
                         </div>
                     )
                 })}
