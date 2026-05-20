@@ -1,5 +1,6 @@
 import { useEffect, useRef } from "react"
 import { TOPICS } from "../../constants/topics"
+import { PART_OF_SPEECH } from "../../constants/partOfSpeech"
 
 const LESSON_COUNT = 50
 
@@ -24,6 +25,8 @@ export default function ReviewConfig({
   setSelectedLessons,
   selectedTopics,
   setSelectedTopics,
+  selectedPartsOfSpeech,
+  setSelectedPartsOfSpeech,
   mode,
   setMode,
   directions,
@@ -39,13 +42,16 @@ export default function ReviewConfig({
     if (!saved) return
 
     try {
-      const { lessons, topics, mode, directions } = JSON.parse(saved)
+      const { lessons, topics, partsOfSpeech, mode, directions } = JSON.parse(saved)
 
       if (lessons) {
         setSelectedLessons(lessons)
       }
       if (topics) {
         setSelectedTopics(topics)
+      }
+      if (partsOfSpeech) {
+        setSelectedPartsOfSpeech(partsOfSpeech)
       }
       if (mode) {
         setMode(mode)
@@ -82,6 +88,24 @@ export default function ReviewConfig({
     })
   }
 
+  const toggleTopic = (key) => {
+    setSelectedTopics((prev) => {
+      if (prev.includes(key)) {
+        return prev.filter((t) => t !== key)
+      }
+      return [...prev, key]
+    })
+  }
+
+  const togglePartOfSpeech = (key) => {
+    setSelectedPartsOfSpeech((prev) => {
+      if (prev.includes(key)) {
+        return prev.filter((t) => t !== key)
+      }
+      return [...prev, key]
+    }
+    )
+  }
   return (
     <div className="space-y-8">
       {/* TOP CONFIG */}
@@ -194,17 +218,47 @@ export default function ReviewConfig({
 
             <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-2">
               {TOPICS.map((item) => {
-                const checked = selectedLessons.includes(item.key)
+                const checked = selectedTopics.includes(item.key)
 
                 return (
                   <div
                     key={item.key}
-                    onClick={() => toggleLesson(item.key)}
+                    onClick={() => toggleTopic(item.key)}
                     className={`
               px-3 py-2 rounded-lg border text-sm cursor-pointer
               transition text-center
               ${checked
                         ? "bg-green-600 text-white border-green-600"
+                        : "bg-gray-100 hover:bg-gray-200"
+                      }
+            `}
+                  >
+                    {item.label}
+                  </div>
+                )
+              })}
+            </div>
+          </div>
+
+          {/* PARTS OF SPEECH */}
+          <div>
+            <h3 className="text-sm font-medium mb-2 text-gray-600">
+              Loại từ
+            </h3>
+            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-2">
+              {PART_OF_SPEECH.map((item) => {
+                const checked = selectedPartsOfSpeech.includes(item.key)
+                return (
+                  <div
+                    key={item.key}
+                    onClick={() => {
+                      togglePartOfSpeech(item.key)
+                    }}
+                    className={`
+              px-3 py-2 rounded-lg border text-sm cursor-pointer
+              transition text-center
+              ${checked
+                        ? "bg-purple-600 text-white border-purple-600"
                         : "bg-gray-100 hover:bg-gray-200"
                       }
             `}

@@ -24,6 +24,7 @@ export const getRandomVocab = (lessons, limit = 20) => {
 
 
 export const getReviewSession = (params) => {
+  console.log("Fetching review session with params:", params)
   return api.get("/vocab/review-session", { params })
 }
 

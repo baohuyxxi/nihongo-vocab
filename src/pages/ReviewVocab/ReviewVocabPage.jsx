@@ -7,6 +7,7 @@ export default function ReviewVocabPage() {
 
   const [selectedLessons, setSelectedLessons] = useState([])
   const [selectedTopics, setSelectedTopics] = useState([])
+  const [selectedPartsOfSpeech, setSelectedPartsOfSpeech] = useState([]) // ✅ thêm
 
   const [mode, setMode] = useState("typing")
   const [directions, setDirections] = useState(["jp_vi"])
@@ -16,6 +17,7 @@ export default function ReviewVocabPage() {
     const data = {
       lessons: selectedLessons,
       topics: selectedTopics, // ✅ thêm
+      partsOfSpeech: selectedPartsOfSpeech, // ✅ thêm
       mode,
       directions,
     }
@@ -30,6 +32,8 @@ export default function ReviewVocabPage() {
       setSelectedLessons={setSelectedLessons}
       selectedTopics={selectedTopics}          // ✅ thêm
       setSelectedTopics={setSelectedTopics}    // ✅ thêm
+      selectedPartsOfSpeech={selectedPartsOfSpeech}          // ✅ thêm
+      setSelectedPartsOfSpeech={setSelectedPartsOfSpeech}    // ✅ thêm
       mode={mode}
       setMode={setMode}
       directions={directions}
