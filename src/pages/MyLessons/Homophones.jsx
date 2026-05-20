@@ -1,8 +1,7 @@
 import { useEffect, useState } from "react"
 import axios from "axios"
 import { ChevronDown, ChevronRight } from "lucide-react"
-import getDuplicateHiragana from "../../services/lessons/getDuplicateHiragana"
-
+import { getDuplicateHiragana } from "../../services/lesson.service"
 export default function HomophonesPage() {
     const [data, setData] = useState([])
     const [loading, setLoading] = useState(true)
