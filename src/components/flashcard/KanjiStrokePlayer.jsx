@@ -1,117 +1,88 @@
-// KanjiStrokePlayer.jsx
-
-import { useMemo, useState }
-  from "react"
-
-import KanjiItem
-  from "./KanjiItem"
+import { useEffect, useMemo, useState } from "react"
+import KanjiItem from "./KanjiItem"
 
 function extractChars(text) {
-
   if (!text) return []
-
   return [...text].map((c) => ({
     char: c,
-    isKanji:
-      /[\u4e00-\u9faf]/.test(c),
+    isKanji: /[\u4e00-\u9faf]/.test(c),
   }))
 }
 
 export default function KanjiStrokePlayer({
   kanji,
-  size = 180,
+  size = 160,
 }) {
+  const list = useMemo(() => extractChars(kanji), [kanji])
 
-  const list = useMemo(
-    () => extractChars(kanji),
-    [kanji]
-  )
+  const [activeIndex, setActiveIndex] = useState(0)
+  const [scale, setScale] = useState(1)
 
-  const [activeIndex, setActiveIndex]
-    = useState(0)
+  useEffect(() => {
+    setActiveIndex(0)
+  }, [kanji])
 
-  if (list.length === 0) {
-    return null
-  }
+  useEffect(() => {
+    const update = () => {
+      const w = window.innerWidth
 
-  const dynamicSize = useMemo(() => {
+      let s = 1
 
-    const base = size
-    const length = list.length
+      // theo số ký tự
+      if (list.length <= 2) s = 1
+      else if (list.length <= 3) s = 0.85
+      else if (list.length <= 5) s = 0.7
+      else if (list.length <= 8) s = 0.55
+      else s = 0.45
 
-    if (window.innerWidth < 640) {
+      // mobile / ipad
+      if (w < 1024) s *= 0.8
+      if (w < 768) s *= 0.7
+      if (w < 480) s *= 0.6
 
-      if (length <= 2) {
-        return base * 0.55
-      }
+      // 🔥 FIX CHÍNH: chặn overflow cứng
+      s = Math.min(s, 0.75)
 
-      if (length <= 4) {
-        return base * 0.42
-      }
-
-      return base * 0.32
+      setScale(s)
     }
 
-    if (length <= 3) {
-      return base
-    }
+    update()
+    window.addEventListener("resize", update)
+    return () => window.removeEventListener("resize", update)
+  }, [list])
 
-    if (length <= 5) {
-      return base * 0.8
-    }
+  if (!list.length) return null
 
-    if (length <= 8) {
-      return base * 0.65
-    }
-
-    return base * 0.5
-
-  }, [list, size])
+  const dynamicSize = size * scale
 
   return (
-
     <div
       className="
         w-full
-
+        h-full
         flex
         items-center
         justify-center
-
         gap-2
-        sm:gap-4
-        md:gap-6
-
-        flex-wrap
       "
+      style={{
+        alignItems: "center",
+      }}
     >
-
       {list.map((item, i) => (
-
         <KanjiItem
           key={`${item.char}-${i}`}
-
           kanji={item.char}
-
           isKanji={item.isKanji}
-
           size={dynamicSize}
-
           active={i === activeIndex}
-
           onDone={() => {
-
             if (i === activeIndex) {
-
-              setActiveIndex(
-                (prev) => prev + 1
-              )
+              setActiveIndex((p) => p + 1)
             }
           }}
         />
-
       ))}
-
     </div>
   )
 }
