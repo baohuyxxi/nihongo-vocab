@@ -52,73 +52,34 @@ export default function FlashcardBack({
             {/* ===== KANJI MODE ===== */}
 
             {isKanji && back ? (
+                <div className="flex flex-col w-full h-full min-h-0">
 
-                <>
-
-                    {/* HÁN VIỆT */}
-
+                    {/* ===== TOP: HÁN VIỆT ===== */}
                     {back.hanViet && (
-
-                        <div
-                            className="
-                font-bold
-                text-gray-800
-
-                leading-tight
-
-                text-2xl
-                sm:text-4xl
-                md:text-6xl
-                lg:text-7xl
-
-                break-words
-              "
-                        >
+                        <div className="shrink-0 font-bold text-gray-800
+        text-2xl sm:text-4xl md:text-6xl lg:text-7xl
+        leading-tight">
                             {back.hanViet}
                         </div>
-
                     )}
 
-                    {/* JP */}
-
-                    <div
-                        className="
-              w-full
-
-              text-lg
-              sm:text-2xl
-              md:text-4xl
-
-              overflow-hidden
-            "
-                    >
-
-                        <JapaneseTextWithAudio
-                            text={back.jp}
-                            autoPlay={false}
-                            onSpeak={onSpeak}
-                        />
-
+                    {/* ===== MIDDLE: JP (FIX BUG HERE) ===== */}
+                    <div className="flex-1 min-h-0 flex items-center justify-center px-2">
+                        <div className="w-full overflow-visible">
+                            <JapaneseTextWithAudio
+                                text={back.jp}
+                                autoPlay={false}
+                                onSpeak={onSpeak}
+                            />
+                        </div>
                     </div>
 
-                    {/* VN */}
-
-                    <div
-                        className="
-              w-full
-              max-w-[90%]
-              overflow-hidden
-            "
-                    >
-
-                        <VietnameseTextAutoFit
-                            text={back.meaning}
-                        />
-
+                    {/* ===== BOTTOM: VN ===== */}
+                    <div className="shrink-0 w-full max-w-[90%] mx-auto">
+                        <VietnameseTextAutoFit text={back.meaning} />
                     </div>
 
-                </>
-
+                </div>
             ) : isJP ? (
 
                 <div

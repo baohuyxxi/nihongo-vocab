@@ -46,26 +46,41 @@ export default function FlashcardFront({
       >
 
         {isKanji ? (
-
           <div
             className="
-              w-full
-              h-full
+      w-full
+      h-full
 
-              flex
-              items-center
-              justify-center
+      flex
+      items-center
+      justify-center
 
-              scale-75
-              sm:scale-90
-              md:scale-100
-            "
+      overflow-hidden
+      px-2
+    "
           >
-            <KanjiStrokePlayer
-              kanji={text}
-            />
-          </div>
+            <div
+              className="
+        flex
+        items-center
+        justify-center
+        gap-1
 
+        max-w-full
+  
+
+        scale-[0.55]
+        sm:scale-[0.75]
+        md:scale-90
+        lg:scale-100
+
+        origin-center
+        whitespace-nowrap
+      "
+            >
+              <KanjiStrokePlayer kanji={text} />
+            </div>
+          </div>
         ) : isJP ? (
 
           <div
