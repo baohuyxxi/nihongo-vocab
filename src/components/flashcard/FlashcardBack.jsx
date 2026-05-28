@@ -6,6 +6,8 @@ import JapaneseTextWithAudio
 import VietnameseTextAutoFit
     from "../VietnameseTextAutoFit"
 
+import FlashCardBackKanji from "./FlashCardBackKanji"
+
 export default function FlashcardBack({
     back,
     onSpeak,
@@ -52,34 +54,10 @@ export default function FlashcardBack({
             {/* ===== KANJI MODE ===== */}
 
             {isKanji && back ? (
-                <div className="flex flex-col w-full h-full min-h-0">
-
-                    {/* ===== TOP: HÁN VIỆT ===== */}
-                    {back.hanViet && (
-                        <div className="shrink-0 font-bold text-gray-800
-        text-2xl sm:text-4xl md:text-6xl lg:text-7xl
-        leading-tight">
-                            {back.hanViet}
-                        </div>
-                    )}
-
-                    {/* ===== MIDDLE: JP (FIX BUG HERE) ===== */}
-                    <div className="flex-1 min-h-0 flex items-center justify-center px-2">
-                        <div className="w-full overflow-visible">
-                            <JapaneseTextWithAudio
-                                text={back.jp}
-                                autoPlay={false}
-                                onSpeak={onSpeak}
-                            />
-                        </div>
-                    </div>
-
-                    {/* ===== BOTTOM: VN ===== */}
-                    <div className="shrink-0 w-full max-w-[90%] mx-auto">
-                        <VietnameseTextAutoFit text={back.meaning} />
-                    </div>
-
-                </div>
+                <FlashCardBackKanji
+                    back={back}
+                    onSpeak={onSpeak}
+                />
             ) : isJP ? (
 
                 <div
