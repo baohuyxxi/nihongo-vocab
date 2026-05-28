@@ -377,7 +377,6 @@ export default function VerbConjugation() {
               text-xl
               sm:text-2xl
               md:text-3xl
-
               leading-8
             "
 
