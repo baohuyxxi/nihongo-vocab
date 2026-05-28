@@ -1,6 +1,10 @@
-import { useEffect, useRef } from "react"
-import HanziWriter from "hanzi-writer"
-import { RotateCcw } from "lucide-react"
+// KanjiItem.jsx
+
+import { useEffect, useRef }
+  from "react"
+
+import HanziWriter
+  from "hanzi-writer"
 
 export default function KanjiItem({
   kanji,
@@ -14,69 +18,61 @@ export default function KanjiItem({
 
   const writerRef = useRef(null)
 
-  const hasAnimatedRef = useRef(false)
+  const playedRef = useRef(false)
 
   useEffect(() => {
 
-    if (!ref.current || !kanji) return
+    if (!ref.current || !kanji) {
+      return
+    }
 
     let cancelled = false
 
     ref.current.innerHTML = ""
 
-    writerRef.current = null
+    playedRef.current = false
 
-    hasAnimatedRef.current = false
-
-    /* ======================
-        NOT KANJI
-    ====================== */
+    /* =========================
+        NON KANJI
+    ========================= */
 
     if (!isKanji) {
 
       ref.current.innerText = kanji
 
-      ref.current.style.fontSize =
-        `${size * 0.7}px`
-
-      ref.current.style.display = "flex"
-
-      ref.current.style.alignItems =
-        "center"
-
-      ref.current.style.justifyContent =
-        "center"
-
-      ref.current.style.width =
-        `${size}px`
-
-      ref.current.style.height =
-        `${size}px`
-
-      ref.current.style.fontWeight =
-        "600"
-
-      ref.current.style.lineHeight =
-        "1"
+      Object.assign(
+        ref.current.style,
+        {
+          width: `${size}px`,
+          height: `${size}px`,
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+          fontSize: `${size * 0.72}px`,
+          fontWeight: "700",
+          lineHeight: "1",
+        }
+      )
 
       if (active) {
-
         onDone?.()
       }
 
       return
     }
 
-    /* ======================
+    /* =========================
         LOAD KANJI
-    ====================== */
+    ========================= */
 
     HanziWriter
       .loadCharacterData(kanji)
 
       .then(() => {
 
-        if (cancelled) return
+        if (cancelled) {
+          return
+        }
 
         writerRef.current =
           HanziWriter.create(
@@ -87,31 +83,33 @@ export default function KanjiItem({
               height: size,
 
               padding:
-                window.innerWidth < 640
-                  ? 2
-                  : 6,
+                size < 70
+                  ? 1
+                  : size < 110
+                    ? 3
+                    : 6,
 
               showOutline: true,
               showCharacter: true,
 
               strokeAnimationSpeed:
-                window.innerWidth < 640
-                  ? 1.8
-                  : 2.2,
+                window.innerWidth < 768
+                  ? 1.6
+                  : 2,
 
               delayBetweenStrokes:
-                window.innerWidth < 640
-                  ? 30
-                  : 60,
+                window.innerWidth < 768
+                  ? 20
+                  : 50,
             }
           )
 
         if (
           active &&
-          !hasAnimatedRef.current
+          !playedRef.current
         ) {
 
-          hasAnimatedRef.current = true
+          playedRef.current = true
 
           writerRef.current
             .animateCharacter({
@@ -129,39 +127,30 @@ export default function KanjiItem({
 
       .catch(() => {
 
-        if (!ref.current) return
+        if (!ref.current) {
+          return
+        }
 
         ref.current.innerText = kanji
 
-        ref.current.style.fontSize =
-          `${size * 0.7}px`
-
-        ref.current.style.fontWeight =
-          "600"
-
-        ref.current.style.lineHeight =
-          "1"
-
-        ref.current.style.display =
-          "flex"
-
-        ref.current.style.alignItems =
-          "center"
-
-        ref.current.style.justifyContent =
-          "center"
-
-        ref.current.style.width =
-          `${size}px`
-
-        ref.current.style.height =
-          `${size}px`
+        Object.assign(
+          ref.current.style,
+          {
+            width: `${size}px`,
+            height: `${size}px`,
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            fontSize: `${size * 0.72}px`,
+            fontWeight: "700",
+            lineHeight: "1",
+          }
+        )
 
         onDone?.()
       })
 
     return () => {
-
       cancelled = true
     }
 
@@ -169,21 +158,24 @@ export default function KanjiItem({
     kanji,
     size,
     active,
-    onDone,
     isKanji,
+    onDone,
   ])
 
   return (
+
     <div
       className="
-        flex flex-col
-        items-center
-
-        gap-2
-        sm:gap-3
-
         shrink-0
+
+        flex
+        items-center
+        justify-center
       "
+      style={{
+        width: size,
+        height: size,
+      }}
     >
 
       <div
@@ -193,63 +185,8 @@ export default function KanjiItem({
           flex
           items-center
           justify-center
-
-          overflow-hidden
         "
       />
-
-      {/* REPLAY */}
-
-      {isKanji && (
-        <button
-          onClick={(e) => {
-
-            e.stopPropagation()
-
-            if (!writerRef.current)
-              return
-
-            writerRef.current
-              .hideCharacter()
-
-            writerRef.current
-              .animateCharacter({
-
-                onComplete: () => {
-
-                  writerRef.current
-                    .setCharacter(kanji)
-                },
-              })
-          }}
-
-          className="
-            w-9 h-9
-            sm:w-11 sm:h-11
-
-            rounded-full
-
-            bg-gray-200
-            hover:bg-gray-300
-            active:scale-95
-
-            transition
-
-            flex
-            items-center
-            justify-center
-
-            shadow-sm
-          "
-        >
-          <RotateCcw
-            className="
-              w-4 h-4
-              sm:w-5 sm:h-5
-            "
-          />
-        </button>
-      )}
 
     </div>
   )
