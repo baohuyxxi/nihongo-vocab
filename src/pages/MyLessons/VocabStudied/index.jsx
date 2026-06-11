@@ -14,11 +14,24 @@ import {
 
 import SearchDropdown from "./SearchDropdown"
 import VocabDetail from "./VocabDetail"
+import RecentVocabs from "./RecentVocabs"
 
 export default function VocabStudied() {
 
-  const [allVocab, setAllVocab] = useState([])
+  const [allVocab, setAllVocab] = useState(() => {
+    const savedVocab = localStorage.getItem("allVocab")
+    return savedVocab ? JSON.parse(savedVocab) : []
+  })
+  const [recentVocabs, setRecentVocabs] = useState(() => {
 
+    const savedRecent =
+      localStorage.getItem("recentVocabs")
+
+    return savedRecent
+      ? JSON.parse(savedRecent)
+      : []
+
+  })
   // ================= SEARCH =================
 
   const [jpSearch, setJpSearch] = useState("")
@@ -49,6 +62,7 @@ export default function VocabStudied() {
       const res = await getAllVocab()
 
       setAllVocab(res.data || [])
+      localStorage.setItem("allVocab", JSON.stringify(res.data || []))
 
     } catch (err) {
 
@@ -148,6 +162,28 @@ export default function VocabStudied() {
 
     setShowDropdown(false)
 
+    /* ================= RECENT ================= */
+
+    setRecentVocabs((prev) => {
+
+      const filtered = prev.filter(
+        (v) => v._id !== item._id
+      )
+
+      const updated = [
+        item,
+        ...filtered,
+      ].slice(0, 20)
+
+      localStorage.setItem(
+        "recentVocabs",
+        JSON.stringify(updated)
+      )
+
+      return updated
+
+    })
+
   }
 
   /* ================= SAVE ================= */
@@ -175,209 +211,259 @@ export default function VocabStudied() {
 
     <div className="min-h-screen bg-gray-50">
 
-      {/* HEADER */}
+      <div
+        className="
+        max-w
+        mx-auto
+        px-3
+        sm:px-5
+        py-5
+        grid
+        grid-cols-1
+        lg:grid-cols-5
+        gap-6
+        items-start
+      "
+      >
 
-      <div className="sticky top-0 bg-white border-b z-40">
+        {/* LEFT */}
 
         <div
           className="
-            max-w-5xl
-            mx-auto
-
-            px-3
-            sm:px-5
-
-            py-4
-          "
+          lg:col-span-4
+        "
         >
 
-          {/* TITLE */}
+          {/* HEADER */}
 
           <div
             className="
-              flex items-center
-              gap-3
-              mb-4
-            "
+            sticky
+            top-0
+
+            bg-white
+
+            border-b
+
+            z-40
+          "
           >
 
-            <BookOpen size={28} />
+            <div
+              className="
+              px-3
+              sm:px-5
 
-            <div>
+              py-4
+            "
+            >
+
+              {/* TITLE */}
 
               <div
                 className="
-                  text-xl
-                  sm:text-2xl
-                  font-bold
-                "
+                flex items-center
+                gap-3
+
+                mb-4
+              "
               >
-                Từ vựng đã học
+
+                <BookOpen size={28} />
+
+                <div>
+
+                  <div
+                    className="
+                    text-xl
+                    sm:text-2xl
+                    font-bold
+                  "
+                  >
+                    Từ vựng đã học
+                  </div>
+
+                  <div
+                    className="
+                    text-xs
+                    sm:text-sm
+
+                    text-gray-500
+                  "
+                  >
+                    Search Japanese Vocabulary
+                  </div>
+
+                </div>
+
               </div>
 
+              {/* SEARCH */}
+
               <div
+                ref={wrapperRef}
                 className="
-                  text-xs
-                  sm:text-sm
-                  text-gray-500
-                "
+                relative
+                space-y-3
+              "
               >
-                Search Japanese Vocabulary
+
+                {/* JP */}
+
+                <div
+                  className="
+                  flex items-center
+                  gap-3
+
+                  border
+                  rounded-2xl
+
+                  bg-gray-50
+
+                  px-4
+                  py-3
+                "
+                >
+
+                  <Search
+                    size={20}
+                    className="
+                    text-gray-400
+                    shrink-0
+                  "
+                  />
+
+                  <JPTableInput
+                    value={jpSearch}
+                    onChange={(v) => {
+
+                      setJpSearch(v)
+
+                      setViSearch("")
+
+                      setShowDropdown(true)
+                      setActiveIndex(0)
+
+                    }}
+                    placeholder="食べる / たべる / eat"
+                    className="
+                    text-base
+                    sm:text-lg
+
+                    w-full
+                  "
+                  />
+
+                </div>
+
+                {/* VI */}
+
+                <div
+                  className="
+                  flex items-center
+                  gap-3
+
+                  border
+                  rounded-2xl
+
+                  bg-gray-50
+
+                  px-4
+                  py-3
+                "
+                >
+
+                  <Languages
+                    size={20}
+                    className="
+                    text-gray-400
+                    shrink-0
+                  "
+                  />
+
+                  <input
+                    value={viSearch}
+                    onChange={(e) => {
+
+                      setViSearch(
+                        e.target.value
+                      )
+
+                      setJpSearch("")
+
+                      setShowDropdown(true)
+                      setActiveIndex(0)
+
+                    }}
+                    placeholder="ăn / học sinh / trường học"
+                    className="
+                    bg-transparent
+                    outline-none
+
+                    text-base
+                    sm:text-lg
+
+                    w-full
+                  "
+                  />
+
+                </div>
+
+                <SearchDropdown
+                  search={
+                    jpSearch ||
+                    viSearch
+                  }
+                  filtered={filtered}
+                  recentVocabs={recentVocabs}
+                  activeIndex={activeIndex}
+                  showDropdown={showDropdown}
+                  handleSelect={handleSelect}
+                  setActiveIndex={setActiveIndex}
+                />
+
               </div>
 
             </div>
 
           </div>
 
-          {/* SEARCH */}
+          {/* DETAIL */}
 
-          <div
-            ref={wrapperRef}
-            className="
-              relative
-              space-y-3
-            "
-          >
+          <div className="mt-5">
 
-            {/* JP SEARCH */}
-
-            <div
-              className="
-                flex items-center
-                gap-3
-
-                border
-                rounded-2xl
-
-                bg-gray-50
-
-                px-4
-                py-3
-              "
-            >
-
-              <Search
-                size={20}
-                className="text-gray-400 shrink-0"
-              />
-
-              <JPTableInput
-                value={jpSearch}
-
-                onChange={(v) => {
-
-                  setJpSearch(v)
-
-                  // clear ô VI
-                  setViSearch("")
-
-                  setShowDropdown(true)
-                  setActiveIndex(0)
-
-                }}
-
-                placeholder="食べる / たべる / eat"
-
-                className="
-                  text-base
-                  sm:text-lg
-
-                  w-full
-
-                  whitespace-nowrap
-                  overflow-hidden
-                  text-ellipsis
-                "
-              />
-
-            </div>
-
-            {/* VI SEARCH */}
-
-            <div
-              className="
-                flex items-center
-                gap-3
-
-                border
-                rounded-2xl
-
-                bg-gray-50
-
-                px-4
-                py-3
-              "
-            >
-
-              <Languages
-                size={20}
-                className="text-gray-400 shrink-0"
-              />
-
-              <input
-                value={viSearch}
-
-                onChange={(e) => {
-
-                  setViSearch(e.target.value)
-
-                  // clear ô JP
-                  setJpSearch("")
-
-                  setShowDropdown(true)
-                  setActiveIndex(0)
-
-                }}
-
-                placeholder="ăn / học sinh / trường học"
-
-                className="
-                  bg-transparent
-                  outline-none
-
-                  text-base
-                  sm:text-lg
-
-                  w-full
-                "
-              />
-
-            </div>
-
-            {/* DROPDOWN */}
-
-            <SearchDropdown
-              search={jpSearch || viSearch}
-              filtered={filtered}
-              activeIndex={activeIndex}
-              showDropdown={showDropdown}
-              handleSelect={handleSelect}
+            <VocabDetail
+              selected={selected}
+              onSave={handleSave}
             />
 
           </div>
 
         </div>
 
-      </div>
+        {/* RIGHT */}
 
-      {/* CONTENT */}
-
-      <div
-        className="
-          max-w-5xl
-          mx-auto
-
-          px-3
-          sm:px-5
-
-          py-5
+        <div
+          className="
+          lg:col-span-1
         "
-      >
+        >
 
-        <VocabDetail
-          selected={selected}
-          onSave={handleSave}
-        />
+          <div
+            className="
+            lg:sticky
+            lg:top-5
+          "
+          >
+
+            <RecentVocabs
+              recentVocabs={recentVocabs}
+              onSelect={handleSelect}
+            />
+
+          </div>
+
+        </div>
 
       </div>
 
