@@ -79,7 +79,8 @@ export default function SearchDropdown({
         e.preventDefault()
 
         handleSelect(
-          filtered[activeIndex]
+          filtered[activeIndex],
+          false
         )
 
       }
@@ -168,7 +169,7 @@ export default function SearchDropdown({
               }
 
               onClick={() =>
-                handleSelect(item)
+                handleSelect(item, false)
               }
 
               onMouseEnter={() =>

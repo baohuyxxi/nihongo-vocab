@@ -56,7 +56,7 @@ export default function RecentVocabs({
               key={item._id}
 
               onClick={() =>
-                onSelect?.(item)
+                onSelect?.( item, false )
               }
 
               className="

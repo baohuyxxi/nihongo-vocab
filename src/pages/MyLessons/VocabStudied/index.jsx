@@ -145,24 +145,31 @@ export default function VocabStudied() {
 
   /* ================= SELECT ================= */
 
-  const handleSelect = (item) => {
+  const handleSelect = (
+    item,
+    updateSearch = true
+  ) => {
 
     setSelected(item)
 
-    setJpSearch(
-      item.kanji ||
-      item.hiragana ||
-      item.katakana ||
-      ""
-    )
+    // Chỉ cập nhật ô tìm kiếm
+    // khi được yêu cầu
+    if (updateSearch) {
 
-    setViSearch(
-      item.meaning || ""
-    )
+      setJpSearch(
+        item.kanji ||
+        item.hiragana ||
+        item.katakana ||
+        ""
+      )
+
+      setViSearch(
+        item.meaning || ""
+      )
+
+    }
 
     setShowDropdown(false)
-
-    /* ================= RECENT ================= */
 
     setRecentVocabs((prev) => {
 
