@@ -15,6 +15,8 @@ export default function RecentVocabs({
       "
     >
 
+      {/* HEADER */}
+
       <div
         className="
           px-4
@@ -52,13 +54,19 @@ export default function RecentVocabs({
 
             <button
               key={item._id}
-              onClick={() => onSelect(item)}
+
+              onClick={() =>
+                onSelect?.(item)
+              }
+
               className="
                 w-full
+
                 px-3
-                py-2
+                py-3
 
                 hover:bg-gray-50
+                transition
 
                 text-left
               "
@@ -66,43 +74,69 @@ export default function RecentVocabs({
 
               <div
                 className="
-                  flex
-                  items-center
+                  grid
+                  grid-cols-[70px_70px_100px_1fr]
                   gap-2
+
+                  items-center
 
                   text-sm
                 "
               >
 
+                {/* KANJI */}
+
                 <div
                   className="
                     font-bold
-                    min-w-[70px]
+                    text-gray-900
+
+                    truncate
                   "
                 >
                   {item.kanji ||
                     item.hiragana ||
-                    item.katakana}
+                    item.katakana ||
+                    "ー"}
                 </div>
+
+                {/* HAN VIET */}
+
+                <div
+                  className="
+                    text-xs
+                    text-gray-400
+
+                    truncate
+                  "
+                >
+                  {item.hanViet || "—"}
+                </div>
+
+                {/* HIRAGANA */}
 
                 <div
                   className="
                     text-gray-500
-                    min-w-[90px]
+
+                    truncate
                   "
                 >
                   {item.hiragana ||
-                    item.katakana}
+                    item.katakana ||
+                    "—"}
                 </div>
+
+                {/* MEANING */}
 
                 <div
                   className="
-                    flex-1
-                    truncate
                     text-gray-700
+
+                    truncate
                   "
                 >
-                  {item.meaning}
+                  {item.meaning || "—"}
                 </div>
 
               </div>
