@@ -46,6 +46,13 @@ export default function MyLessons() {
       icon: Languages,
       color: "from-pink-500 to-pink-600",
     },
+    {
+      id: "topic-manager",
+      title: "Quản lý chủ đề",
+      desc: "Tạo và quản lý các chủ đề học tập",
+      icon: BookOpen,
+      color: "from-gray-500 to-gray-600",
+    }
   ]
 
   return (

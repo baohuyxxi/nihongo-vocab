@@ -22,6 +22,7 @@ const Adverbs = lazy(() => import("../pages/MyLessons/Adverbs"));
 const VerbConjugation = lazy(() => import("../pages/MyLessons/VerbConjugation"));
 const Homophones = lazy(() => import("../pages/MyLessons/Homophones"))
 const VocabStudied  = lazy(() => import("../pages/MyLessons/VocabStudied/index"))
+const TopicManagerPage = lazy(() => import("../pages/MyLessons/TopicManager/TopicManagerPage"))
 export default function AppRoutes() {
   return (
     <Routes>
@@ -124,6 +125,14 @@ export default function AppRoutes() {
         element={
           <Suspense fallback={<div>Loading...</div>}>
             <VocabStudied />
+          </Suspense>
+        }
+      />
+      <Route
+        path="/my-lessons/topic-manager"
+        element={
+          <Suspense fallback={<div>Loading...</div>}>
+            <TopicManagerPage />
           </Suspense>
         }
       />

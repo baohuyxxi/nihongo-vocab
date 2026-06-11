@@ -3,6 +3,7 @@ import { useEffect, useRef } from "react"
 export default function SearchDropdown({
   search,
   filtered,
+  recentVocabs,
   activeIndex,
   showDropdown,
   handleSelect,
@@ -109,12 +110,15 @@ export default function SearchDropdown({
   // HIDE
   // =====================
 
-  if (
-    !showDropdown ||
-    !search
-  ) return null
+  if (!showDropdown) {
+    return null
+  }
 
+  const displayItems = search
+    ? filtered
+    : recentVocabs
   return (
+
 
     <div
       className="
@@ -134,7 +138,7 @@ export default function SearchDropdown({
       "
     >
 
-      {filtered.length === 0 ? (
+      {displayItems.length === 0 ? (
 
         <div
           className="
@@ -154,7 +158,7 @@ export default function SearchDropdown({
           "
         >
 
-          {filtered.map((item, index) => (
+          {displayItems.map((item, index) => (
 
             <button
               key={`${item._id}-${index}`}
