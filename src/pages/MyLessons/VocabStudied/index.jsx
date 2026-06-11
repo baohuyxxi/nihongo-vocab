@@ -220,7 +220,7 @@ export default function VocabStudied() {
         py-5
         grid
         grid-cols-1
-        lg:grid-cols-5
+        lg:grid-cols-4
         gap-6
         items-start
       "
@@ -230,7 +230,7 @@ export default function VocabStudied() {
 
         <div
           className="
-          lg:col-span-4
+          lg:col-span-3
         "
         >
 
