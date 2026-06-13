@@ -321,12 +321,9 @@ export default function VocabStudied() {
                   className="
                   flex items-center
                   gap-3
-
                   border
                   rounded-2xl
-
                   bg-gray-50
-
                   px-4
                   py-3
                 "
@@ -369,12 +366,9 @@ export default function VocabStudied() {
                   className="
                   flex items-center
                   gap-3
-
                   border
                   rounded-2xl
-
                   bg-gray-50
-
                   px-4
                   py-3
                 "
