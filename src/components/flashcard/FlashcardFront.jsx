@@ -7,6 +7,9 @@ import VietnameseTextAutoFit
 import KanjiStrokePlayer
   from "./KanjiStrokePlayer"
 
+import KanjiText from "./KanjiText"
+
+
 export default function FlashcardFront({
   text,
   isJP,
@@ -78,7 +81,7 @@ export default function FlashcardFront({
         whitespace-nowrap
       "
             >
-              <KanjiStrokePlayer kanji={text} />
+              <KanjiText text={text} />
             </div>
           </div>
         ) : isJP ? (
