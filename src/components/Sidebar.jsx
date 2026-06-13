@@ -1,6 +1,6 @@
 import { useState } from "react"
 import MenuItem from "./MenuItem"
-import { Home, Brain, BookOpen, Settings, Menu , Aperture} from "lucide-react"
+import { Home, Brain, BookOpen, Settings, Menu , Aperture, ScrollText} from "lucide-react"
 
 export default function Sidebar() {
   const [mobileOpen, setMobileOpen] = useState(false)
@@ -69,6 +69,7 @@ export default function Sidebar() {
           <MenuItem to="/vocabulary" label="Ôn từ vựng" icon={Brain} open={desktopOpen || mobileOpen} />
           <MenuItem to="/vocab-table?lesson=1" label="Bảng từ vựng" icon={BookOpen} open={desktopOpen || mobileOpen} />
           <MenuItem to="/my-lessons" label="Phần học của tôi" icon={Aperture} open={desktopOpen || mobileOpen} />
+          <MenuItem to="/grammar" label="Ngữ pháp" icon={ScrollText} open={desktopOpen || mobileOpen} />
           <MenuItem to="/settings" label="Cài đặt" icon={Settings} open={desktopOpen || mobileOpen} />
         </nav>
       </aside>
