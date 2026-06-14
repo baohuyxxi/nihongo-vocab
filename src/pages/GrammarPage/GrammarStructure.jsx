@@ -31,12 +31,15 @@ export default function GrammarStructure({ structure }) {
         // 2. Lấy cột chứa các loại từ (Cột 1) làm cột cơ sở để dựng khung hàng chuẩn
         const baseCol = 1;
         const subRowsPerNode = 2; // Mỗi từ chiếm 2 hàng trong Grid để dễ tính toán dãn cách
-        const totalRows = colsData[baseCol].length * subRowsPerNode;
+
+        // Sửa lỗi ở đây: Sử dụng optional chaining (?.) để tránh văng lỗi nếu cột 1 rỗng
+        const baseNodes = colsData[baseCol] || [];
+        const totalRows = Math.max(1, baseNodes.length * subRowsPerNode);
 
         const nodeIntervals = {};
 
         // Gán hàng cố định cho cột cơ sở (Cột 1)
-        colsData[baseCol].forEach((node, idx) => {
+        baseNodes.forEach((node, idx) => {
             const start = idx * subRowsPerNode + 1;
             const end = start + subRowsPerNode;
             nodeIntervals[node.id] = [start, end];
@@ -101,6 +104,8 @@ export default function GrammarStructure({ structure }) {
             // Một node hiển thị ngoặc trái khi nó là node gom nhóm ở cột trước (ví dụ: node 1)
             // Hoặc bản thân nó thuộc nhóm con trỏ về 1 node duy nhất ở bên trái mà node đó bao phủ nhiều hàng
             let hasLeftBrace = leftNeighbors.length >= 2;
+
+
             if (!hasLeftBrace && leftNeighbors.length === 1) {
                 const leftNodeId = leftNeighbors[0];
                 const leftNodeRightNeighbors = (adj[leftNodeId] || []).filter(id => nodeMap[id]?.position?.col === col);
@@ -108,12 +113,13 @@ export default function GrammarStructure({ structure }) {
                 if (leftNodeRightNeighbors.length >= 2) {
                     const sortedGroup = leftNodeRightNeighbors.sort((a, b) => nodeIntervals[a][0] - nodeIntervals[b][0]);
                     if (sortedGroup[0] === node.id) {
-                        hasLeftBrace = true;
+                        hasLeftBrace = false; // Node này không cần ngoặc trái vì nó là node gom nhóm ở cột trước
                         // Gán dải hàng cho khung chứa ngoặc trái bằng đúng dải hàng bao phủ của toàn bộ nhóm
                         node.leftBraceRows = [nodeIntervals[sortedGroup[0]][0], nodeIntervals[sortedGroup[sortedGroup.length - 1]][1]];
                     }
                 }
             }
+            console.log(node.id, hasLeftBrace, hasRightBrace);
 
             return {
                 ...node,
@@ -155,7 +161,7 @@ export default function GrammarStructure({ structure }) {
             </div>
 
             <div className="w-full overflow-x-auto bg-white border rounded-lg mb-6 p-4">
-                <div 
+                <div
                     className="grid items-stretch w-max max-w-full"
                     style={{
                         gridTemplateColumns: `repeat(${maxCol}, max-content 24px) max-content`,
@@ -178,8 +184,8 @@ export default function GrammarStructure({ structure }) {
                                     {renderNodeContent(node)}
                                 </div>
 
-                                {/* 2. DẤU NGOẶC ĐÓNG } (Nằm bên trái của cột hiện tại) */}
-                                {node.hasLeftBrace && (
+                                {/* 2. DẤU NGOẶC ĐÓNG */}
+                                {node.hasLeftBrace &&  (
                                     <div
                                         style={{
                                             gridColumnStart: node.gridColStart - 1,
@@ -189,12 +195,12 @@ export default function GrammarStructure({ structure }) {
                                         className="flex items-center justify-center relative my-1"
                                     >
                                         <svg className="w-3.5 h-[96%] text-gray-700" viewBox="0 0 20 100" preserveAspectRatio="none">
-                                            <path d="M0,2 C8,2 8,46 18,50 C8,54 8,98 0,98" fill="none" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round"/>
+                                            <path d="M0,2 C8,2 8,46 18,50 C8,54 8,98 0,98" fill="none" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" />
                                         </svg>
                                     </div>
                                 )}
 
-                                {/* 3. DẤU NGOẶC MỞ { (Nằm bên phải của cột hiện tại) */}
+                                {/* 3. DẤU NGOẶC MỞ */}
                                 {node.hasRightBrace && (
                                     <div
                                         style={{
@@ -205,7 +211,7 @@ export default function GrammarStructure({ structure }) {
                                         className="flex items-center justify-center relative my-1"
                                     >
                                         <svg className="w-3.5 h-[96%] text-gray-700" viewBox="0 0 20 100" preserveAspectRatio="none">
-                                            <path d="M20,2 C12,2 12,46 2 50 C12,54 12,98 20,98" fill="none" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round"/>
+                                            <path d="M20,2 C12,2 12,46 2,50 C12,54 12,98 20,98" fill="none" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" />
                                         </svg>
                                     </div>
                                 )}
