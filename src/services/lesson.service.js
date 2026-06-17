@@ -25,3 +25,7 @@ export const getAllAdverbs = () => {
 export const getDuplicateHiragana = () => {
   return api.get("/lessons/duplicate-hiragana")
 }
+
+export const getKanjiFrequency = () => {
+  return api.get("/lessons/kanji-frequency")
+} 
