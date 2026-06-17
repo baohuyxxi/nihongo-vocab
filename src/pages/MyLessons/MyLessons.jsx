@@ -5,6 +5,7 @@ import {
   Volume2,
   GitBranch,
   Languages,
+  LanguagesIcon,
 } from "lucide-react"
 
 export default function MyLessons() {
@@ -52,7 +53,14 @@ export default function MyLessons() {
       desc: "Tạo và quản lý các chủ đề học tập",
       icon: BookOpen,
       color: "from-gray-500 to-gray-600",
-    }
+    },
+    {
+      id: "kanji-frequency",
+      title: "Kanji phổ biến",
+      desc: "Các Kanji xuất hiện nhiều nhất trong từ vựng",
+      icon: LanguagesIcon,
+      color: "from-red-500 to-red-600",
+    },
   ]
 
   return (
