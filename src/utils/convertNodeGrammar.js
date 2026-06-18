@@ -50,3 +50,33 @@ export const verbForm = (verbForm) => {
 
     return map[verbForm] || verbForm
 }
+
+
+    //  type: {
+    //         type: String,
+    //         enum: [
+    //             "custom",
+    //             "noun",
+    //             "adj_i",
+    //             "adj_na",
+    //             "verb",
+    //             "keyword",
+    //         ],
+    //         required: true,
+    //     },   
+
+export const typeForm = (typeForm) => {
+    const map = {
+        custom: "Tùy chỉnh",
+        noun: "Danh từ",
+        adj_i: "Tính từ い",
+        adj_na: "Tính từ な",
+        verb: "Động từ",
+        keyword: "Từ khóa",
+    }
+
+    return map[typeForm] || typeForm
+}
+
+
+

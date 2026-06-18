@@ -1,9 +1,9 @@
 import React, { useMemo } from 'react';
-import { verbForm } from "../../utils/convertNodeGrammar";
+import { verbForm, typeForm } from "../../utils/convertNodeGrammar";
 
 export default function GrammarStructure({ structure }) {
     if (!structure?.length) return null;
-
+    // if(structure[0].label === "Từ nghi vấn") return null; 
     const { processedNodes, maxCol, totalRows } = useMemo(() => {
         const nodeMap = Object.fromEntries(structure.map(n => [n.id, n]));
         const maxCol = Math.max(...structure.map(n => n.position?.col ?? 0));
@@ -29,21 +29,28 @@ export default function GrammarStructure({ structure }) {
         colsData.forEach(arr => arr.sort((a, b) => (a.position?.row ?? 0) - (b.position?.row ?? 0)));
 
         // 2. Lấy cột chứa các loại từ (Cột 1) làm cột cơ sở để dựng khung hàng chuẩn
-        const baseCol = 1;
-        const subRowsPerNode = 2; // Mỗi từ chiếm 2 hàng trong Grid để dễ tính toán dãn cách
+        //colsData nào nhiều node nhất
+        const baseCol = colsData.reduce(
+            (maxIndex, arr, index) =>
+                arr.length > colsData[maxIndex].length ? index : maxIndex,
+            0
+        );
+        const subRowsPerNode = 1; // Mỗi từ chiếm 2 hàng trong Grid để dễ tính toán dãn cách
 
         // Sửa lỗi ở đây: Sử dụng optional chaining (?.) để tránh văng lỗi nếu cột 1 rỗng
         const baseNodes = colsData[baseCol] || [];
         const totalRows = Math.max(1, baseNodes.length * subRowsPerNode);
 
-        const nodeIntervals = {};
 
+        const nodeIntervals = {};
         // Gán hàng cố định cho cột cơ sở (Cột 1)
         baseNodes.forEach((node, idx) => {
             const start = idx * subRowsPerNode + 1;
             const end = start + subRowsPerNode;
             nodeIntervals[node.id] = [start, end];
+            console.log(node.id, [start, end]);
         });
+
 
         // Hàm helper lấy dải hàng bao phủ của các node liên kết
         const getCoverage = (nodeId, targetCol) => {
@@ -119,7 +126,6 @@ export default function GrammarStructure({ structure }) {
                     }
                 }
             }
-            console.log(node.id, hasLeftBrace, hasRightBrace);
 
             return {
                 ...node,
@@ -137,15 +143,22 @@ export default function GrammarStructure({ structure }) {
 
     // Hàm render text và modifier loại bỏ ký tự (Ví dụ: だ)
     const renderNodeContent = (node) => {
-        const baseText = verbForm(node.verbForm) || node.hiragana || node.kanji || node.label || node.type;
+        const baseText = verbForm(node.verbForm) || node.hiragana || node.kanji || node.label || typeForm(node.type);
         const removeModifier = node.modifiers?.find(m => m.action === 'remove');
 
         if (removeModifier) {
             return (
-                <div className="flex flex-col items-start justify-center font-sans text-left whitespace-nowrap">
-                    <span className="text-gray-950 font-medium">{baseText}</span>
-                    <span className="text-xs text-gray-400 mt-0.5 font-normal tracking-wide">
-                        (<span className="line-through decoration-red-500 decoration-2 text-gray-400 font-semibold">~{removeModifier.from}</span>)
+                <div className="flex items-center gap-1 font-sans text-left whitespace-nowrap">
+                    <span className="text-gray-950 font-medium">
+                        {baseText}
+                    </span>
+
+                    <span className="text-xs text-gray-400 font-normal tracking-wide">
+                        (
+                        <span className="line-through decoration-red-500 decoration-2 text-gray-400 font-semibold">
+                            ~{removeModifier.from}
+                        </span>
+                        )
                     </span>
                 </div>
             );
@@ -185,7 +198,7 @@ export default function GrammarStructure({ structure }) {
                                 </div>
 
                                 {/* 2. DẤU NGOẶC ĐÓNG */}
-                                {node.hasLeftBrace &&  (
+                                {node.hasLeftBrace && (
                                     <div
                                         style={{
                                             gridColumnStart: node.gridColStart - 1,
