@@ -1,14 +1,13 @@
-import { useEffect, useState, useRef } from "react"
+import { useEffect, useMemo, useRef, useState } from "react"
 import { useSearchParams } from "react-router-dom"
 
 import FilterGrammar from "./FilterGrammar"
 import SearchGrammar from "./SearchGrammar"
 import GrammarList from "./GrammarList"
+import GrammarDetail from "./GrammarDetail"
 
-import {
-    getAllGrammar,
-    getGrammarByLesson,
-} from "../../services/grammar.service"
+import useGrammarCache from "../../hooks/useGrammarCache"
+import { normalize } from "../../utils/normalize"
 
 export default function GrammarPage() {
 
@@ -17,38 +16,70 @@ export default function GrammarPage() {
     const lesson = Number(searchParams.get("lesson")) || 1
     const showAll = !searchParams.get("lesson")
 
-    const [grammars, setGrammars] = useState([])
-    const [loading, setLoading] = useState(false)
-
     const wrapperRef = useRef(null)
 
-    /* =========================
-       LOAD DATA
-    ========================= */
-    useEffect(() => {
-        loadData()
-    }, [lesson, showAll])
+    const [jpSearch, setJpSearch] = useState("")
+    const [viSearch, setViSearch] = useState("")
 
-    const loadData = async () => {
-        try {
-            setLoading(true)
+    // dropdown state
+    const [showDropdown, setShowDropdown] = useState(false)
+    const [activeIndex, setActiveIndex] = useState(0)
 
-            let res
+    // detail modal
+    const [selected, setSelected] = useState(null)
 
-            if (showAll) {
-                res = await getAllGrammar()
-            } else {
-                res = await getGrammarByLesson(lesson)
-            }
+    const { grammars, loading } = useGrammarCache()
 
-            setGrammars(res.data || [])
+    // filter main list
+    const filteredGrammars = useMemo(() => {
 
-        } catch (err) {
-            console.log(err)
-        } finally {
-            setLoading(false)
+        let result = grammars
+
+        if (!showAll) {
+            result = result.filter(item => item.lesson === lesson)
         }
-    }
+
+        const keyword = normalize(jpSearch || viSearch)
+
+        if (!keyword) return result
+
+        return result.filter(item =>
+            item.searchText?.includes(keyword)
+        )
+
+    }, [grammars, jpSearch, viSearch, lesson, showAll])
+
+    // suggestions dropdown
+    const suggestions = useMemo(() => {
+
+        const keyword = normalize(jpSearch || viSearch)
+
+        if (!keyword) return []
+
+        return grammars
+            .filter(x => x.searchText?.includes(keyword))
+            .slice(0, 10)
+
+    }, [grammars, jpSearch, viSearch])
+
+    // click outside to close dropdown
+    useEffect(() => {
+
+        const handleClickOutside = (e) => {
+
+            if (wrapperRef.current &&
+                !wrapperRef.current.contains(e.target)
+            ) {
+                setShowDropdown(false)
+            }
+        }
+
+        document.addEventListener("mousedown", handleClickOutside)
+
+        return () =>
+            document.removeEventListener("mousedown", handleClickOutside)
+
+    }, [])
 
     return (
         <div className="max-w-6xl px-3 sm:px-4 py-6 space-y-6">
@@ -61,11 +92,32 @@ export default function GrammarPage() {
 
             <SearchGrammar
                 wrapperRef={wrapperRef}
+
+                jpSearch={jpSearch}
+                setJpSearch={setJpSearch}
+
+                viSearch={viSearch}
+                setViSearch={setViSearch}
+
+                suggestions={suggestions}
+                showDropdown={showDropdown}
+                setShowDropdown={setShowDropdown}
+
+                activeIndex={activeIndex}
+                setActiveIndex={setActiveIndex}
+
+                setSelected={setSelected}
             />
 
             <GrammarList
-                grammars={grammars}
+                grammars={filteredGrammars}
                 loading={loading}
+                setSelected={setSelected}
+            />
+
+            <GrammarDetail
+                grammar={selected}
+                onClose={() => setSelected(null)}
             />
 
         </div>
