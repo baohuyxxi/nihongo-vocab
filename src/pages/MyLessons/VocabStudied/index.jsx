@@ -349,7 +349,7 @@ export default function VocabStudied() {
                       setActiveIndex(0)
 
                     }}
-                    placeholder="食べる / たべる / eat"
+                    placeholder="食べる / たべる  "
                     className="
                     text-base
                     sm:text-lg

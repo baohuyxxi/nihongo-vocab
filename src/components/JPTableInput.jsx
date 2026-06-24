@@ -1,5 +1,5 @@
-import { useEffect, useRef } from "react"
-import { bind, unbind } from "wanakana"
+import { useEffect, useRef, useState } from "react"
+import { toKana } from "wanakana"
 
 export default function JPTableInput({
   value,
@@ -8,59 +8,39 @@ export default function JPTableInput({
   placeholder = "ひら / カタ",
 }) {
   const ref = useRef(null)
-  const lastValueRef = useRef(value)
+  const timerRef = useRef(null)
 
-  /* ===== bind wanakana ===== */
+  const [localValue, setLocalValue] = useState(value)
+
   useEffect(() => {
-    const el = ref.current
-    if (!el) return
+    setLocalValue(value)
+  }, [value])
 
-    bind(el, {
-      IMEMode: true,
-      passRomaji: false,
-    })
-
-    return () => unbind(el)
-  }, [])
-
-  /* ===== auto resize (FIX) ===== */
   const autoResize = () => {
     const el = ref.current
     if (!el) return
 
     el.style.height = "auto"
 
-    // ⚠️ quan trọng: để DOM cập nhật xong rồi mới đo
     requestAnimationFrame(() => {
       el.style.height = el.scrollHeight + "px"
     })
   }
 
-  /* ===== sync khi load bài / đổi layout ===== */
-  useEffect(() => {
-    if (value !== lastValueRef.current && ref.current) {
-      ref.current.value = value || ""
-      lastValueRef.current = value
-      autoResize()
-    }
-  }, [value])
-
-  /* ===== init height ===== */
   useEffect(() => {
     autoResize()
-  }, [])
+  }, [localValue])
 
   return (
     <textarea
       ref={ref}
       rows={1}
-      defaultValue={value}
+      value={localValue}
       lang="ja"
       spellCheck={false}
       autoCorrect="off"
       autoCapitalize="off"
       placeholder={placeholder}
-
       className={`
         w-full
         resize-none
@@ -70,15 +50,21 @@ export default function JPTableInput({
         whitespace-pre-wrap
         break-words
         leading-7
-        min-h-[1.75rem]   /* ✅ chống che chữ */
+        min-h-[1.75rem]
         ${className}
       `}
-
-      onInput={(e) => {
+      onChange={(e) => {
         const v = e.target.value
-        lastValueRef.current = v
-        onChange(v)
-        autoResize()
+
+        setLocalValue(v)
+
+        clearTimeout(timerRef.current)
+
+        timerRef.current = setTimeout(() => {
+          const kana = toKana(v)
+          setLocalValue(kana)
+          onChange(kana)
+        }, 300)
       }}
     />
   )
