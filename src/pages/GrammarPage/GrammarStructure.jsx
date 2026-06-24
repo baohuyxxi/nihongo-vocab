@@ -48,7 +48,6 @@ export default function GrammarStructure({ structure }) {
             const start = idx * subRowsPerNode + 1;
             const end = start + subRowsPerNode;
             nodeIntervals[node.id] = [start, end];
-            console.log(node.id, [start, end]);
         });
 
 

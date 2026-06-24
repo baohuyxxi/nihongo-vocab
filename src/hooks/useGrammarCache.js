@@ -60,7 +60,6 @@ export default function useGrammarCache() {
 
         } catch (err) {
 
-            console.log(err)
 
         } finally {
 

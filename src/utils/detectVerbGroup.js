@@ -147,9 +147,6 @@ export function detectVerbGroup(input) {
 
 
   if (E_SOUNDS.includes(lastKana)) {
-    // console.log(verb)
-    // console.log("stem", stem)
-    // console.log("lastKana", lastKana)
     return 2
   }
 

@@ -41,7 +41,7 @@ export default function VocabStudied() {
 
             } catch (err) {
 
-                console.log(err)
+    
 
             }
 
