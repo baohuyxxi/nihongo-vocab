@@ -1,15 +1,16 @@
-import { useEffect, useRef } from "react"
-import { bind, unbind } from "wanakana"
+import { useEffect, useRef, useState } from "react"
+import { bind, unbind, isKana, isJapanese, isRomaji, isHiragana } from "wanakana"
 
 export default function JPTableInput({
   value,
   onChange,
   className = "",
   placeholder = "ひら / カタ",
-  onFocus = () => {}
+  onFocus = () => { }
 }) {
   const ref = useRef(null)
   const lastValueRef = useRef(value)
+  const [autoFocus, setAutoFocus] = useState(false)
 
   /* ===== bind wanakana ===== */
   useEffect(() => {
@@ -51,12 +52,40 @@ export default function JPTableInput({
     autoResize()
   }, [])
 
+  useEffect(() => {
+    if (autoFocus) {
+
+      const timer = setTimeout(() => {
+        ref.current?.focus()
+        setAutoFocus(false)
+      }, 1)
+
+      return () => clearTimeout(timer)
+    }
+  }, [autoFocus])
+
+  const handleOnInput = (e) => {
+    let v = e.target.value
+
+    if (isJapanese(v)) {
+      console.log(v)
+      onChange(v)
+      autoResize()
+
+      e.target.blur()
+      setAutoFocus(true)
+    }
+
+    lastValueRef.current = v
+    onChange(v)
+    autoResize()
+    setAutoFocus(true)
+  }
   return (
     <textarea
       ref={ref}
       rows={1}
-      defaultValue={value}
-      lang="ja"
+      value={value}
       spellCheck={false}
       autoCorrect="off"
       autoCapitalize="off"
@@ -76,14 +105,9 @@ export default function JPTableInput({
       `}
 
       onFocus={onFocus}
-      onInput={(e) => {
-       
-        const v = e.target.value
-        lastValueRef.current = v
-        onChange(v)
-        autoResize()
-      }}
-      
+
+      onInput={handleOnInput}
+
     />
   )
 }
