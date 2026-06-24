@@ -1,47 +1,67 @@
-import { useEffect, useRef, useState } from "react"
-import { toKana } from "wanakana"
+import { useEffect, useRef } from "react"
+import { bind, unbind } from "wanakana"
 
 export default function JPTableInput({
   value,
   onChange,
   className = "",
   placeholder = "ひら / カタ",
-  onFocus = () => {} 
+  onFocus = () => {}
 }) {
   const ref = useRef(null)
-  const timerRef = useRef(null)
+  const lastValueRef = useRef(value)
 
-  const [localValue, setLocalValue] = useState(value)
-
+  /* ===== bind wanakana ===== */
   useEffect(() => {
-    setLocalValue(value)
-  }, [value])
+    const el = ref.current
+    if (!el) return
 
+    bind(el, {
+      IMEMode: true,
+      passRomaji: false,
+    })
+
+    return () => unbind(el)
+  }, [])
+
+  /* ===== auto resize (FIX) ===== */
   const autoResize = () => {
     const el = ref.current
     if (!el) return
 
     el.style.height = "auto"
 
+    // ⚠️ quan trọng: để DOM cập nhật xong rồi mới đo
     requestAnimationFrame(() => {
       el.style.height = el.scrollHeight + "px"
     })
   }
 
+  /* ===== sync khi load bài / đổi layout ===== */
+  useEffect(() => {
+    if (value !== lastValueRef.current && ref.current) {
+      ref.current.value = value || ""
+      lastValueRef.current = value
+      autoResize()
+    }
+  }, [value])
+
+  /* ===== init height ===== */
   useEffect(() => {
     autoResize()
-  }, [localValue])
+  }, [])
 
   return (
     <textarea
       ref={ref}
       rows={1}
-      value={localValue}
+      defaultValue={value}
       lang="ja"
       spellCheck={false}
       autoCorrect="off"
       autoCapitalize="off"
       placeholder={placeholder}
+
       className={`
         w-full
         resize-none
@@ -51,25 +71,19 @@ export default function JPTableInput({
         whitespace-pre-wrap
         break-words
         leading-7
-        min-h-[1.75rem]
+        min-h-[1.75rem]   /* ✅ chống che chữ */
         ${className}
       `}
-      onChange={(e) => {
-        const v = e.target.value
 
-        setLocalValue(v)
-
-        clearTimeout(timerRef.current)
-
-        timerRef.current = setTimeout(() => {
-          const kana = toKana(v, {
-            IMEMode: true,
-          })
-          setLocalValue(kana)
-          onChange(kana)
-        }, 300)
-      }}
       onFocus={onFocus}
+      onInput={(e) => {
+       
+        const v = e.target.value
+        lastValueRef.current = v
+        onChange(v)
+        autoResize()
+      }}
+      
     />
   )
 }
