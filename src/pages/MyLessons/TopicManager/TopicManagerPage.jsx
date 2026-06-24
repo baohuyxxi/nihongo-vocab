@@ -132,7 +132,7 @@ TopicManagerPage() {
 
         } catch (error) {
 
-            console.log(error)
+
 
         }
 
@@ -270,9 +270,6 @@ TopicManagerPage() {
                 )
 
             } catch (error) {
-
-                console.log(error)
-
             } finally {
 
                 setLoading(false)

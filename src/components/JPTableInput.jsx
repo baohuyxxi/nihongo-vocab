@@ -6,6 +6,7 @@ export default function JPTableInput({
   onChange,
   className = "",
   placeholder = "ひら / カタ",
+  onFocus = () => {} 
 }) {
   const ref = useRef(null)
   const timerRef = useRef(null)
@@ -61,11 +62,14 @@ export default function JPTableInput({
         clearTimeout(timerRef.current)
 
         timerRef.current = setTimeout(() => {
-          const kana = toKana(v)
+          const kana = toKana(v, {
+            IMEMode: true,
+          })
           setLocalValue(kana)
           onChange(kana)
         }, 300)
       }}
+      onFocus={onFocus}
     />
   )
 }

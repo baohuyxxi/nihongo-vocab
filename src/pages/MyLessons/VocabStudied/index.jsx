@@ -66,7 +66,7 @@ export default function VocabStudied() {
 
     } catch (err) {
 
-      console.log(err)
+
 
     }
 
@@ -149,13 +149,10 @@ export default function VocabStudied() {
     item,
     updateSearch = true
   ) => {
-
     setSelected(item)
-
     // Chỉ cập nhật ô tìm kiếm
     // khi được yêu cầu
     if (updateSearch) {
-
       setJpSearch(
         item.kanji ||
         item.hiragana ||
@@ -168,15 +165,12 @@ export default function VocabStudied() {
       )
 
     }
-
     setShowDropdown(false)
-
     setRecentVocabs((prev) => {
 
       const filtered = prev.filter(
         (v) => v._id !== item._id
       )
-
       const updated = [
         item,
         ...filtered,
@@ -192,6 +186,27 @@ export default function VocabStudied() {
     })
 
   }
+
+  useEffect(() => {
+    const handlePointerDown = (e) => {
+      if (
+        wrapperRef.current &&
+        !wrapperRef.current.contains(e.target)
+      ) {
+        setShowDropdown(false)
+      }
+
+    }
+    document.addEventListener(
+      "pointerdown",
+      handlePointerDown
+    )
+    return () =>
+      document.removeEventListener(
+        "pointerdown",
+        handlePointerDown
+      )
+  }, [])
 
   /* ================= SAVE ================= */
 
@@ -340,14 +355,14 @@ export default function VocabStudied() {
                   <JPTableInput
                     value={jpSearch}
                     onChange={(v) => {
-
                       setJpSearch(v)
-
                       setViSearch("")
-
                       setShowDropdown(true)
                       setActiveIndex(0)
-
+                    }}
+                    onFocus={() => {
+                      setShowDropdown(true)
+                      setActiveIndex(0)
                     }}
                     placeholder="食べる / たべる  "
                     className="
@@ -389,12 +404,14 @@ export default function VocabStudied() {
                       setViSearch(
                         e.target.value
                       )
-
                       setJpSearch("")
-
                       setShowDropdown(true)
                       setActiveIndex(0)
 
+                    }}
+                    onFocus={() => {
+                      setShowDropdown(true)
+                      setActiveIndex(0)
                     }}
                     placeholder="ăn / học sinh / trường học"
                     className="

@@ -1,5 +1,4 @@
 export default function TableNode({ data }) {
-    console.log("Rendering TableNode with data:", data);
   const cell = {
     border: "1px solid #999",
     padding: "6px 10px",
