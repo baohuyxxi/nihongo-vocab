@@ -95,8 +95,6 @@ export default function JPTableInput({
     if (
       v.length > 0
       && /^[a-zA-Z]$/.test(v[0])
-
-
     ) {
       // console.log("set chữ đầu", toRomajiKeepCase(v[0]))
       setFirstData(v[0])
