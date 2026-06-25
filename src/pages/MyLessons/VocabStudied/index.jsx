@@ -5,7 +5,7 @@ import {
   Languages,
 } from "lucide-react"
 
-import JPTableInput from "../../../components/JPTableInput"
+import JPInput from "../../../components/JPInput/JPInput"
 
 import {
   getAllVocab,
@@ -352,7 +352,7 @@ export default function VocabStudied() {
                   "
                   />
 
-                  <JPTableInput
+                  <JPInput
                     value={jpSearch}
                     onChange={(v) => {
                       setJpSearch(v)
