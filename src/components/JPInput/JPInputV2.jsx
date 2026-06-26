@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from "react"
 import { bind, unbind, isKana, isJapanese, isRomaji, isHiragana, toRomaji, toKana, isKatakana } from "wanakana"
 
-export default function JPInput({
+export default function JPTableInput({
   value,
   onChange,
   className = "",
@@ -10,127 +10,71 @@ export default function JPInput({
 }) {
   const ref = useRef(null)
   const lastValueRef = useRef(value)
-  const [autoFocus, setAutoFocus] = useState(false)
+  useEffect(() => {
+    const el = ref.current
+    if (!el) return
 
-  const telexMap = {
-    "á": "s",
-    "à": "f",
-    "ả": "r",
-    "ã": "x",
-    "ạ": "j",
-
-    "ắ": "s",
-    "ằ": "f",
-    "ẳ": "r",
-    "ẵ": "x",
-    "ặ": "j",
-
-    "ấ": "a",
-    "ầ": "f",
-    "ẩ": "r",
-    "ẫ": "x",
-    "ậ": "j",
-
-    "é": "s",
-    "è": "f",
-    "ẻ": "r",
-    "ẽ": "x",
-    "ẹ": "j",
-
-    "í": "s",
-    "ì": "f",
-    "ỉ": "r",
-    "ĩ": "x",
-    "ị": "j",
-
-    "ó": "s",
-    "ò": "f",
-    "ỏ": "r",
-    "õ": "x",
-    "ọ": "j",
-
-    "ú": "s",
-    "ù": "f",
-    "ủ": "r",
-    "ũ": "x",
-    "ụ": "j",
-
-    "ý": "s",
-    "ỳ": "f",
-    "ỷ": "r",
-    "ỹ": "x",
-    "ỵ": "j",
-
-    "â": "a",
-    "ă": "w",
-    "ê": "e",
-    "ô": "o",
-    "ơ": "w",
-    "ư": "w"
-  }
-  const toRomajiKeepCase = (text) => {
-    const romaji = toRomaji(text)
-
-    if (
-      isKatakana(text[0]) ||
-      /^[A-Z]$/.test(text[0])
-    ) {
-      return romaji.toUpperCase()
-    }
-
-    if (isHiragana(text[0])) {
-      return romaji.toLowerCase()
-    }
-
-    return romaji
+    bind(el, {
+      IMEMode: true,
+      passRomaji: false,
+    })
+    return () => unbind(el)
+  }, [])
+  const autoResize = () => {
+    const el = ref.current
+    if (!el) return
+    el.style.height = "auto"
+    requestAnimationFrame(() => {
+      el.style.height = el.scrollHeight + "px"
+    })
   }
 
-  const [firstData, setFirstData] = useState('')
-  const [data, setData] = useState('')
-  const [dataShow, setDataShow] = useState("")
-  const [onKeyInput, setOnKeyInput] = useState(false)
-  const lastInputTimeRef = useRef(Date.now())
+  useEffect(() => {
+    if (value !== lastValueRef.current && ref.current) {
+      ref.current.value = value || ""
+      lastValueRef.current = value
+      autoResize()
+    }
+  }, [value])
+  useEffect(() => {
+    autoResize()
+  }, [])
+
+  const [data, setData] = useState("")
+
+
   const handleOnInput = (e) => {
-    const now = Date.now()
-    const diff = now - lastInputTimeRef.current
-    lastInputTimeRef.current = now
-    console.log(diff)
+    const v = e.target.value
+    lastValueRef.current = v
 
-    let v = e.target.value
+    setData(handleData(v))
+    onChange(v)
+    autoResize()
+  }
 
-    if (diff < 10) {
-      //lấy ký tự cuối cùng
-      //nếu có dấu sắt thì là s dấu huyền là f ngã là x nặng là j ô thì o â thì a ư là w
-      const lastChar = v.at(-1)
-      const telexKey = telexMap[lastChar]
-      if (telexKey) {
-        setData(data + telexKey)
+  const handleData = (text) => {
+    let result = ""
+    for (const char of text) {
+      if (isKatakana(char)) {
+        result += toRomaji(char).toUpperCase()
+        result += " "
       }
-      return
-    }
-
-    if (onKeyInput.keyCode == 231) {
-      const lastChar = v.at(-1)
-      const telexKey = telexMap[lastChar]
-
-      if (telexKey === "w") {
-         setData(data + telexKey)
+      else if (isHiragana(char)) {
+        result += toRomaji(char).toLowerCase()
+        result += " "
+      }
+      else {
+        result += char
       }
     }
-    else if (onKeyInput.keyCode == 8) {
-      setData(v)
-    }
-    else {
-      setData(handleToRomaji(v))
-
-    }
+    return result
   }
 
   const handleToKana = (text) => {
     let result = ""
     let buffer = ""
-
-    for (const char of text) {
+    const t = text.trim()
+    for (const char of t) {
       if (isJapanese(char)) {
         if (buffer) {
           const kana = toKana(buffer, {
@@ -166,24 +110,8 @@ export default function JPInput({
 
     return result
   }
-  const handleToRomaji = (text) => {
-    let result = ""
 
-    for (const char of text) {
-      if (isKatakana(char)) {
-        result += toRomaji(char).toUpperCase()
-      }
-      else if (isHiragana(char)) {
-        result += toRomaji(char).toLowerCase()
-      }
-      else {
-        result += char
-      }
-    }
-    return result
-  }
   useEffect(() => {
-
     if (data.length == 1 && (data[0] === "n" || data[0] === "N")) {
       onChange(data)
     } else {
@@ -192,16 +120,18 @@ export default function JPInput({
 
   }, [data])
   return (
-    <textarea
-      ref={ref}
-      rows={1}
-      value={value}
-      spellCheck={false}
-      autoCorrect="off"
-      autoCapitalize="off"
-      placeholder={placeholder}
+    <div>
+      <textarea
+        ref={ref}
+        rows={1}
+        defaultValue={value}
+        lang="ja"
+        spellCheck={false}
+        autoCorrect="off"
+        autoCapitalize="off"
+        placeholder={placeholder}
 
-      className={`
+        className={`
         w-full
         resize-none
         overflow-hidden
@@ -214,13 +144,15 @@ export default function JPInput({
         ${className}
       `}
 
+        onFocus={onFocus}
+        onInput={handleOnInput}
 
+      />
 
-      onFocus={onFocus}
-      onKeyDown={(e) => setOnKeyInput(e)}
+      <div>
+        {data}
+      </div>
+    </div>
 
-      onInput={handleOnInput}
-
-    />
   )
 }
