@@ -94,11 +94,11 @@ export default function JPInput({
     const now = Date.now()
     const diff = now - lastInputTimeRef.current
     lastInputTimeRef.current = now
-
+    console.log(diff)
 
     let v = e.target.value
 
-    if (diff < 30) {
+    if (diff < 100) {
       //lấy ký tự cuối cùng
       //nếu có dấu sắt thì là s dấu huyền là f ngã là x nặng là j ô thì o â thì a ư là w
       const lastChar = v.at(-1)
