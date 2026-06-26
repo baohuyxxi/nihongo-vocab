@@ -161,7 +161,6 @@ export default function VocabStudied() {
       .sort((a, b) => b.score - a.score)
       .map(x => x.item)
       .slice(0, 50)
-
   }, [
     jpSearch,
     viSearch,
