@@ -98,7 +98,7 @@ export default function JPInput({
 
     let v = e.target.value
 
-    if (diff < 10) {
+    if (diff < 30) {
       //lấy ký tự cuối cùng
       //nếu có dấu sắt thì là s dấu huyền là f ngã là x nặng là j ô thì o â thì a ư là w
       const lastChar = v.at(-1)
