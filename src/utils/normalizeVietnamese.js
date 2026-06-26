@@ -6,4 +6,6 @@ export function normalizeVietnamese(text) {
     .replace(/Đ/g, "D")
     .toLowerCase()
     .trim()
+    
 }
+
