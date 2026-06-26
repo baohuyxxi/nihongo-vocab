@@ -5,7 +5,7 @@ import {
   Languages,
 } from "lucide-react"
 
-import JPInput from "../../../components/JPInput/JPInput"
+import JPTableInput from "../../../components/JPTableInput"
 
 import {
   getAllVocab,
