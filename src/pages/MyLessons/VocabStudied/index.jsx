@@ -352,7 +352,7 @@ export default function VocabStudied() {
                   "
                   />
 
-                  <JPInput
+                  <JPTableInput
                     value={jpSearch}
                     onChange={(v) => {
                       setJpSearch(v)
