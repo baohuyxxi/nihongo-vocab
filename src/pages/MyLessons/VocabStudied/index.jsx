@@ -6,6 +6,7 @@ import {
 } from "lucide-react"
 
 import JPTableInput from "../../../components/JPTableInput"
+import { normalizeVietnamese } from "../../../utils/normalizeVietnamese"
 
 import {
   getAllVocab,
@@ -66,8 +67,6 @@ export default function VocabStudied() {
 
     } catch (err) {
 
-
-
     }
 
   }
@@ -76,11 +75,9 @@ export default function VocabStudied() {
 
   const filtered = useMemo(() => {
 
-    const jpKeyword =
-      jpSearch.toLowerCase().trim()
+    const jpKeyword = jpSearch.toLowerCase().trim()
 
-    const viKeyword =
-      viSearch.toLowerCase().trim()
+    const viKeyword = normalizeVietnamese(viSearch)
 
     // KHÔNG nhập gì
     if (!jpKeyword && !viKeyword) {
@@ -91,52 +88,79 @@ export default function VocabStudied() {
     if (jpKeyword) {
 
       return allVocab
-        .filter((item) => (
+        .map((item) => {
 
-          item.kanji
-            ?.toLowerCase()
-            .includes(jpKeyword)
+          const kanji = item.kanji?.toLowerCase() || ""
+          const hiragana = item.hiragana?.toLowerCase() || ""
+          const katakana = item.katakana?.toLowerCase() || ""
+          const romaji = item.romaji?.toLowerCase() || ""
 
-          ||
+          let score = -1
 
-          item.hiragana
-            ?.toLowerCase()
-            .includes(jpKeyword)
+          // ===== Exact =====
+          if (kanji === jpKeyword) score = 100
+          else if (hiragana === jpKeyword) score = 98
+          else if (katakana === jpKeyword) score = 96
+          else if (romaji === jpKeyword) score = 94
 
-          ||
+          // ===== Starts With =====
+          else if (kanji.startsWith(jpKeyword)) score = 90
+          else if (hiragana.startsWith(jpKeyword)) score = 88
+          else if (katakana.startsWith(jpKeyword)) score = 86
+          else if (romaji.startsWith(jpKeyword)) score = 84
 
-          item.katakana
-            ?.toLowerCase()
-            .includes(jpKeyword)
+          // ===== Contains =====
+          else if (kanji.includes(jpKeyword)) score = 80
+          else if (hiragana.includes(jpKeyword)) score = 78
+          else if (katakana.includes(jpKeyword)) score = 76
+          else if (romaji.includes(jpKeyword)) score = 74
 
-          ||
-
-          item.romaji
-            ?.toLowerCase()
-            .includes(jpKeyword)
-
-        ))
-        .slice(0, 20)
+          return { item, score }
+        })
+        .filter(x => x.score >= 0)
+        .sort((a, b) => b.score - a.score)
+        .map(x => x.item)
+        .slice(0, 50)
 
     }
-
     // SEARCH VI
     return allVocab
-      .filter((item) => (
+      .map((item) => {
+        const meaning = normalizeVietnamese(item.meaning)
+        const hanViet = normalizeVietnamese(item.hanViet)
 
-        item.meaning
-          ?.toLowerCase()
-          .includes(viKeyword)
+        let score = -1
 
-        ||
+        // Trùng hoàn toàn
+        if (meaning === viKeyword) score = 100
+        else if (hanViet === viKeyword) score = 95
 
-        item.hanViet
-          ?.toLowerCase()
-          .includes(viKeyword)
+        // Bắt đầu bằng từ khóa
+        else if (meaning.startsWith(viKeyword)) score = 90
+        else if (hanViet.startsWith(viKeyword)) score = 85
 
-      ))
-      .slice(0, 20)
+        // Có chứa nguyên từ
+        else if (
+          meaning.split(/\s+/).includes(viKeyword)
+        ) {
+          score = 80
+        }
+        else if (
+          hanViet.split(/\s+/).includes(viKeyword)
+        ) {
+          score = 75
+        }
 
+        // Chứa chuỗi
+        else if (meaning.includes(viKeyword)) score = 60
+        else if (hanViet.includes(viKeyword)) score = 55
+
+        return { item, score }
+      })
+      .filter(x => x.score >= 0)
+      .sort((a, b) => b.score - a.score)
+      .map(x => x.item)
+      .slice(0, 50)
   }, [
     jpSearch,
     viSearch,
