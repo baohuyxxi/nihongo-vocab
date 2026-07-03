@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from "react"
+import { useSearchParams } from "react-router-dom"
 
 import {
     getKanjiFrequency
@@ -15,31 +16,81 @@ import Pagination
 
 const PAGE_SIZE = 50
 
+const getCacheKey = (page) =>
+    `kanji-frequency-page-${page}`
+
 export default function KanjiFrequencyPage() {
 
-    const [data, setData] = useState([])
+    const [searchParams, setSearchParams] =
+        useSearchParams()
 
-    const [loading, setLoading]
-        = useState(true)
+    const page = Math.max(
+        1,
+        Number(
+            searchParams.get("page")
+        ) || 1
+    )
 
-    const [search, setSearch]
-        = useState("")
+    const [data, setData] =
+        useState([])
 
-    const [page, setPage]
-        = useState(1)
+    const [loading, setLoading] =
+        useState(true)
 
-    const [pagination, setPagination]
-        = useState({
+    const [search, setSearch] =
+        useState("")
+
+    const [pagination, setPagination] =
+        useState({
             total: 0,
             page: 1,
             totalPages: 1,
             limit: PAGE_SIZE,
         })
 
-    const [openGroups, setOpenGroups]
-        = useState({})
+    const [openGroups, setOpenGroups] =
+        useState({})
 
     useEffect(() => {
+
+        const cache =
+            localStorage.getItem(
+                getCacheKey(page)
+            )
+
+        if (cache) {
+
+            try {
+
+                const parsed =
+                    JSON.parse(cache)
+
+                setData(
+                    parsed.data || []
+                )
+
+                setPagination(
+                    parsed.pagination || {
+                        total: 0,
+                        page: 1,
+                        totalPages: 1,
+                        limit: PAGE_SIZE,
+                    }
+                )
+
+                setLoading(false)
+
+            } catch {
+
+                setLoading(true)
+
+            }
+
+        } else {
+
+            setLoading(true)
+
+        }
 
         fetchData(page)
 
@@ -51,26 +102,41 @@ export default function KanjiFrequencyPage() {
 
         try {
 
-            setLoading(true)
-
             const res =
                 await getKanjiFrequency({
                     page: currentPage,
                     limit: PAGE_SIZE,
                 })
 
-            setData(
+            const newData =
                 res.data || []
+
+            const newPagination = {
+                total:
+                    res?.total || 0,
+                page:
+                    res?.page || 1,
+                totalPages:
+                    res?.totalPages || 1,
+                limit:
+                    res?.limit || PAGE_SIZE,
+            }
+
+            setData(
+                newData
             )
 
             setPagination(
-                {
-                    total: res?.total || 0,
-                    page: res?.page || 1,
-                    totalPages:
-                        res?.totalPages || 1,
-                    limit: res?.limit || PAGE_SIZE,
-                }
+                newPagination
+            )
+
+            localStorage.setItem(
+                getCacheKey(currentPage),
+                JSON.stringify({
+                    data: newData,
+                    pagination: newPagination,
+                    updatedAt: Date.now(),
+                })
             )
 
         } catch (err) {
@@ -83,7 +149,9 @@ export default function KanjiFrequencyPage() {
         } finally {
 
             setLoading(false)
+
         }
+
     }
 
     const filteredData =
@@ -116,6 +184,35 @@ export default function KanjiFrequencyPage() {
                 [kanji]:
                     !prev[kanji],
             }))
+
+        }
+
+    const handlePageChange =
+        (value) => {
+
+            const nextPage =
+                typeof value === "function"
+                    ? value(page)
+                    : value
+
+            if (
+                nextPage < 1
+                ||
+                nextPage >
+                pagination.totalPages
+            ) {
+                return
+            }
+
+            setSearchParams({
+                page: String(nextPage),
+            })
+
+            window.scrollTo({
+                top: 0,
+                behavior: "smooth",
+            })
+
         }
 
     return (
@@ -149,6 +246,7 @@ export default function KanjiFrequencyPage() {
                 >
                     Đang tải...
                 </div>
+
             )}
 
             {!loading && (
@@ -185,7 +283,7 @@ export default function KanjiFrequencyPage() {
 
                                 isOpen={
                                     openGroups[
-                                    group.kanji
+                                        group.kanji
                                     ]
                                 }
 
@@ -195,6 +293,7 @@ export default function KanjiFrequencyPage() {
                                     )
                                 }
                             />
+
                         )
                     )}
 
@@ -209,9 +308,11 @@ export default function KanjiFrequencyPage() {
                         >
                             Không tìm thấy Kanji
                         </div>
+
                     )}
 
                 </div>
+
             )}
 
             <Pagination
@@ -219,9 +320,13 @@ export default function KanjiFrequencyPage() {
                 totalPages={
                     pagination.totalPages
                 }
-                setPage={setPage}
+                setPage={
+                    handlePageChange
+                }
             />
 
         </div>
+
     )
+
 }
