@@ -25,6 +25,9 @@ const VocabStudied  = lazy(() => import("../pages/MyLessons/VocabStudied/index")
 const TopicManagerPage = lazy(() => import("../pages/MyLessons/TopicManager/TopicManagerPage"))
 const GrammarPage = lazy(() => import("../pages/GrammarPage/index"))
 const KanjiFrequencyPage  = lazy(() => import("../pages/MyLessons/KanjiFrequency/KanjiFrequency"))
+
+const SettingsPage = lazy(() => import("../pages/Settings/SettingsPage"));
+const VocabManager = lazy(() => import("../pages/Settings/VocabManager/VocabManager"));
 export default function AppRoutes() {
   return (
     <Routes>
@@ -151,6 +154,22 @@ export default function AppRoutes() {
         element={
           <Suspense fallback={<div>Loading...</div>}>
             <KanjiFrequencyPage />
+          </Suspense>
+        }
+      />
+      <Route
+        path="/settings"
+        element={
+          <Suspense fallback={<div>Loading...</div>}>
+            <SettingsPage />
+          </Suspense>
+        }
+      />
+      <Route
+        path="/settings/vocabulary"
+        element={
+          <Suspense fallback={<div>Loading...</div>}>
+            <VocabManager />
           </Suspense>
         }
       />
