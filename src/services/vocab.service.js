@@ -48,3 +48,7 @@ export const getVocabByTopic = (topic) => {
 export const getAllVerbs = () => {
   return api.get("/vocab/verbs")
 }
+
+export const getVocabWithoutImage = () => {
+  return api.get("/vocab/without-image")
+}
