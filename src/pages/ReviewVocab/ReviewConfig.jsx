@@ -16,6 +16,7 @@ const DIRECTIONS = [
   { key: "jp_vi", label: "Nhật → Việt" },
   { key: "vi_jp", label: "Việt → Nhật" },
   { key: "kanji", label: "Kanji" },
+  { key: "image", label: "Hình ảnh" },
 ]
 
 const STORAGE_KEY = "reviewConfig"

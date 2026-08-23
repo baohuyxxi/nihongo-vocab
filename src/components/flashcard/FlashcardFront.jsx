@@ -7,13 +7,15 @@ import VietnameseTextAutoFit
 import KanjiStrokePlayer
   from "./KanjiStrokePlayer"
 
-import KanjiText from "./KanjiText"
+import KanjiText
+  from "./KanjiText"
 
 
 export default function FlashcardFront({
   text,
   isJP,
   isKanji,
+  isImage,
   onSpeak,
 }) {
 
@@ -48,43 +50,89 @@ export default function FlashcardFront({
         "
       >
 
-        {isKanji ? (
+        {/* =========================
+            IMAGE
+        ========================= */}
+
+        {isImage ? (
+
           <div
             className="
-      w-full
-      h-full
-
-      flex
-      items-center
-      justify-center
-
-      overflow-hidden
-      px-2
-    "
+              w-full
+              h-full
+              flex
+              items-center
+              justify-center
+              overflow-hidden
+              p-2
+              sm:p-4
+            "
           >
+
+            <img
+              src={text}
+              alt=""
+              className="
+                max-w-full
+                max-h-full
+                w-auto
+                h-auto
+                object-contain
+                rounded-xl
+                sm:rounded-2xl
+              "
+            />
+
+          </div>
+
+        ) : isKanji ? (
+
+          /* =========================
+              KANJI
+          ========================= */
+
+          <div
+            className="
+              w-full
+              h-full
+
+              flex
+              items-center
+              justify-center
+
+              overflow-hidden
+              px-2
+            "
+          >
+
             <div
               className="
-        flex
-        items-center
-        justify-center
-        gap-1
+                flex
+                items-center
+                justify-center
+                gap-1
 
-        max-w-full
-  
+                max-w-full
 
-        scale-[0.55]
-        sm:scale-[0.75]
-        md:scale-90
-        lg:scale-100
+                scale-[0.55]
+                sm:scale-[0.75]
+                md:scale-90
+                lg:scale-100
 
-        origin-center
-        whitespace-nowrap
-      "
+                origin-center
+                whitespace-nowrap
+              "
             >
               <KanjiText text={text} />
             </div>
+
           </div>
+
         ) : isJP ? (
+
+          /* =========================
+              JAPANESE
+          ========================= */
 
           <div
             className="
@@ -100,14 +148,20 @@ export default function FlashcardFront({
               overflow-hidden
             "
           >
+
             <JapaneseTextWithAudio
               text={text}
               autoPlay={false}
               onSpeak={onSpeak}
             />
+
           </div>
 
         ) : (
+
+          /* =========================
+              VIETNAMESE
+          ========================= */
 
           <div
             className="
@@ -115,9 +169,11 @@ export default function FlashcardFront({
               overflow-hidden
             "
           >
+
             <VietnameseTextAutoFit
               text={text}
             />
+
           </div>
 
         )}
