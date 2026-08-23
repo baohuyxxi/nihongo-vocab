@@ -6,71 +6,94 @@ import JapaneseTextWithAudio
 import VietnameseTextAutoFit
     from "../VietnameseTextAutoFit"
 
-import FlashCardBackKanji from "./FlashCardBackKanji"
+import FlashCardBackKanji
+    from "./FlashCardBackKanji"
+import FlashCardBackImage from "./FlashCardBackImage"
 
 export default function FlashcardBack({
     back,
     onSpeak,
     isJP,
     isKanji,
+    isImage,
 }) {
 
     return (
 
         <div
             className="
-        absolute inset-0
+                absolute inset-0
 
-        bg-green-50
+                bg-green-50
 
-        rounded-2xl sm:rounded-3xl
+                rounded-2xl sm:rounded-3xl
 
-        shadow-lg sm:shadow-xl
+                shadow-lg sm:shadow-xl
 
-        flex flex-col
-        items-center
-        justify-center
+                flex flex-col
+                items-center
+                justify-center
 
-        gap-2
-        sm:gap-4
-        md:gap-5
+                gap-2
+                sm:gap-4
+                md:gap-5
 
-        rotate-x-180
-        backface-hidden
+                rotate-x-180
+                backface-hidden
 
-        px-3
-        sm:px-6
-        md:px-8
+                px-3
+                sm:px-6
+                md:px-8
 
-        py-4
-        sm:py-6
+                py-4
+                sm:py-6
 
-        text-center
+                text-center
 
-        overflow-hidden
-      "
+                overflow-hidden
+            "
         >
 
-            {/* ===== KANJI MODE ===== */}
+            {/* =========================
+                IMAGE MODE
+            ========================= */}
 
-            {isKanji && back ? (
+            {isImage ? (
+
+                <FlashCardBackImage
+                    back={back}
+                    onSpeak={onSpeak}
+                />  
+
+            ) : isKanji && back ? (
+
+                /* =========================
+                    KANJI MODE
+                ========================= */
+
                 <FlashCardBackKanji
                     back={back}
                     onSpeak={onSpeak}
                 />
+
             ) : isJP ? (
+
+                /* =========================
+                    JP MODE
+                ========================= */
 
                 <div
                     className="
-                    w-full
-                    h-full
-                    text-[1.3rem]
-                    leading-snug
-                    sm:text-[2rem]
-                    md:text-[2.8rem]
-                    lg:text-[3rem]
-                    overflow-hidden
-                    break-words"
+                        w-full
+                        h-full
+                        text-[1.3rem]
+                        leading-snug
+                        sm:text-[2rem]
+                        md:text-[2.8rem]
+                        lg:text-[3rem]
+                        overflow-hidden
+                        break-words
+                    "
                 >
 
                     <JapaneseTextWithAudio
@@ -83,11 +106,15 @@ export default function FlashcardBack({
 
             ) : (
 
+                /* =========================
+                    VI MODE
+                ========================= */
+
                 <div
                     className="
-            w-full
-            overflow-hidden
-          "
+                        w-full
+                        overflow-hidden
+                    "
                 >
 
                     <VietnameseTextAutoFit
