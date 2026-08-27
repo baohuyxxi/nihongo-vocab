@@ -1,253 +1,192 @@
-// ReviewSession.jsx
+import {
+  useNavigate,
+} from "react-router-dom"
 
-import { useEffect, useState } from "react"
-import { useNavigate } from "react-router-dom"
+import FlashcardReview
+  from "./FlashcardReview"
 
-import FlashcardReview from "./FlashcardReview"
-import QuizReview from "./QuizReview"
-import TypingReview from "./TypingReview"
+import QuizReview
+  from "./QuizReview"
 
-import { getReviewSession }
-  from "../../services/vocab.service"
+import TypingReview
+  from "./TypingReview"
 
-const SESSION_STORAGE_KEY =
-  "reviewSessionData"
+import useReviewSession
+  from "../../hooks/useReviewSession"
 
-const FLASHCARD_PROGRESS_KEY =
-  "flashcardProgress"
 
 export default function ReviewSession() {
 
-  const navigate = useNavigate()
+  const navigate =
+    useNavigate()
 
-  const reviewConfig =
-    JSON.parse(
-      localStorage.getItem(
-        "reviewConfig"
-      )
-    ) || null
 
-  const [session, setSession]
-    = useState(null)
+  const {
 
-  const [loading, setLoading]
-    = useState(true)
+    reviewConfig,
 
-  const [error, setError]
-    = useState(null)
+    session,
 
-  useEffect(() => {
+    loading,
 
-    if (!reviewConfig) {
+    error,
 
-      setLoading(false)
+    continueReview,
 
-      return
-    }
+  } =
+    useReviewSession()
 
-    /* ======================
-        CHECK SAVED SESSION
-    ====================== */
-
-    const savedRaw =
-      localStorage.getItem(
-        SESSION_STORAGE_KEY
-      )
-
-    if (savedRaw) {
-
-      try {
-
-        const saved =
-          JSON.parse(savedRaw)
-
-        const isSameConfig =
-          JSON.stringify(saved.config)
-          === JSON.stringify(reviewConfig)
-
-        /* ======================
-            RESUME SESSION
-        ====================== */
-
-        if (isSameConfig) {
-
-          setSession(saved.session)
-
-          setLoading(false)
-
-          return
-        }
-
-      } catch {
-
-        localStorage.removeItem(
-          SESSION_STORAGE_KEY
-        )
-      }
-    }
-
-    /* ======================
-        CREATE NEW SESSION
-    ====================== */
-
-    const {
-      lessons,
-      topics,
-      partsOfSpeech,
-      mode,
-      directions,
-    } = reviewConfig
-
-    setLoading(true)
-
-    /* ======================
-        CLEAR OLD PROGRESS
-    ====================== */
-
-    localStorage.removeItem(
-      FLASHCARD_PROGRESS_KEY
-    )
-
-    getReviewSession({
-
-      lessons:
-        lessons.join(","),
-
-      topics:
-        topics.join(","),
-
-      partsOfSpeech:
-        partsOfSpeech.join(","),
-
-      mode,
-
-      directions:
-        directions.join(","),
-    })
-
-      .then((res) => {
-
-        const data = res.data
-
-        setSession(data)
-
-        /* ======================
-            SAVE SESSION
-        ====================== */
-
-        localStorage.setItem(
-
-          SESSION_STORAGE_KEY,
-
-          JSON.stringify({
-            config: reviewConfig,
-            session: data,
-          })
-        )
-      })
-
-      .catch(() => {
-
-        setError(
-          "Không tải được phiên ôn tập"
-        )
-      })
-
-      .finally(() => {
-
-        setLoading(false)
-      })
-
-  }, [])
-
-  /* ======================
-      EXIT SESSION
-  ====================== */
-
-  const handleExit = () => {
-
-    localStorage.removeItem(
-      SESSION_STORAGE_KEY
-    )
-
-    localStorage.removeItem(
-      FLASHCARD_PROGRESS_KEY
-    )
-
-    navigate("/vocabulary")
-  }
-
-  /* ======================
-      STATES
-  ====================== */
 
   if (!reviewConfig) {
 
     return (
-      <div className="bg-white p-6 rounded shadow text-center">
+
+      <div
+        className="
+          bg-white
+          p-6
+          rounded
+          shadow
+          text-center
+        "
+      >
 
         <p className="mb-4">
+
           ⚠️ Không có cấu hình ôn tập
+
         </p>
 
+
         <button
+
           onClick={() =>
             navigate("/vocabulary")
           }
-          className="text-blue-600 underline"
+
+          className="
+            text-blue-600
+            underline
+          "
         >
+
           ← Quay lại chọn bài
+
         </button>
 
       </div>
+
     )
+
   }
+
 
   if (loading) {
 
     return (
-      <div className="bg-white p-6 rounded shadow text-center">
+
+      <div
+        className="
+          bg-white
+          p-6
+          rounded
+          shadow
+          text-center
+        "
+      >
+
         ⏳ Đang tạo phiên ôn tập...
+
       </div>
+
     )
+
   }
+
 
   if (error) {
 
     return (
-      <div className="bg-white p-6 rounded shadow text-center">
+
+      <div
+        className="
+          bg-white
+          p-6
+          rounded
+          shadow
+          text-center
+        "
+      >
 
         <p className="text-red-600 mb-4">
+
           {error}
+
         </p>
 
+
         <button
+
           onClick={() =>
             navigate("/vocabulary")
           }
-          className="text-blue-600 underline"
+
+          className="
+            text-blue-600
+            underline
+          "
         >
+
           ← Quay lại
+
         </button>
 
       </div>
+
     )
+
   }
 
-  return (
-    <div className="bg-white p-6 rounded shadow space-y-4">
 
-      <div className="flex items-center justify-between border-b pb-3">
+  return (
+
+    <div
+      className="
+        bg-white
+        p-6
+        rounded
+        shadow
+        space-y-4
+      "
+    >
+
+      <div
+        className="
+          flex
+          items-center
+          justify-between
+          border-b
+          pb-3
+        "
+      >
 
         <button
-          onClick={handleExit}
+
+          onClick={() =>
+            navigate("/vocabulary")
+          }
+
           className="
-            text-sm text-blue-600
+            text-sm
+            text-blue-600
             hover:underline
           "
         >
+
           ← Thoát phiên
+
         </button>
+
 
         <div className="text-sm text-gray-500">
 
@@ -255,12 +194,17 @@ export default function ReviewSession() {
 
           {" • "}
 
-          📚 {reviewConfig.lessons.length} bài
+          📚 {
+            reviewConfig
+              .lessons
+              .length
+          } bài
 
           {" • "}
 
           🔁 {
-            reviewConfig.directions
+            reviewConfig
+              .directions
               .join(", ")
           }
 
@@ -268,24 +212,42 @@ export default function ReviewSession() {
 
       </div>
 
-      {session.mode === "flashcard" && (
-        <FlashcardReview
-          cards={session.cards}
-        />
-      )}
 
-      {session.mode === "quiz" && (
-        <QuizReview
-          questions={session.questions}
-        />
-      )}
+      {session.mode ===
+        "flashcard" && (
 
-      {session.mode === "typing" && (
-        <TypingReview
-          questions={session.questions}
-        />
-      )}
+          <FlashcardReview
+            cards={session.cards}
+            onContinue={continueReview}
+          />
+
+        )}
+
+
+      {session.mode ===
+        "quiz" && (
+
+          <QuizReview
+            questions={
+              session.questions
+            }
+          />
+
+        )}
+
+
+      {session.mode ===
+        "typing" && (
+
+          <TypingReview
+            questions={
+              session.questions
+            }
+          />
+
+        )}
 
     </div>
+
   )
 }
