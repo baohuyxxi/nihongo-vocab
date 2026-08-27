@@ -1,27 +1,3 @@
-//  partOfSpeech: {
-//             type: String,
-//             enum: [
-//                 "noun",
-
-//                 "verb_g_1",
-//                 "verb_g_2",
-//                 "verb_g_3",
-
-//                 "adj_i",
-//                 "adj_na",
-
-//                 "adverb",
-//                 "conjunction",
-
-//                 "pronoun",
-//                 "interjection",
-
-//                 "expression",
-//                 "counter",
-//                 "prefix",
-//                 "suffix",
-//             ],
-//         },
 
 export const PART_OF_SPEECH = [
     { key: "noun", label: "Danh từ" },

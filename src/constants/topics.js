@@ -7,4 +7,8 @@ export const TOPICS = [
   { key: "counter", label: "Đếm" },
   { key: "adverbs", label: "⚡ Phó từ" },
   { key: "conjunctions", label: "🔗 Liên từ" },
+  // động từ bổ sung
+  { key: "verb-conjugation", label: "Động từ bổ sung" },
+  //tính từ bổ sung
+  { key: "adjective-conjugation", label: "Tính từ bổ sung" },
 ]
