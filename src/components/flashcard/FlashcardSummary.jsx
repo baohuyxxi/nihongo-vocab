@@ -1,33 +1,125 @@
-// FlashcardSummary.jsx
+import {
+  useEffect,
+  useState,
+} from "react"
+
+
+const SESSION_STORAGE_KEY =
+  "reviewSessionData"
+
 
 export default function FlashcardSummary({
   cards,
   repeatMap,
   totalTime,
   onRestart,
+  onContinue,
 }) {
 
+  const [progressData, setProgressData] =
+    useState(null)
+
+
+  /* ======================
+      LOAD PROGRESS
+  ====================== */
+
+  useEffect(() => {
+
+    try {
+
+      const saved =
+        localStorage.getItem(
+          SESSION_STORAGE_KEY
+        )
+
+
+      if (!saved) {
+        return
+      }
+
+
+      const parsed =
+        JSON.parse(saved)
+
+
+      setProgressData(
+        parsed.progress
+      )
+
+    }
+    catch (error) {
+
+      console.error(
+        "Failed to load review progress",
+        error
+      )
+
+    }
+
+  }, [])
+
+
+  /* ======================
+      REPEATED WORDS
+  ====================== */
+
   const repeatedWords =
-    Object.entries(repeatMap)
+    Object.entries(
+      repeatMap || {}
+    )
 
-      .map(([id, count]) => {
+      .map(
+        ([id, count]) => {
 
-        const card =
-          cards.find(
-            (c) => c.id === id
-          )
+          const card =
+            cards.find(
+              (c) =>
+                c.id === id
+            )
 
-        return {
-          id,
-          count,
-          front: card?.front,
+
+          return {
+
+            id,
+
+            count,
+
+            front:
+              card?.front,
+
+          }
+
         }
-      })
+      )
 
       .sort(
         (a, b) =>
-          b.count - a.count
+          b.count -
+          a.count
       )
+
+
+  /* ======================
+      PROGRESS
+  ====================== */
+
+  const hasProgress =
+    progressData &&
+    Number(
+      progressData.reviewedVocabs
+    ) <
+    Number(
+      progressData.total
+    )
+
+
+  const seconds =
+    Math.round(
+      Number(totalTime || 0) /
+      1000
+    )
+
 
   return (
 
@@ -35,7 +127,6 @@ export default function FlashcardSummary({
       className="
         w-full
         max-w-3xl
-
         mx-auto
 
         px-3
@@ -49,6 +140,8 @@ export default function FlashcardSummary({
       "
     >
 
+      {/* TITLE */}
+
       <h1
         className="
           text-center
@@ -60,8 +153,13 @@ export default function FlashcardSummary({
           font-bold
         "
       >
+
         🎉 Hoàn thành!
+
       </h1>
+
+
+      {/* STATS */}
 
       <div
         className="
@@ -73,9 +171,12 @@ export default function FlashcardSummary({
         "
       >
 
+        {/* TIME */}
+
         <div
           className="
             bg-white
+
             rounded-2xl
 
             shadow
@@ -85,9 +186,18 @@ export default function FlashcardSummary({
             text-center
           "
         >
-          <div className="text-sm text-gray-500">
+
+          <div
+            className="
+              text-sm
+              text-gray-500
+            "
+          >
+
             Thời gian
+
           </div>
+
 
           <div
             className="
@@ -95,15 +205,20 @@ export default function FlashcardSummary({
               font-bold
             "
           >
-            {Math.round(
-              totalTime / 1000
-            )}s
+
+            {seconds}s
+
           </div>
+
         </div>
+
+
+        {/* TOTAL */}
 
         <div
           className="
             bg-white
+
             rounded-2xl
 
             shadow
@@ -113,9 +228,18 @@ export default function FlashcardSummary({
             text-center
           "
         >
-          <div className="text-sm text-gray-500">
+
+          <div
+            className="
+              text-sm
+              text-gray-500
+            "
+          >
+
             Tổng số từ
+
           </div>
+
 
           <div
             className="
@@ -123,13 +247,20 @@ export default function FlashcardSummary({
               font-bold
             "
           >
+
             {cards.length}
+
           </div>
+
         </div>
+
+
+        {/* REPEAT */}
 
         <div
           className="
             bg-white
+
             rounded-2xl
 
             shadow
@@ -139,9 +270,18 @@ export default function FlashcardSummary({
             text-center
           "
         >
-          <div className="text-sm text-gray-500">
+
+          <div
+            className="
+              text-sm
+              text-gray-500
+            "
+          >
+
             Cần ôn lại
+
           </div>
+
 
           <div
             className="
@@ -150,11 +290,144 @@ export default function FlashcardSummary({
               text-red-600
             "
           >
-            {repeatedWords.length}
+
+            {
+              repeatedWords.length
+            }
+
           </div>
+
         </div>
 
       </div>
+
+
+      {/* PROGRESS */}
+
+      {progressData && (
+
+        <div
+          className="
+            bg-white
+            rounded-2xl
+            shadow
+            p-4
+          "
+        >
+
+          <div
+            className="
+              flex
+              justify-between
+              items-center
+
+              text-sm
+
+              mb-2
+            "
+          >
+
+            <span
+              className="
+                text-gray-500
+              "
+            >
+
+              Tiến độ
+
+            </span>
+
+
+            <span
+              className="
+                font-semibold
+              "
+            >
+
+              {
+                progressData.reviewedVocabs
+              }
+
+              {" / "}
+
+              {
+                progressData.total
+              }
+
+            </span>
+
+          </div>
+
+
+          <div
+            className="
+              w-full
+              h-2
+
+              bg-gray-200
+
+              rounded-full
+
+              overflow-hidden
+            "
+          >
+
+            <div
+              className="
+                h-full
+                bg-blue-600
+
+                transition-all
+              "
+              style={{
+                width:
+                  progressData.total > 0
+                    ? `${Math.min(
+                        100,
+                        (
+                          progressData.reviewedVocabs /
+                          progressData.total
+                        ) * 100
+                      )}%`
+                    : "0%",
+              }}
+            />
+
+          </div>
+
+
+          {hasProgress && (
+
+            <p
+              className="
+                text-xs
+                text-gray-500
+                mt-2
+              "
+            >
+
+              Còn{" "}
+
+              {
+                Math.max(
+                  0,
+                  progressData.total -
+                  progressData.reviewedVocabs
+                )
+              }
+
+              {" "}từ chưa ôn
+
+            </p>
+
+          )}
+
+        </div>
+
+      )}
+
+
+      {/* REPEATED WORDS */}
 
       {repeatedWords.length > 0 && (
 
@@ -170,77 +443,89 @@ export default function FlashcardSummary({
               mb-3
             "
           >
+
             📋 Từ cần ôn lại
+
           </h2>
+
 
           <ul
             className="
               space-y-2
 
               max-h-[320px]
+
               overflow-y-auto
             "
           >
 
-            {repeatedWords.map((w) => (
+            {repeatedWords.map(
+              (w) => (
 
-              <li
-                key={w.id}
-
-                className="
-                  flex
-                  items-center
-                  justify-between
-
-                  gap-4
-
-                  bg-gray-100
-
-                  px-3
-                  sm:px-4
-
-                  py-3
-
-                  rounded-xl
-                "
-              >
-
-                <span
-                  className="
-                    text-sm
-                    sm:text-lg
-
-                    break-words
-                  "
-                >
-                  {
-                    typeof w.front
-                      === "string"
-
-                      ? w.front
-
-                      : w.front?.jp
+                <li
+                  key={
+                    w.id
                   }
-                </span>
 
-                <span
                   className="
-                    font-bold
+                    flex
+                    items-center
+                    justify-between
 
-                    text-red-600
+                    gap-4
 
-                    text-sm
-                    sm:text-base
+                    bg-gray-100
 
-                    whitespace-nowrap
+                    px-3
+                    sm:px-4
+
+                    py-3
+
+                    rounded-xl
                   "
                 >
-                  {w.count} lần
-                </span>
 
-              </li>
+                  <span
+                    className="
+                      text-sm
+                      sm:text-lg
 
-            ))}
+                      break-words
+                    "
+                  >
+
+                    {
+                      typeof w.front ===
+                      "string"
+
+                        ? w.front
+
+                        : w.front?.jp
+                    }
+
+                  </span>
+
+
+                  <span
+                    className="
+                      font-bold
+                      text-red-600
+
+                      text-sm
+                      sm:text-base
+
+                      whitespace-nowrap
+                    "
+                  >
+
+                    {w.count} lần
+
+                  </span>
+
+                </li>
+
+              )
+            )}
 
           </ul>
 
@@ -248,10 +533,29 @@ export default function FlashcardSummary({
 
       )}
 
-      <div className="text-center">
+
+      {/* ACTIONS */}
+
+      <div
+        className="
+          flex
+
+          justify-center
+
+          gap-3
+
+          flex-wrap
+        "
+      >
+
+        {/* RESTART */}
 
         <button
-          onClick={onRestart}
+          type="button"
+
+          onClick={
+            onRestart
+          }
 
           className="
             px-6
@@ -262,6 +566,7 @@ export default function FlashcardSummary({
             rounded-2xl
 
             bg-blue-600
+
             hover:bg-blue-700
 
             text-white
@@ -271,11 +576,55 @@ export default function FlashcardSummary({
             transition
           "
         >
+
           🔄 Ôn lại
+
         </button>
+
+
+        {/* CONTINUE */}
+
+        {hasProgress && (
+
+          <button
+            type="button"
+
+            onClick={
+              onContinue
+            }
+
+            className="
+              px-6
+              sm:px-8
+
+              py-3
+
+              rounded-2xl
+
+              bg-gray-100
+
+              hover:bg-gray-200
+
+              border
+              border-gray-300
+
+              text-gray-700
+
+              font-semibold
+
+              transition
+            "
+          >
+
+            ▶️ Tiếp tục ôn
+
+          </button>
+
+        )}
 
       </div>
 
     </div>
+
   )
 }

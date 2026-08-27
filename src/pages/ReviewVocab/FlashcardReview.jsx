@@ -1,12 +1,29 @@
-import { useEffect, useState } from "react"
+import {
+  useEffect,
+  useState,
+  useCallback,
+} from "react"
 
-import Flashcard from "../../components/flashcard/Flashcard"
-import FlashcardProgress from "../../components/flashcard/FlashcardProgress"
-import FlashcardControls from "../../components/flashcard/FlashcardControls"
-import FlashcardNav from "../../components/flashcard/FlashcardNav"
-import FlashcardSettings from "../../components/flashcard/FlashcardSettings"
-import FlashcardTimer from "../../components/flashcard/FlashcardTimer"
-import FlashcardSummary from "../../components/flashcard/FlashcardSummary"
+import Flashcard
+  from "../../components/flashcard/Flashcard"
+
+import FlashcardProgress
+  from "../../components/flashcard/FlashcardProgress"
+
+import FlashcardControls
+  from "../../components/flashcard/FlashcardControls"
+
+import FlashcardNav
+  from "../../components/flashcard/FlashcardNav"
+
+import FlashcardSettings
+  from "../../components/flashcard/FlashcardSettings"
+
+import FlashcardTimer
+  from "../../components/flashcard/FlashcardTimer"
+
+import FlashcardSummary
+  from "../../components/flashcard/FlashcardSummary"
 
 import useFlashcardTouch
   from "../../components/flashcard/useFlashcardTouch"
@@ -14,82 +31,195 @@ import useFlashcardTouch
 import useFlashcardKeyboard
   from "../../components/flashcard/useFlashcardKeyboard"
 
+
 const FLASHCARD_PROGRESS_KEY =
   "flashcardProgress"
 
+
 export default function FlashcardReview({
   cards = [],
+  onContinue,
 }) {
 
   /* ======================
       LOAD SAVED PROGRESS
   ====================== */
 
-  const savedProgress = JSON.parse(
-    localStorage.getItem(
-      FLASHCARD_PROGRESS_KEY
-    ) || "null"
-  )
+  const savedProgress = (() => {
+
+    try {
+
+      return JSON.parse(
+        localStorage.getItem(
+          FLASHCARD_PROGRESS_KEY
+        ) || "null"
+      )
+
+    } catch {
+
+      return null
+
+    }
+
+  })()
+
 
   /* ======================
       STATES
   ====================== */
 
-  const [list, setList] = useState(
-    savedProgress?.list || cards
-  )
-
-  const [index, setIndex] = useState(
-    savedProgress?.index || 0
-  )
-
-  const [showAnswer, setShowAnswer]
-    = useState(
-      savedProgress?.showAnswer
-      || false
+  const [list, setList] =
+    useState(
+      savedProgress?.list || cards
     )
 
-  const [autoFlip, setAutoFlip]
-    = useState(false)
 
-  const [flipDelay, setFlipDelay]
-    = useState(4000)
+  const [index, setIndex] =
+    useState(
+      savedProgress?.index || 0
+    )
 
-  const [currentJP, setCurrentJP]
-    = useState(null)
 
-  const [repeatMap, setRepeatMap]
-    = useState(
+  const [showAnswer, setShowAnswer] =
+    useState(
+      savedProgress?.showAnswer || false
+    )
+
+
+  const [autoFlip, setAutoFlip] =
+    useState(false)
+
+
+  const [flipDelay, setFlipDelay] =
+    useState(4000)
+
+
+  const [currentJP, setCurrentJP] =
+    useState(null)
+
+
+  const [repeatMap, setRepeatMap] =
+    useState(
       savedProgress?.repeatMap || {}
     )
 
-  const [totalTime, setTotalTime]
-    = useState(null)
+
+  const [startTime, setStartTime] =
+    useState(
+      savedProgress?.startTime ||
+      Date.now()
+    )
+
+
+  const [totalTime, setTotalTime] =
+    useState(
+      savedProgress?.totalTime || null
+    )
+
+
+  /* ======================
+      INITIAL START TIME
+  ====================== */
+
+  useEffect(() => {
+
+    const saved =
+      JSON.parse(
+        localStorage.getItem(
+          FLASHCARD_PROGRESS_KEY
+        ) || "null"
+      )
+
+    if (saved?.startTime) {
+
+      setStartTime(
+        saved.startTime
+      )
+
+      return
+
+    }
+
+
+    const now =
+      Date.now()
+
+    setStartTime(now)
+
+
+    localStorage.setItem(
+
+      FLASHCARD_PROGRESS_KEY,
+
+      JSON.stringify({
+
+        list,
+
+        index,
+
+        repeatMap,
+
+        showAnswer,
+
+        startTime: now,
+
+        totalTime: null,
+
+      })
+
+    )
+
+  }, [])
+
 
   /* ======================
       DERIVED
   ====================== */
 
-  const card = list[index]
+  const card =
+    list[index]
+
 
   const finished =
     list.length === 0
 
+
   /* ======================
-      AUTO SAVE
+      SAVE PROGRESS
   ====================== */
 
   useEffect(() => {
 
+    /*
+      Không lưu lại progress sau khi
+      session đã hoàn thành.
+    */
+
+    if (finished) {
+      return
+    }
+
+
     localStorage.setItem(
+
       FLASHCARD_PROGRESS_KEY,
 
       JSON.stringify({
+
         list,
+
         index,
+
         repeatMap,
+
         showAnswer,
+
+        startTime,
+
+        totalTime,
+
       })
+
     )
 
   }, [
@@ -97,22 +227,59 @@ export default function FlashcardReview({
     index,
     repeatMap,
     showAnswer,
+    startTime,
+    totalTime,
+    finished,
   ])
 
+
   /* ======================
-      CLEAR WHEN FINISHED
+      FINISH TIMER
+  ====================== */
+
+  const handleTimerFinish =
+    useCallback(
+      (elapsed) => {
+
+        setTotalTime(
+          (current) =>
+            current ?? elapsed
+        )
+
+      },
+      []
+    )
+
+
+  /* ======================
+      FINISHED
   ====================== */
 
   useEffect(() => {
 
-    if (finished) {
-
-      localStorage.removeItem(
-        FLASHCARD_PROGRESS_KEY
-      )
+    if (!finished) {
+      return
     }
 
-  }, [finished])
+
+    const elapsed =
+      totalTime ??
+      (
+        Date.now() -
+        startTime
+      )
+
+
+    setTotalTime(
+      elapsed
+    )
+
+  }, [
+    finished,
+    startTime,
+    totalTime,
+  ])
+
 
   /* ======================
       NAVIGATION
@@ -128,16 +295,23 @@ export default function FlashcardReview({
         list.length - 1
       )
     )
+
   }
+
 
   const prev = () => {
 
     setShowAnswer(false)
 
     setIndex((i) =>
-      Math.max(i - 1, 0)
+      Math.max(
+        i - 1,
+        0
+      )
     )
+
   }
+
 
   /* ======================
       SRS
@@ -146,8 +320,12 @@ export default function FlashcardReview({
   const markKnown = () => {
 
     setList((l) =>
-      l.filter((_, i) => i !== index)
+      l.filter(
+        (_, i) =>
+          i !== index
+      )
     )
+
 
     setIndex((i) =>
       Math.min(
@@ -156,31 +334,53 @@ export default function FlashcardReview({
       )
     )
 
+
     setShowAnswer(false)
+
   }
+
 
   const markUnknown = () => {
 
-    const id = list[index].id
+    const current =
+      list[index]
+
+
+    if (!current) {
+      return
+    }
+
+
+    const id =
+      current.id
+
 
     setRepeatMap((m) => ({
+
       ...m,
 
       [id]:
         (m[id] || 0) + 1,
+
     }))
+
 
     setList((l) => [
 
       ...l.filter(
-        (_, i) => i !== index
+        (_, i) =>
+          i !== index
       ),
 
       l[index],
+
     ])
 
+
     setShowAnswer(false)
+
   }
+
 
   /* ======================
       SPEAK
@@ -188,35 +388,53 @@ export default function FlashcardReview({
 
   const speak = (text) => {
 
+    if (!text) {
+      return
+    }
+
+
     const u =
       new SpeechSynthesisUtterance(
         text
       )
 
-    u.lang = "ja-JP"
+
+    u.lang =
+      "ja-JP"
+
 
     speechSynthesis.cancel()
 
     speechSynthesis.speak(u)
+
   }
+
 
   /* ======================
       KEYBOARD
   ====================== */
 
   useFlashcardKeyboard({
+
     next,
+
     prev,
 
     flip: () =>
-      setShowAnswer((s) => !s),
+      setShowAnswer(
+        (s) => !s
+      ),
 
     markKnown,
+
     markUnknown,
 
     speak,
+
     currentJP,
+
   })
+
 
   /* ======================
       AUTO FLIP
@@ -226,21 +444,34 @@ export default function FlashcardReview({
 
     if (
       !autoFlip ||
-      showAnswer
-    ) return
+      showAnswer ||
+      finished
+    ) {
 
-    const t = setTimeout(
-      () => setShowAnswer(true),
-      flipDelay
-    )
+      return
 
-    return () => clearTimeout(t)
+    }
+
+
+    const timer =
+      setTimeout(
+        () =>
+          setShowAnswer(true),
+        flipDelay
+      )
+
+
+    return () =>
+      clearTimeout(timer)
 
   }, [
     index,
     autoFlip,
     flipDelay,
+    showAnswer,
+    finished,
   ])
+
 
   /* ======================
       TOUCH
@@ -249,13 +480,20 @@ export default function FlashcardReview({
   const touchHandlers =
     useFlashcardTouch({
 
-      onNext: next,
+      onNext:
+        next,
 
-      onPrev: prev,
+      onPrev:
+        prev,
 
-      onFlip: () =>
-        setShowAnswer((s) => !s),
+      onFlip:
+        () =>
+          setShowAnswer(
+            (s) => !s
+          ),
+
     })
+
 
   /* ======================
       FINISHED
@@ -264,30 +502,107 @@ export default function FlashcardReview({
   if (finished) {
 
     return (
+
       <FlashcardSummary
+
         cards={cards}
+
         repeatMap={repeatMap}
-        totalTime={totalTime}
+
+        totalTime={
+          totalTime ??
+          (
+            Date.now() -
+            startTime
+          )
+        }
+
+        onContinue={
+          onContinue
+        }
 
         onRestart={() => {
+
+          const now =
+            Date.now()
+
+
+          setList(
+            cards
+          )
+
+
+          setIndex(
+            0
+          )
+
+
+          setRepeatMap(
+            {}
+          )
+
+
+          setShowAnswer(
+            false
+          )
+
+
+          setTotalTime(
+            null
+          )
+
+
+          setStartTime(
+            now
+          )
+
 
           localStorage.removeItem(
             FLASHCARD_PROGRESS_KEY
           )
 
-          setList(cards)
 
-          setIndex(0)
+          /*
+            Tạo progress mới ngay lập tức
+            để timer bắt đầu từ now.
+          */
 
-          setRepeatMap({})
+          localStorage.setItem(
 
-          setShowAnswer(false)
+            FLASHCARD_PROGRESS_KEY,
 
-          setTotalTime(null)
+            JSON.stringify({
+
+              list:
+                cards,
+
+              index:
+                0,
+
+              repeatMap:
+                {},
+
+              showAnswer:
+                false,
+
+              startTime:
+                now,
+
+              totalTime:
+                null,
+
+            })
+
+          )
+
         }}
+
       />
+
     )
+
   }
+
 
   /* ======================
       SAFETY
@@ -296,166 +611,262 @@ export default function FlashcardReview({
   if (!card) {
 
     return (
-      <div className="text-center text-xl">
+
+      <div
+        className="
+          text-center
+          text-xl
+        "
+      >
+
         🎉 Hoàn thành!
+
       </div>
+
     )
+
   }
 
+
   /* ======================
-     UI
- ====================== */
+      UI
+  ====================== */
 
   return (
+
     <div
       className="
-      w-full
-      max-w-6xl
-      mx-auto
+        w-full
+        max-w-6xl
+        mx-auto
 
-      flex flex-col
-      items-center
+        flex
+        flex-col
+        items-center
 
-      gap-2
-      sm:gap-3
-      md:gap-4
+        gap-2
+        sm:gap-3
+        md:gap-4
 
-      px-2
-      sm:px-4
+        px-2
+        sm:px-4
 
-      py-1
-      sm:py-2
-    "
+        py-1
+        sm:py-2
+      "
     >
 
       {/* TIMER */}
 
       <div
         className="
-        w-full
-        flex
-        justify-center
-      "
+          w-full
+          flex
+          justify-center
+        "
       >
+
         <FlashcardTimer
-          isFinished={finished}
-          onFinish={setTotalTime}
+
+          isFinished={
+            finished
+          }
+
+          onFinish={
+            handleTimerFinish
+          }
+
         />
+
       </div>
+
 
       {/* PROGRESS */}
 
       <div
         className="
-        w-full
-        max-w-2xl
-        flex
-        justify-center
-      "
+          w-full
+          max-w-2xl
+          flex
+          justify-center
+        "
       >
+
         <FlashcardProgress
+
           learned={
             Math.max(
               0,
-              cards.length - list.length
+              cards.length -
+              list.length
             )
           }
 
-          total={cards.length}
+          total={
+            cards.length
+          }
+
         />
+
       </div>
+
 
       {/* CARD */}
 
       <div
         className="
-        w-full
+          w-full
 
-        flex
-        justify-center
-        items-center
+          flex
+          justify-center
+          items-center
 
-        min-h-[180px]
-        sm:min-h-[240px]
-        md:min-h-[300px]
-      "
+          min-h-[180px]
+          sm:min-h-[240px]
+          md:min-h-[300px]
+        "
       >
+
         <Flashcard
-          key={card.id}
 
-          front={card.front}
-
-          back={card.back}
-
-          showAnswer={showAnswer}
-
-          onFlip={() =>
-            setShowAnswer((s) => !s)
+          key={
+            card.id
           }
 
-          onSpeak={speak}
+          front={
+            card.front
+          }
 
-          touchHandlers={touchHandlers}
+          back={
+            card.back
+          }
 
-          direction={card.direction}
+          showAnswer={
+            showAnswer
+          }
 
-          index={index}
+          onFlip={() =>
+            setShowAnswer(
+              (s) => !s
+            )
+          }
 
-          onExposeJP={setCurrentJP}
+          onSpeak={
+            speak
+          }
+
+          touchHandlers={
+            touchHandlers
+          }
+
+          direction={
+            card.direction
+          }
+
+          index={
+            index
+          }
+
+          onExposeJP={
+            setCurrentJP
+          }
+
         />
+
       </div>
+
 
       {/* NAVIGATION */}
 
       <div
         className="
-        w-full
-        flex
-        justify-center
-      "
+          w-full
+          flex
+          justify-center
+        "
       >
-        <FlashcardNav
-          index={index}
-          total={list.length}
 
-          onPrev={prev}
-          onNext={next}
+        <FlashcardNav
+
+          index={
+            index
+          }
+
+          total={
+            list.length
+          }
+
+          onPrev={
+            prev
+          }
+
+          onNext={
+            next
+          }
+
         />
+
       </div>
+
 
       {/* CONTROLS */}
 
       <div
         className="
-        w-full
-        flex
-        justify-center
-      "
+          w-full
+          flex
+          justify-center
+        "
       >
+
         <FlashcardControls
-          onKnown={markKnown}
-          onUnknown={markUnknown}
+
+          onKnown={
+            markKnown
+          }
+
+          onUnknown={
+            markUnknown
+          }
+
         />
+
       </div>
+
 
       {/* SETTINGS */}
 
       <div
         className="
-        w-full
-        flex
-        justify-center
-      "
+          w-full
+          flex
+          justify-center
+        "
       >
-        <FlashcardSettings
-          autoFlip={autoFlip}
-          setAutoFlip={setAutoFlip}
 
-          flipDelay={flipDelay}
-          setFlipDelay={setFlipDelay}
+        <FlashcardSettings
+
+          autoFlip={
+            autoFlip
+          }
+
+          setAutoFlip={
+            setAutoFlip
+          }
+
+          flipDelay={
+            flipDelay
+          }
+
+          setFlipDelay={
+            setFlipDelay
+          }
+
         />
+
       </div>
 
     </div>
+
   )
 }

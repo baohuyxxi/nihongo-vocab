@@ -1,43 +1,108 @@
-// FlashcardTimer.jsx
+import { useEffect, useState } from "react"
 
-import { useEffect, useState }
-  from "react"
+const FLASHCARD_PROGRESS_KEY =
+  "flashcardProgress"
 
 export default function FlashcardTimer({
   isFinished,
   onFinish,
 }) {
 
-  const [startTime]
-    = useState(Date.now())
+  const [startTime, setStartTime] =
+    useState(() => {
 
-  const [now, setNow]
-    = useState(Date.now())
+      try {
+
+        const saved =
+          JSON.parse(
+            localStorage.getItem(
+              FLASHCARD_PROGRESS_KEY
+            ) || "null"
+          )
+
+        if (saved?.startTime) {
+          return saved.startTime
+        }
+
+      } catch (error) {
+
+        console.error(
+          "Failed to load timer",
+          error
+        )
+
+      }
+
+      const now = Date.now()
+
+      try {
+
+        const saved =
+          JSON.parse(
+            localStorage.getItem(
+              FLASHCARD_PROGRESS_KEY
+            ) || "{}"
+          )
+
+        localStorage.setItem(
+          FLASHCARD_PROGRESS_KEY,
+          JSON.stringify({
+            ...saved,
+            startTime: now,
+          })
+        )
+
+      } catch {}
+
+      return now
+
+    })
+
+  const [now, setNow] =
+    useState(Date.now())
+
+
+  /* ======================
+      TIMER
+  ====================== */
 
   useEffect(() => {
 
     if (isFinished) {
 
-      onFinish(
+      const elapsed =
         Date.now() - startTime
-      )
+
+      onFinish(elapsed)
 
       return
+
     }
 
-    const t = setInterval(() => {
 
-      setNow(Date.now())
+    const timer =
+      setInterval(() => {
 
-    }, 1000)
+        setNow(Date.now())
 
-    return () => clearInterval(t)
+      }, 1000)
 
-  }, [isFinished])
 
-  const seconds = Math.floor(
-    (now - startTime) / 1000
-  )
+    return () =>
+      clearInterval(timer)
+
+  }, [
+    isFinished,
+    startTime,
+    onFinish,
+  ])
+
+
+  const seconds =
+    Math.floor(
+      (now - startTime) / 1000
+    )
+
 
   return (
 
@@ -56,7 +121,10 @@ export default function FlashcardTimer({
         rounded-full
       "
     >
-      ⏱ {seconds}s
+
+      ⏱ {Math.max(0, seconds)}s
+
     </div>
+
   )
 }

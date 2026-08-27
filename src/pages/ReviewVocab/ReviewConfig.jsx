@@ -1,294 +1,189 @@
-import { useEffect, useRef } from "react"
-import { TOPICS } from "../../constants/topics"
-import { PART_OF_SPEECH } from "../../constants/partOfSpeech"
+import { useRef }
+  from "react"
 
-const LESSON_COUNT = 50
+import ReviewOptions
+  from "../../components/reviewConfig/ReviewOptions"
 
+import ReviewContent
+  from "../../components/reviewConfig/ReviewContent"
 
-
-const REVIEW_MODES = [
-  { key: "typing", label: "✍️ Điền từ" },
-  { key: "quiz", label: "🧠 Trắc nghiệm" },
-  { key: "flashcard", label: "🃏 Flashcard" },
-]
-
-const DIRECTIONS = [
-  { key: "jp_vi", label: "Nhật → Việt" },
-  { key: "vi_jp", label: "Việt → Nhật" },
-  { key: "kanji", label: "Kanji" },
-  { key: "image", label: "Hình ảnh" },
-]
-
-const STORAGE_KEY = "reviewConfig"
 
 export default function ReviewConfig({
+
   selectedLessons,
   setSelectedLessons,
+
   selectedTopics,
   setSelectedTopics,
+
   selectedPartsOfSpeech,
   setSelectedPartsOfSpeech,
+
   mode,
   setMode,
+
   directions,
   setDirections,
+
+  reviewLimit,
+  setReviewLimit,
+
   onStart,
-  loading,
+  onContinue,
+
+  hasSession,
+
 }) {
-  const isDragging = useRef(false)
-  const dragMode = useRef("add")
 
-  useEffect(() => {
-    const saved = localStorage.getItem(STORAGE_KEY)
-    if (!saved) return
+  const isDragging =
+    useRef(false)
 
-    try {
-      const { lessons, topics, partsOfSpeech, mode, directions } = JSON.parse(saved)
-
-      if (lessons) {
-        setSelectedLessons(lessons)
-      }
-      if (topics) {
-        setSelectedTopics(topics)
-      }
-      if (partsOfSpeech) {
-        setSelectedPartsOfSpeech(partsOfSpeech)
-      }
-      if (mode) {
-        setMode(mode)
-      }
-      if (Array.isArray(directions)) {
-        setDirections(directions)
-      }
-    } catch (e) {
-      console.error("Failed to load review config", e)
-    }
-  }, [])
+  const dragMode =
+    useRef("add")
 
 
-  const toggleLesson = (lesson, forceMode) => {
-    setSelectedLessons((prev) => {
-      const exists = prev.includes(lesson)
-      if (forceMode === "add" && !exists) return [...prev, lesson]
-      if (forceMode === "remove" && exists)
-        return prev.filter((l) => l !== lesson)
-      if (forceMode) return prev
-      return exists
-        ? prev.filter((l) => l !== lesson)
-        : [...prev, lesson]
-    })
-  }
-
-  const toggleDirection = (key) => {
-    setDirections((prev) => {
-      if (prev.includes(key)) {
-        if (prev.length === 1) return prev
-        return prev.filter((d) => d !== key)
-      }
-      return [...prev, key]
-    })
-  }
-
-  const toggleTopic = (key) => {
-    setSelectedTopics((prev) => {
-      if (prev.includes(key)) {
-        return prev.filter((t) => t !== key)
-      }
-      return [...prev, key]
-    })
-  }
-
-  const togglePartOfSpeech = (key) => {
-    setSelectedPartsOfSpeech((prev) => {
-      if (prev.includes(key)) {
-        return prev.filter((t) => t !== key)
-      }
-      return [...prev, key]
-    }
-    )
-  }
   return (
+
     <div className="space-y-8">
-      {/* TOP CONFIG */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        {/* LEFT */}
-        <div className="space-y-6">
-          {/* MODE */}
-          <section className="bg-white rounded-xl shadow p-5">
-            <h2 className="font-semibold mb-4 flex items-center gap-2">
-              🎮 <span>Chế độ ôn</span>
-            </h2>
-            <div className="space-y-3">
-              {REVIEW_MODES.map((m) => (
-                <label
-                  key={m.key}
-                  className="flex items-center gap-3 cursor-pointer"
-                >
-                  <input
-                    type="radio"
-                    className="scale-110"
-                    checked={mode === m.key}
-                    onChange={() => setMode(m.key)}
-                  />
-                  <span>{m.label}</span>
-                </label>
-              ))}
-            </div>
-          </section>
 
-          {/* DIRECTION */}
-          <section className="bg-white rounded-xl shadow p-5">
-            <h2 className="font-semibold mb-4 flex items-center gap-2">
-              🔁 <span>Hướng ôn</span>
-            </h2>
-            <div className="space-y-3">
-              {DIRECTIONS.map((d) => (
-                <label
-                  key={d.key}
-                  className="flex items-center gap-3 cursor-pointer"
-                >
-                  <input
-                    type="checkbox"
-                    className="scale-110"
-                    checked={directions.includes(d.key)}
-                    onChange={() => toggleDirection(d.key)}
-                  />
-                  <span>{d.label}</span>
-                </label>
-              ))}
-            </div>
-          </section>
-        </div>
+      <div
+        className="
+          grid
+          grid-cols-1
+          lg:grid-cols-3
+          gap-6
+        "
+      >
 
-        {/* LESSON + EXTRA */}
-        <section className="lg:col-span-2 bg-white rounded-xl shadow p-5 space-y-6">
-          <h2 className="font-semibold flex items-center gap-2">
-            📚 <span>Chọn nội dung ôn</span>
-          </h2>
+        <ReviewOptions
 
-          {/* LESSONS */}
-          <div>
-            <h3 className="text-sm font-medium mb-2 text-gray-600">
-              Bài Minna (1–50)
-            </h3>
+          mode={mode}
+          setMode={setMode}
 
-            <div
-              className="
-        grid gap-2 select-none
-        grid-cols-4 sm:grid-cols-6 md:grid-cols-8 lg:grid-cols-10
-      "
-              onMouseUp={() => (isDragging.current = false)}
-              onMouseLeave={() => (isDragging.current = false)}
-            >
-              {Array.from({ length: LESSON_COUNT }, (_, i) => i + 1).map(
-                (lesson) => {
-                  const checked = selectedLessons.includes(lesson)
+          directions={directions}
+          setDirections={setDirections}
 
-                  return (
-                    <div
-                      key={lesson}
-                      className={`aspect-square flex items-center justify-center rounded-lg border cursor-pointer text-xs font-medium transition ${checked
-                        ? "bg-blue-600 text-white border-blue-600"
-                        : "bg-gray-100 hover:bg-gray-200"
-                        }
-`}
-                      onMouseDown={() => {
-                        isDragging.current = true
-                        dragMode.current = checked ? "remove" : "add"
-                        toggleLesson(lesson, dragMode.current)
-                      }}
-                      onMouseEnter={() => {
-                        if (isDragging.current) {
-                          toggleLesson(lesson, dragMode.current)
-                        }
-                      }}
-                    >
-                      {lesson}
-                    </div>
-                  )
-                }
-              )}
-            </div>
-          </div>
+          reviewLimit={reviewLimit}
+          setReviewLimit={setReviewLimit}
 
-          {/* EXTRA TOPICS */}
-          <div>
-            <h3 className="text-sm font-medium mb-2 text-gray-600">
-              Chủ đề mở rộng
-            </h3>
+        />
 
-            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-2">
-              {TOPICS.map((item) => {
-                const checked = selectedTopics.includes(item.key)
 
-                return (
-                  <div
-                    key={item.key}
-                    onClick={() => toggleTopic(item.key)}
-                    className={`
-              px-3 py-2 rounded-lg border text-sm cursor-pointer
-              transition text-center
-              ${checked
-                        ? "bg-green-600 text-white border-green-600"
-                        : "bg-gray-100 hover:bg-gray-200"
-                      }
-            `}
-                  >
-                    {item.label}
-                  </div>
-                )
-              })}
-            </div>
-          </div>
+        <ReviewContent
 
-          {/* PARTS OF SPEECH */}
-          <div>
-            <h3 className="text-sm font-medium mb-2 text-gray-600">
-              Loại từ
-            </h3>
-            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-2">
-              {PART_OF_SPEECH.map((item) => {
-                const checked = selectedPartsOfSpeech.includes(item.key)
-                return (
-                  <div
-                    key={item.key}
-                    onClick={() => {
-                      togglePartOfSpeech(item.key)
-                    }}
-                    className={`
-              px-3 py-2 rounded-lg border text-sm cursor-pointer
-              transition text-center
-              ${checked
-                        ? "bg-purple-600 text-white border-purple-600"
-                        : "bg-gray-100 hover:bg-gray-200"
-                      }
-            `}
-                  >
-                    {item.label}
-                  </div>
-                )
-              })}
-            </div>
-          </div>
-        </section>
+          selectedLessons={
+            selectedLessons
+          }
+
+          setSelectedLessons={
+            setSelectedLessons
+          }
+
+          selectedTopics={
+            selectedTopics
+          }
+
+          setSelectedTopics={
+            setSelectedTopics
+          }
+
+          selectedPartsOfSpeech={
+            selectedPartsOfSpeech
+          }
+
+          setSelectedPartsOfSpeech={
+            setSelectedPartsOfSpeech
+          }
+
+          isDragging={
+            isDragging
+          }
+
+          dragMode={
+            dragMode
+          }
+
+        />
+
       </div>
 
-      {/* START BUTTON */}
-      <div className="text-center">
+
+      <div
+        className="
+          flex
+          justify-center
+          gap-3
+        "
+      >
+
         <button
-          onClick={onStart}
-          disabled={loading}
+
+          type="button"
+
+          onClick={
+            onContinue
+          }
+
+          disabled={
+            !hasSession
+          }
+
           className="
-            inline-flex items-center gap-2
-            px-10 py-3 rounded-xl
-            bg-blue-600 text-white text-lg font-semibold
-            hover:bg-blue-700 transition
+            inline-flex
+            items-center
+            justify-center
+            gap-2
+            px-8
+            py-3
+            rounded-xl
+            bg-gray-100
+            text-gray-700
+            border
+            border-gray-300
+            text-lg
+            font-semibold
+            hover:bg-gray-200
+            transition
             disabled:opacity-50
+            disabled:cursor-not-allowed
           "
         >
-          🚀 Bắt đầu ôn
+
+          ▶️ Tiếp tục ôn
+
         </button>
+
+
+        <button
+
+          type="button"
+
+          onClick={
+            onStart
+          }
+
+          className="
+            inline-flex
+            items-center
+            justify-center
+            gap-2
+            px-8
+            py-3
+            rounded-xl
+            bg-blue-600
+            text-white
+            text-lg
+            font-semibold
+            hover:bg-blue-700
+          "
+        >
+
+          🚀 Bắt đầu ôn mới
+
+        </button>
+
       </div>
+
     </div>
   )
 }
