@@ -61,6 +61,13 @@ export default function MyLessons() {
       icon: LanguagesIcon,
       color: "from-red-500 to-red-600",
     },
+    {
+      id: "kanji-worksheet",
+      title: "Tạo tập viết Kanji",
+      desc: "Tạo worksheet Kanji để luyện viết và in ra giấy",
+      icon: LanguagesIcon,
+      color: "from-teal-500 to-teal-600",
+    }
   ]
 
   return (
