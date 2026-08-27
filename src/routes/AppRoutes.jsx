@@ -28,6 +28,7 @@ const KanjiFrequencyPage  = lazy(() => import("../pages/MyLessons/KanjiFrequency
 
 const SettingsPage = lazy(() => import("../pages/Settings/SettingsPage"));
 const VocabManager = lazy(() => import("../pages/Settings/VocabManager/VocabManager"));
+const KanjiWorksheetPage = lazy(() => import("../pages/MyLessons/KanjiWorksheet/KanjiWorksheetPage"))
 export default function AppRoutes() {
   return (
     <Routes>
@@ -154,6 +155,14 @@ export default function AppRoutes() {
         element={
           <Suspense fallback={<div>Loading...</div>}>
             <KanjiFrequencyPage />
+          </Suspense>
+        }
+      />
+      <Route
+        path="/my-lessons/kanji-worksheet"
+        element={
+          <Suspense fallback={<div>Loading...</div>}>
+            <KanjiWorksheetPage />
           </Suspense>
         }
       />
