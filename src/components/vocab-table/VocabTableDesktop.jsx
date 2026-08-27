@@ -1,18 +1,23 @@
 import VocabRowDesktop from "./VocabRowDesktop"
 
-export default function VocabTableDesktop({ rows, onChange, onKanaChange }) {
+export default function VocabTableDesktop({
+  rows,
+  onChange,
+  onKanaChange,
+}) {
   return (
     <table className="hidden md:table min-w-full border-collapse table-fixed">
       <colgroup>
         <col style={{ width: "2%" }} />
-        <col style={{ width: "17%" }} />
-        <col style={{ width: "10%" }} />
+        <col style={{ width: "16%" }} />
+        <col style={{ width: "9%" }} />
+        <col style={{ width: "11%" }} />
+        <col style={{ width: "11%" }} />
+        <col style={{ width: "5%" }} />
         <col style={{ width: "12%" }} />
-        <col style={{ width: "12%" }} />
-        <col style={{ width: "12%" }} />
-        <col style={{ width: "20%" }} />
+        <col style={{ width: "18%" }} />
         <col style={{ width: "7%" }} />
-        <col style={{ width: "4%" }} />
+        <col style={{ width: "2%" }} />
       </colgroup>
 
       <thead className="bg-gray-200 sticky top-0 z-10">
@@ -22,6 +27,7 @@ export default function VocabTableDesktop({ rows, onChange, onKanaChange }) {
           <Th>Phiên Âm</Th>
           <Th>Kanji</Th>
           <Th>Hán Việt</Th>
+          <Th>Từ loại</Th>
           <Th>Tiếng Anh</Th>
           <Th>Nghĩa</Th>
           <Th>Hình Ảnh</Th>
