@@ -1,130 +1,62 @@
 import { useEffect, useState } from "react"
 
-const FLASHCARD_PROGRESS_KEY =
-  "flashcardProgress"
-
+const FLASHCARD_PROGRESS_KEY = "flashcardProgress"
 export default function FlashcardTimer({
   isFinished,
   onFinish,
 }) {
+  const [startTime] = useState(() => {
+    try {
+      const saved = JSON.parse(
+        localStorage.getItem(FLASHCARD_PROGRESS_KEY) || "null"
+      )
 
-  const [startTime, setStartTime] =
-    useState(() => {
-
-      try {
-
-        const saved =
-          JSON.parse(
-            localStorage.getItem(
-              FLASHCARD_PROGRESS_KEY
-            ) || "null"
-          )
-
-        if (saved?.startTime) {
-          return saved.startTime
-        }
-
-      } catch (error) {
-
-        console.error(
-          "Failed to load timer",
-          error
-        )
-
-      }
+      if (saved?.startTime) return saved.startTime
 
       const now = Date.now()
 
-      try {
-
-        const saved =
-          JSON.parse(
-            localStorage.getItem(
-              FLASHCARD_PROGRESS_KEY
-            ) || "{}"
-          )
-
-        localStorage.setItem(
-          FLASHCARD_PROGRESS_KEY,
-          JSON.stringify({
-            ...saved,
-            startTime: now,
-          })
-        )
-
-      } catch {}
+      localStorage.setItem(
+        FLASHCARD_PROGRESS_KEY,
+        JSON.stringify({
+          ...saved,
+          startTime: now,
+        })
+      )
 
       return now
+    } catch {
+      return Date.now()
+    }
+  })
 
-    })
-
-  const [now, setNow] =
-    useState(Date.now())
-
-
-  /* ======================
-      TIMER
-  ====================== */
+  const [now, setNow] = useState(Date.now())
 
   useEffect(() => {
-
     if (isFinished) {
-
-      const elapsed =
-        Date.now() - startTime
-
-      onFinish(elapsed)
-
+      onFinish(Date.now() - startTime)
       return
-
     }
 
+    const timer = setInterval(() => {
+      setNow(Date.now())
+    }, 60_000)
 
-    const timer =
-      setInterval(() => {
+    return () => clearInterval(timer)
+  }, [isFinished, startTime, onFinish])
 
-        setNow(Date.now())
-
-      }, 1000)
-
-
-    return () =>
-      clearInterval(timer)
-
-  }, [
-    isFinished,
-    startTime,
-    onFinish,
-  ])
-
-
-  const seconds =
-    Math.floor(
-      (now - startTime) / 1000
-    )
-
+  const minutes = Math.floor(
+    (now - startTime) / 60_000
+  )
 
   return (
-
-    <div
-      className="
-        text-xs
-        sm:text-sm
-
-        text-gray-500
-
-        bg-gray-100
-
-        px-3
-        py-1.5
-
-        rounded-full
-      "
-    >
-
-      ⏱ {Math.max(0, seconds)}s
-
+    <div className="
+      text-xs sm:text-sm
+      text-gray-500
+      bg-gray-100
+      px-3 py-1.5
+      rounded-full
+    ">
+      ⏱ {minutes} phút
     </div>
-
   )
 }
