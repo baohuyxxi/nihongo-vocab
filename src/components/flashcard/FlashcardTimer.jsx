@@ -1,7 +1,6 @@
 import { useEffect, useState } from "react"
 
 const FLASHCARD_PROGRESS_KEY = "flashcardProgress"
-
 export default function FlashcardTimer({
   isFinished,
   onFinish,
