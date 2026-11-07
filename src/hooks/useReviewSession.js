@@ -54,12 +54,17 @@ export default function useReviewSession() {
 
 
                     const {
-                        lessons,
-                        topics,
-                        partsOfSpeech,
-                        mode,
-                        directions,
-                        limit,
+                        lessons = [],
+                        topics = [],
+
+                        // N3
+                        units = [],
+                        n3Topics = [],
+
+                        partsOfSpeech = [],
+                        mode = "flashcard",
+                        directions = ["jp_vi"],
+                        limit = null,
                     } = config
 
 
@@ -72,6 +77,13 @@ export default function useReviewSession() {
                             topics:
                                 topics.join(","),
 
+                            // N3
+                            units:
+                                units.join(","),
+
+                            n3Topics:
+                                n3Topics.join(","),
+
                             partsOfSpeech:
                                 partsOfSpeech.join(","),
 
@@ -80,7 +92,8 @@ export default function useReviewSession() {
                             directions:
                                 directions.join(","),
 
-                            limit,
+                            limit:
+                                limit ?? "",
 
                             reviewId,
 
@@ -102,7 +115,8 @@ export default function useReviewSession() {
 
                         progress: {
                             ...res.progress,
-                            completed: false,
+                            completed:
+                                res.progress?.completed ?? false,
                         },
 
                         reviewId:
@@ -189,7 +203,7 @@ export default function useReviewSession() {
         loadSession({
             config:
                 reviewConfig,
-        })
+        }).catch(() => {})
 
     }, [])
 
@@ -210,18 +224,29 @@ export default function useReviewSession() {
                 setError(
                     "Không tìm thấy review session"
                 )
+
                 return
 
             }
+
+
+            const reviewId =
+                saved.reviewId
+
+            const config =
+                saved.config || reviewConfig
+
+
             clearFlashcardProgress()
+
             clearReviewSession()
+
+
             await loadSession({
 
-                config:
-                    reviewConfig,
+                config,
 
-                reviewId:
-                    saved.reviewId,
+                reviewId,
 
             })
 

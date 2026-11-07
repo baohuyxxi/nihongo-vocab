@@ -64,10 +64,6 @@ export default function FlashcardReview({
   })()
 
 
-  /* ======================
-      STATES
-  ====================== */
-
   const [list, setList] =
     useState(
       savedProgress?.list || cards
@@ -117,9 +113,6 @@ export default function FlashcardReview({
     )
 
 
-  /* ======================
-      INITIAL START TIME
-  ====================== */
 
   useEffect(() => {
 

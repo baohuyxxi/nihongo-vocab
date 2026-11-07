@@ -1,4 +1,3 @@
-// hooks/useReviewConfig.js
 
 import {
   useEffect,
@@ -13,16 +12,33 @@ import {
 
 export default function useReviewConfig() {
 
-  const [selectedLessons,
-    setSelectedLessons] =
+  // ======================
+  // MINNA
+  // ======================
+
+  const [selectedLessons, setSelectedLessons] =
     useState([])
 
-  const [selectedTopics,
-    setSelectedTopics] =
+  const [selectedTopics, setSelectedTopics] =
     useState([])
 
-  const [selectedPartsOfSpeech,
-    setSelectedPartsOfSpeech] =
+
+  // ======================
+  // N3
+  // ======================
+
+  const [selectedUnits, setSelectedUnits] =
+    useState([])
+
+  const [selectedN3Topics, setSelectedN3Topics] =
+    useState([])
+
+
+  // ======================
+  // COMMON
+  // ======================
+
+  const [selectedPartsOfSpeech, setSelectedPartsOfSpeech] =
     useState([])
 
   const [mode, setMode] =
@@ -31,22 +47,19 @@ export default function useReviewConfig() {
   const [directions, setDirections] =
     useState(["jp_vi"])
 
-  const [reviewLimit,
-    setReviewLimit] =
+  const [reviewLimit, setReviewLimit] =
     useState(null)
 
 
-  /* ======================
-      LOAD CONFIG
-  ====================== */
+  // ======================
+  // LOAD CONFIG
+  // ======================
 
   useEffect(() => {
 
-    const saved =
-      getReviewConfig()
+    const saved = getReviewConfig()
 
     if (!saved) return
-
 
     setSelectedLessons(
       saved.lessons || []
@@ -54,6 +67,14 @@ export default function useReviewConfig() {
 
     setSelectedTopics(
       saved.topics || []
+    )
+
+    setSelectedUnits(
+      saved.units || []
+    )
+
+    setSelectedN3Topics(
+      saved.n3Topics || []
     )
 
     setSelectedPartsOfSpeech(
@@ -75,37 +96,45 @@ export default function useReviewConfig() {
   }, [])
 
 
-  /* ======================
-      CONFIG
-  ====================== */
+  // ======================
+  // CONFIG
+  // ======================
 
   const config = {
-    lessons:
-      selectedLessons,
 
-    topics:
-      selectedTopics,
+    lessons: selectedLessons,
 
-    partsOfSpeech:
-      selectedPartsOfSpeech,
+    topics: selectedTopics,
+
+    units: selectedUnits,
+
+    n3Topics: selectedN3Topics,
+
+    partsOfSpeech: selectedPartsOfSpeech,
 
     mode,
 
     directions,
 
-    limit:
-      reviewLimit,
+    limit: reviewLimit,
+
   }
 
+
+  // ======================
+  // SAVE CONFIG
+  // ======================
 
   const saveConfig = () => {
 
-    saveReviewConfig(
-      config
-    )
+    saveReviewConfig(config)
 
   }
 
+
+  // ======================
+  // RETURN
+  // ======================
 
   return {
 
@@ -114,6 +143,12 @@ export default function useReviewConfig() {
 
     selectedTopics,
     setSelectedTopics,
+
+    selectedUnits,
+    setSelectedUnits,
+
+    selectedN3Topics,
+    setSelectedN3Topics,
 
     selectedPartsOfSpeech,
     setSelectedPartsOfSpeech,

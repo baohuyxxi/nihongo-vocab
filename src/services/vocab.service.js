@@ -52,3 +52,12 @@ export const getAllVerbs = () => {
 export const getVocabWithoutImage = () => {
   return api.get("/vocab/without-image")
 }
+
+export const getVocabByUnit = (unit, n3Topic = "") => {
+  return api.get("/vocab/unit", {
+    params: {
+      unit,
+      ...(n3Topic && { n3Topic }),
+    },
+  });
+};
