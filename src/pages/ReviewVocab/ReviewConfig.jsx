@@ -1,20 +1,21 @@
-import { useRef }
-  from "react"
+import { useRef } from "react";
 
-import ReviewOptions
-  from "../../components/reviewConfig/ReviewOptions"
+import ReviewOptions from "../../components/reviewConfig/ReviewOptions";
 
-import ReviewContent
-  from "../../components/reviewConfig/ReviewContent"
-
+import ReviewContent from "../../components/reviewConfig/ReviewContent";
 
 export default function ReviewConfig({
-
   selectedLessons,
   setSelectedLessons,
 
   selectedTopics,
   setSelectedTopics,
+
+  selectedUnits,
+  setSelectedUnits,
+
+  selectedN3Topics,
+  setSelectedN3Topics,
 
   selectedPartsOfSpeech,
   setSelectedPartsOfSpeech,
@@ -32,20 +33,13 @@ export default function ReviewConfig({
   onContinue,
 
   hasSession,
-
 }) {
+  const isDragging = useRef(false);
 
-  const isDragging =
-    useRef(false)
-
-  const dragMode =
-    useRef("add")
-
+  const dragMode = useRef("add");
 
   return (
-
     <div className="space-y-8">
-
       <div
         className="
           grid
@@ -54,59 +48,30 @@ export default function ReviewConfig({
           gap-6
         "
       >
-
         <ReviewOptions
-
           mode={mode}
           setMode={setMode}
-
           directions={directions}
           setDirections={setDirections}
-
           reviewLimit={reviewLimit}
           setReviewLimit={setReviewLimit}
-
         />
-
 
         <ReviewContent
-
-          selectedLessons={
-            selectedLessons
-          }
-
-          setSelectedLessons={
-            setSelectedLessons
-          }
-
-          selectedTopics={
-            selectedTopics
-          }
-
-          setSelectedTopics={
-            setSelectedTopics
-          }
-
-          selectedPartsOfSpeech={
-            selectedPartsOfSpeech
-          }
-
-          setSelectedPartsOfSpeech={
-            setSelectedPartsOfSpeech
-          }
-
-          isDragging={
-            isDragging
-          }
-
-          dragMode={
-            dragMode
-          }
-
+          selectedLessons={selectedLessons}
+          setSelectedLessons={setSelectedLessons}
+          selectedTopics={selectedTopics}
+          setSelectedTopics={setSelectedTopics}
+          selectedPartsOfSpeech={selectedPartsOfSpeech}
+          setSelectedPartsOfSpeech={setSelectedPartsOfSpeech}
+          selectedUnits={selectedUnits}
+          setSelectedUnits={setSelectedUnits}
+          selectedN3Topics={selectedN3Topics}
+          setSelectedN3Topics={setSelectedN3Topics}
+          isDragging={isDragging}
+          dragMode={dragMode}
         />
-
       </div>
-
 
       <div
         className="
@@ -115,19 +80,10 @@ export default function ReviewConfig({
           gap-3
         "
       >
-
         <button
-
           type="button"
-
-          onClick={
-            onContinue
-          }
-
-          disabled={
-            !hasSession
-          }
-
+          onClick={onContinue}
+          disabled={!hasSession}
           className="
             inline-flex
             items-center
@@ -148,20 +104,12 @@ export default function ReviewConfig({
             disabled:cursor-not-allowed
           "
         >
-
           ▶️ Tiếp tục ôn
-
         </button>
 
-
         <button
-
           type="button"
-
-          onClick={
-            onStart
-          }
-
+          onClick={onStart}
           className="
             inline-flex
             items-center
@@ -177,13 +125,9 @@ export default function ReviewConfig({
             hover:bg-blue-700
           "
         >
-
           🚀 Bắt đầu ôn mới
-
         </button>
-
       </div>
-
     </div>
-  )
+  );
 }
