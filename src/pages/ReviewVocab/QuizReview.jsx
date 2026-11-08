@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from "react"
 
 export default function QuizReview({
   questions = [],
+  onResult,
 }) {
 
   /* ======================
@@ -55,12 +56,14 @@ export default function QuizReview({
       CHOOSE ANSWER
   ====================== */
 
-  const choose = (value) => {
+  const choose = async (value) => {
 
     if (showResult) return
 
     const isCorrect =
       value === q.correct
+
+    if (onResult) { await onResult(q, isCorrect); return }
 
     setSelected(value)
 

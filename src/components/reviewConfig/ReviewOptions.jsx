@@ -89,13 +89,13 @@ export default function ReviewOptions({
 
     }, [])
     return (
-        <div className="space-y-6">
+        <div className="space-y-5 md:space-y-6 min-w-0 w-full">
 
             {/* MODE */}
 
-            <section className="bg-white rounded-xl shadow p-5">
+            <section className="bg-white rounded-xl shadow p-4 sm:p-5 min-w-0">
 
-                <h2 className="font-semibold mb-4 flex items-center gap-2">
+                <h2 className="font-semibold mb-4 flex items-center gap-2 text-sm sm:text-base">
                     🎮 <span>Chế độ ôn</span>
                 </h2>
 
@@ -104,16 +104,16 @@ export default function ReviewOptions({
                     {REVIEW_MODES.map((item) => (
                         <label
                             key={item.key}
-                            className="flex items-center gap-3 cursor-pointer"
+                            className="flex items-center gap-3 cursor-pointer min-h-[44px]"
                         >
                             <input
                                 type="radio"
-                                className="scale-110"
+                                className="scale-110 min-w-[16px] min-h-[16px]"
                                 checked={mode === item.key}
                                 onChange={() => setMode(item.key)}
                             />
 
-                            <span>{item.label}</span>
+                            <span className="text-sm sm:text-base">{item.label}</span>
                         </label>
                     ))}
 
@@ -124,9 +124,9 @@ export default function ReviewOptions({
 
             {/* DIRECTION */}
 
-            <section className="bg-white rounded-xl shadow p-5">
+            <section className="bg-white rounded-xl shadow p-4 sm:p-5 min-w-0">
 
-                <h2 className="font-semibold mb-4 flex items-center gap-2">
+                <h2 className="font-semibold mb-4 flex items-center gap-2 text-sm sm:text-base">
                     🔁 <span>Hướng ôn</span>
                 </h2>
 
@@ -135,18 +135,18 @@ export default function ReviewOptions({
                     {DIRECTIONS.map((item) => (
                         <label
                             key={item.key}
-                            className="flex items-center gap-3 cursor-pointer"
+                            className="flex items-center gap-3 cursor-pointer min-h-[44px]"
                         >
                             <input
                                 type="checkbox"
-                                className="scale-110"
+                                className="scale-110 min-w-[16px] min-h-[16px]"
                                 checked={directions.includes(item.key)}
                                 onChange={() =>
                                     toggleDirection(item.key)
                                 }
                             />
 
-                            <span>{item.label}</span>
+                            <span className="text-sm sm:text-base">{item.label}</span>
                         </label>
                     ))}
 
@@ -157,9 +157,9 @@ export default function ReviewOptions({
 
             {/* LIMIT */}
 
-            <section className="bg-white rounded-xl shadow p-5">
+            <section className="bg-white rounded-xl shadow p-4 sm:p-5 min-w-0">
 
-                <h2 className="font-semibold mb-4 flex items-center gap-2">
+                <h2 className="font-semibold mb-4 flex items-center gap-2 text-sm sm:text-base">
                     🔢 <span>Số lượng từ mỗi phiên</span>
                 </h2>
 
@@ -181,7 +181,6 @@ export default function ReviewOptions({
                     >
 
                         <input
-                        
                             value={reviewLimit ?? ""}
                             placeholder="Tất cả"
                             onChange={(e) => {
@@ -202,11 +201,12 @@ export default function ReviewOptions({
                 flex-1
                 min-w-0
                 px-3
-                py-2
-                text-sm
+                py-3
+                text-base
                 outline-none
                 bg-transparent
               "
+                            inputMode="numeric"
                         />
 
                         <span
@@ -227,7 +227,7 @@ export default function ReviewOptions({
                             }
                             className="
                 px-3
-                py-2
+                py-3
                 border-l
                 border-gray-200
                 text-gray-500
@@ -236,6 +236,8 @@ export default function ReviewOptions({
                 flex
                 items-center
                 justify-center
+                min-w-[44px]
+                min-h-[44px]
               "
                         >
                             <svg

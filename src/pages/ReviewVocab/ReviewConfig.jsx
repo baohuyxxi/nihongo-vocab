@@ -20,6 +20,9 @@ export default function ReviewConfig({
   selectedPartsOfSpeech,
   setSelectedPartsOfSpeech,
 
+  curriculumTab,
+  setCurriculumTab,
+
   mode,
   setMode,
 
@@ -44,8 +47,11 @@ export default function ReviewConfig({
         className="
           grid
           grid-cols-1
-          lg:grid-cols-3
-          gap-6
+          gap-5
+          min-w-0
+          overflow-x-hidden
+          lg:grid-cols-[minmax(260px,0.8fr)_minmax(0,1.7fr)]
+          xl:gap-6
         "
       >
         <ReviewOptions
@@ -68,6 +74,8 @@ export default function ReviewConfig({
           setSelectedUnits={setSelectedUnits}
           selectedN3Topics={selectedN3Topics}
           setSelectedN3Topics={setSelectedN3Topics}
+          curriculumTab={curriculumTab}
+          setCurriculumTab={setCurriculumTab}
           isDragging={isDragging}
           dragMode={dragMode}
         />
@@ -76,8 +84,11 @@ export default function ReviewConfig({
       <div
         className="
           flex
+          flex-col
+          sm:flex-row
           justify-center
           gap-3
+          w-full
         "
       >
         <button
@@ -89,19 +100,23 @@ export default function ReviewConfig({
             items-center
             justify-center
             gap-2
-            px-8
+            px-5
             py-3
+            min-h-[44px]
             rounded-xl
             bg-gray-100
             text-gray-700
             border
             border-gray-300
-            text-lg
+            text-sm
+            sm:text-base
             font-semibold
             hover:bg-gray-200
             transition
             disabled:opacity-50
             disabled:cursor-not-allowed
+            w-full
+            sm:w-auto
           "
         >
           ▶️ Tiếp tục ôn
@@ -115,14 +130,18 @@ export default function ReviewConfig({
             items-center
             justify-center
             gap-2
-            px-8
+            px-5
             py-3
+            min-h-[44px]
             rounded-xl
             bg-blue-600
             text-white
-            text-lg
+            text-sm
+            sm:text-base
             font-semibold
             hover:bg-blue-700
+            w-full
+            sm:w-auto
           "
         >
           🚀 Bắt đầu ôn mới

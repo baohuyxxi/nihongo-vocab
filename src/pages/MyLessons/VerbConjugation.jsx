@@ -9,10 +9,7 @@ import JPTableInput
   from "../../components/JPTableInput"
 
 import {
-  detectVerbGroup,
-} from "../../utils/detectVerbGroup"
-
-import {
+  VERB_GROUP_MAP,
   conjugateVerb,
 } from "../../utils/conjugateVerb"
 
@@ -54,50 +51,68 @@ export default function VerbConjugation() {
 
     const fetchVerbs = async () => {
 
-      const res =
-        await getAllVerbs()
+      try {
+        const res =
+          await getAllVerbs()
 
-      const data =
-        res.data || []
+        const data =
+          Array.isArray(res?.data)
+            ? res.data
+            : []
 
-      const mapped = data.map((v) => {
+        const mapped = data
+          .map((v) => {
+            if (!v || typeof v.hiragana !== "string") {
+              return null
+            }
 
-        const g =
-          detectVerbGroup({
-            kanji: v.kanji,
-            hiragana: v.hiragana,
+            const group = VERB_GROUP_MAP[v.partOfSpeech]
+
+            if (!group) {
+              console.warn("Skipping verb without valid partOfSpeech", v)
+              return null
+            }
+
+            const conjugated = conjugateVerb({
+              hiragana: v.hiragana,
+              kanji: v.kanji,
+              partOfSpeech: v.partOfSpeech,
+            })
+
+            return {
+              ...v,
+              group,
+              conjugated,
+            }
           })
+          .filter(Boolean)
 
-        return {
-          ...v,
-          group: g,
-          conjugated:
-            conjugateVerb(
-              v.hiragana,
-              g
-            ),
-        }
-      })
+        setVerbs(mapped)
 
-      setVerbs(mapped)
-
-      setGroup1(
-        mapped.filter(
-          (v) => v.group === 1
+        setGroup1(
+          mapped.filter(
+            (v) => v.group === 1
+          )
         )
-      )
 
-      setGroup2(
-        mapped.filter(
-          (v) => v.group === 2
+        setGroup2(
+          mapped.filter(
+            (v) => v.group === 2
+          )
         )
-      )
 
-      setGroup3(
-        mapped.filter(
-          (v) => v.group === 3
+        setGroup3(
+          mapped.filter(
+            (v) => v.group === 3
+          )
         )
-      )
+      } catch (error) {
+        console.error("Failed to load verbs", error)
+        setVerbs([])
+        setGroup1([])
+        setGroup2([])
+        setGroup3([])
+      }
     }
 
     fetchVerbs()
@@ -123,12 +138,13 @@ export default function VerbConjugation() {
             Object.values(
               v.conjugated || {}
             )
+            .filter(
+              (f) => typeof f === "string"
+            )
 
           let score = 0
 
           forms.forEach((f) => {
-
-            if (!f) return
 
             // exact
             if (f === keyword) {
