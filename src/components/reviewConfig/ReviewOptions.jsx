@@ -11,6 +11,28 @@ const DIRECTIONS = [
     { key: "vi_jp", label: "Việt → Nhật" },
     { key: "kanji", label: "Kanji" },
     { key: "image", label: "Hình ảnh" },
+    // { key: "kanji_meaning", label: "Kanji → Nghĩa" },
+    // { key: "meaning_kanji", label: "Nghĩa → Kanji" },
+    // { key: "onyomi", label: "Onyomi" },
+    // { key: "kunyomi", label: "Kunyomi" },
+    // { key: "hanviet", label: "Hán Việt" },
+    // { key: "kanji_reading", label: "Kanji → Đọc" },
+    // { key: "reading_kanji", label: "Đọc → Kanji" },
+    // { key: "vocab_meaning", label: "Từ vựng → Nghĩa" },
+    // { key: "meaning_vocab", label: "Nghĩa → Từ vựng" },
+]
+
+const SOUMATOME_DIRECTIONS = [
+    { key: "kanji", label: "Kanji" },
+    { key: "kanji_meaning", label: "Kanji → Nghĩa" },
+    { key: "meaning_kanji", label: "Nghĩa → Kanji" },
+    { key: "onyomi", label: "Onyomi" },
+    { key: "kunyomi", label: "Kunyomi" },
+    { key: "hanviet", label: "Hán Việt" },
+    { key: "kanji_reading", label: "Kanji → Đọc" },
+    { key: "reading_kanji", label: "Đọc → Kanji" },
+    { key: "vocab_meaning", label: "Từ vựng → Nghĩa" },
+    { key: "meaning_vocab", label: "Nghĩa → Từ vựng" },
 ]
 
 const LIMIT_OPTIONS = [
@@ -28,16 +50,21 @@ export default function ReviewOptions({
     setDirections,
     reviewLimit,
     setReviewLimit,
+    n3Source,
 
 }) {
     const [showLimitOptions, setShowLimitOptions] = useState(false)
     const [reviewedCount, setReviewedCount] = useState(0)
     const [reviewTotal, setReviewTotal] = useState(0)
 
+    const availableDirections =
+        n3Source === "sou-matome-kanji"
+            ? SOUMATOME_DIRECTIONS
+            : DIRECTIONS
+
     const toggleDirection = (key) => {
         setDirections((prev) => {
             if (prev.includes(key)) {
-                // Không cho phép bỏ hết hướng ôn
                 if (prev.length === 1) {
                     return prev
                 }
@@ -48,6 +75,20 @@ export default function ReviewOptions({
             return [...prev, key]
         })
     }
+
+    useEffect(() => {
+        const validKeys = new Set(availableDirections.map((item) => item.key))
+
+        setDirections((prev) => {
+            const filtered = prev.filter((item) => validKeys.has(item))
+
+            if (filtered.length > 0) {
+                return filtered
+            }
+
+            return n3Source === "sou-matome-kanji" ? ["kanji"] : ["jp_vi"]
+        })
+    }, [n3Source])
 
     useEffect(() => {
 
@@ -132,7 +173,7 @@ export default function ReviewOptions({
 
                 <div className="space-y-3">
 
-                    {DIRECTIONS.map((item) => (
+                    {availableDirections.map((item) => (
                         <label
                             key={item.key}
                             className="flex items-center gap-3 cursor-pointer min-h-[44px]"

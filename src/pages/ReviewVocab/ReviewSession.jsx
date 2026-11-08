@@ -14,6 +14,10 @@ import TypingReview
 import useReviewSession
   from "../../hooks/useReviewSession"
 
+import {
+  completeKanjiQuestion,
+} from "../../services/kanjiCurriculum.service"
+
 
 export default function ReviewSession() {
 
@@ -22,20 +26,30 @@ export default function ReviewSession() {
 
 
   const {
-
     reviewConfig,
-
     session,
-
     loading,
-
     error,
-
     continueReview,
+  } = useReviewSession()
 
-  } =
-    useReviewSession()
+  const isN3KanjiSession = reviewConfig?.n3Source === "sou-matome-kanji"
 
+  const handleFlashcardResult = async (card, isKnown) => {
+    if (!isN3KanjiSession || !session?.reviewId || !card?.itemType || !card?.itemId) {
+      return
+    }
+
+    if (!isKnown) {
+      return
+    }
+
+    await completeKanjiQuestion({
+      reviewId: session.reviewId,
+      itemType: card.itemType,
+      itemId: card.itemId,
+    })
+  }
 
   if (!reviewConfig) {
 
@@ -229,6 +243,9 @@ export default function ReviewSession() {
           <FlashcardReview
             cards={session.cards}
             onContinue={continueReview}
+            onResult={handleFlashcardResult}
+            progressKey={isN3KanjiSession ? "n3FlashcardProgress" : "flashcardProgress"}
+            sessionStorageKey={isN3KanjiSession ? "n3ReviewSessionData" : "reviewSessionData"}
           />
 
         )}

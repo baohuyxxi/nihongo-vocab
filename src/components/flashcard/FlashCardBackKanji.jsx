@@ -14,202 +14,90 @@ export default function FlashCardBackKanji({
   back,
   onSpeak,
 }) {
-
   const jpRef = useRef(null)
+  const [fontSize, setFontSize] = useState(MAX_SIZE)
 
-  const [fontSize, setFontSize]
-    = useState(MAX_SIZE)
+  const japaneseText = typeof back?.hiragana === "string"
+    ? back.hiragana
+    : typeof back?.word === "string"
+      ? back.word
+      : typeof back?.jp === "string"
+        ? back.jp
+        : ""
 
-  // =========================
-  // AUTO FIT JP TEXT
-  // =========================
+  const hanVietText = typeof back?.hanViet === "string"
+    ? back.hanViet
+    : typeof back?.hanviet === "string"
+      ? back.hanviet
+      : ""
+
+  const meaningText = typeof back?.meaning === "string"
+    ? back.meaning
+    : typeof back?.meaningText === "string"
+      ? back.meaningText
+      : ""
 
   useLayoutEffect(() => {
-
     const el = jpRef.current
-
-    if (!el || !back?.jp) return
+    if (!el || !japaneseText) return
 
     let size = MAX_SIZE
-
     el.style.fontSize = `${size}px`
 
     const parent = el.parentElement
+    if (!parent) return
 
-    // ✅ chỉ check HEIGHT
-    // cho phép xuống hàng
-    while (
-      size > MIN_SIZE &&
-      el.scrollHeight > parent.clientHeight
-    ) {
-
+    while (size > MIN_SIZE && el.scrollHeight > parent.clientHeight) {
       size -= STEP
-
       el.style.fontSize = `${size}px`
     }
 
     setFontSize(size)
-
-  }, [back?.jp])
+  }, [japaneseText])
 
   if (!back) return null
 
   return (
-
-    <div
-      className="
-        w-full
-        h-full
-
-        flex
-        flex-col
-        items-center
-        justify-center
-
-        gap-3
-        sm:gap-4
-        md:gap-5
-
-        px-3
-        sm:px-5
-        md:px-7
-
-        py-4
-        sm:py-5
-
-        text-center
-        overflow-hidden
-      "
-    >
-
-      {/* =========================
-          HÁN VIỆT
-      ========================= */}
-
-      {back.hanViet && (
-
-        <div
-          className="
-            w-full
-
-            font-bold
-            text-gray-800
-
-            leading-[1.15]
-
-            text-[1.6rem]
-            sm:text-[2.2rem]
-            md:text-[3rem]
-            lg:text-[3.5rem]
-
-            break-words
-          "
-        >
-          {back.hanViet}
+    <div className="flex h-full w-full flex-col items-center justify-center gap-2 overflow-hidden px-3 py-3 text-center sm:gap-3 sm:px-5 md:gap-4 md:px-7">
+      {hanVietText && (
+        <div className="w-full break-words font-bold leading-[1.15] text-gray-800 text-[1.2rem] sm:text-[1.8rem] md:text-[2.4rem] lg:text-[3rem]">
+          {hanVietText}
         </div>
-
       )}
 
-      {/* =========================
-          JP
-      ========================= */}
-
-      <div
-        className="
-          relative
-
-          w-full
-
-          flex
-          items-center
-          justify-center
-
-          min-h-[70px]
-          sm:min-h-[90px]
-          md:min-h-[110px]
-
-          overflow-hidden
-        "
-      >
-
+      <div className="relative flex min-h-[58px] w-full items-center justify-center overflow-hidden sm:min-h-[72px] md:min-h-[90px]">
         <span
           ref={jpRef}
-          className="
-            font-bold
-            text-gray-900
-
-            leading-[1.15]
-
-            break-words
-            whitespace-normal
-
-            text-center
-
-            px-8
-            sm:px-12
-          "
+          className="whitespace-normal break-words px-8 text-center font-bold leading-[1.15] text-gray-900 sm:px-12"
           style={{
             fontSize,
             wordBreak: "break-word",
             overflowWrap: "break-word",
           }}
         >
-          {back.jp}
+          {japaneseText}
         </span>
 
-        {/* SPEAK */}
-
-        <button
-          onClick={(e) => {
-
-            e.stopPropagation()
-
-            onSpeak?.(back.jp)
-          }}
-          className="
-            absolute
-            right-0
-            top-1/2
-            -translate-y-1/2
-
-            text-xl
-            sm:text-2xl
-
-            hover:scale-110
-            active:scale-95
-
-            transition
-          "
-        >
-          🔊
-        </button>
-
+        {japaneseText && (
+          <button
+            type="button"
+            onClick={(e) => {
+              e.stopPropagation()
+              onSpeak?.(japaneseText)
+            }}
+            className="absolute right-0 top-1/2 -translate-y-1/2 text-xl transition hover:scale-110 active:scale-95 sm:text-2xl"
+            aria-label="Đọc từ"
+          >
+            🔊
+          </button>
+        )}
       </div>
 
-      {/* =========================
-          MEANING
-      ========================= */}
-
-      <div
-        className="
-          w-full
-
-          font-bold
-          text-gray-700
-
-          leading-[1.2]
-
-          text-[1.6rem]
-          sm:text-[2.2rem]
-          md:text-[3rem]
-          lg:text-[3.5rem]
-
-          break-words
-        "
-      >
-        {back.meaning}
-      </div>
-
+      {meaningText && (
+        <div className="w-full break-words font-bold leading-[1.2] text-gray-700 text-[1rem] sm:text-[1.4rem] md:text-[1.8rem] lg:text-[2.2rem]">
+          {meaningText}
+        </div>
+      )}
     </div>
   )
 }

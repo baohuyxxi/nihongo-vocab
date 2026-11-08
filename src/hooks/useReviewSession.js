@@ -12,11 +12,25 @@ import {
     saveReviewSession,
     clearFlashcardProgress,
     clearReviewSession,
+    clearN3ReviewSession,
+    getN3ReviewSession,
+    saveN3ReviewSession,
+    clearN3FlashcardProgress,
+    getN3ReviewConfig,
 } from "../utils/reviewStorage"
 
 import {
     getReviewSession,
 } from "../services/vocab.service"
+
+import {
+    getKanjiSession,
+} from "../services/kanjiCurriculum.service"
+
+import {
+    getN3KanjiSelectionPayload,
+    normalizeN3KanjiReviewSession,
+} from "../adapters/n3KanjiReviewAdapter"
 
 
 export default function useReviewSession() {
@@ -33,6 +47,12 @@ export default function useReviewSession() {
 
     const reviewConfig =
         getReviewConfig()
+
+    const currentSource =
+        reviewConfig?.n3Source ?? null
+
+    const isN3Review =
+        currentSource === "sou-matome-kanji" || currentSource === "mimi-kara"
 
 
     /* ======================
@@ -60,6 +80,7 @@ export default function useReviewSession() {
                         // N3
                         units = [],
                         n3Topics = [],
+                        n3KanjiPairs = [],
 
                         partsOfSpeech = [],
                         mode = "flashcard",
@@ -67,66 +88,115 @@ export default function useReviewSession() {
                         limit = null,
                     } = config
 
+                    const resolvedSource =
+                        config?.n3Source === "sou-matome-kanji"
+                            ? "sou-matome-kanji"
+                            : config?.n3Source === "mimi-kara"
+                                ? "mimi-kara"
+                                : "unknown"
 
-                    const res =
-                        await getReviewSession({
+                    const isN3KanjiFlow =
+                        resolvedSource === "sou-matome-kanji" &&
+                        Array.isArray(n3KanjiPairs) &&
+                        n3KanjiPairs.length > 0
 
-                            lessons:
-                                lessons.join(","),
+                    if (config?.curriculumTab === "n3" && resolvedSource === "unknown") {
+                        throw new Error("Vui lòng chọn rõ nguồn ôn tập N3: Mimi kara Oboeru hoặc Sou Matome N3 Kanji.")
+                    }
 
-                            topics:
-                                topics.join(","),
+                    let res
+                    let data
 
-                            // N3
-                            units:
-                                units.join(","),
+                    if (isN3KanjiFlow) {
+                        const selection =
+                            getN3KanjiSelectionPayload(n3KanjiPairs)
 
-                            n3Topics:
-                                n3Topics.join(","),
+                        if (!selection.weeks || !selection.days) {
+                            throw new Error("Chưa chọn bài Sou Matome N3 nào")
+                        }
 
-                            partsOfSpeech:
-                                partsOfSpeech.join(","),
+                        if (resolvedSource !== "sou-matome-kanji") {
+                            throw new Error("Vui lòng chọn rõ nguồn ôn tập N3: Mimi kara hoặc Sou Matome Kanji.")
+                        }
 
+                        res = await getKanjiSession({
+                            curriculum: "sou-matome-n3-kanji",
+                            weeks: selection.weeks,
+                            days: selection.days,
+                            contentType: "both",
                             mode,
-
-                            directions:
-                                directions.join(","),
-
-                            limit:
-                                limit ?? "",
-
+                            directions: Array.isArray(directions)
+                                ? directions.filter((item) => ["kanji", "kanji_meaning", "meaning_kanji", "onyomi", "kunyomi", "hanviet", "kanji_reading", "reading_kanji", "vocab_meaning", "meaning_vocab"].includes(item)).join(",")
+                                : directions,
+                            limit: limit ?? null,
                             reviewId,
-
                         })
 
+                        data = normalizeN3KanjiReviewSession(res)
 
-                    const data =
-                        res.data
+                        setSession(data)
 
+                        saveN3ReviewSession({
+                            config,
+                            progress: {
+                                ...res.progress,
+                                completed: res.progress?.completed ?? false,
+                            },
+                            reviewId: res.reviewId,
+                            session: data,
+                        })
+
+                        return data
+                    }
+
+                    res = await getReviewSession({
+
+                        lessons:
+                            lessons.join(","),
+
+                        topics:
+                            topics.join(","),
+
+                        // N3
+                        units:
+                            units.join(","),
+
+                        n3Topics:
+                            n3Topics.join(","),
+
+                        partsOfSpeech:
+                            partsOfSpeech.join(","),
+
+                        mode,
+
+                        directions:
+                            directions.join(","),
+
+                        limit:
+                            limit ?? "",
+
+                        reviewId,
+
+                    })
+
+                    data = res.data
 
                     setSession(
                         data
                     )
 
-
                     saveReviewSession({
-
                         config,
-
                         progress: {
                             ...res.progress,
                             completed:
                                 res.progress?.completed ?? false,
                         },
-
                         reviewId:
                             res.reviewId,
-
                         session:
                             data,
-
                     })
-
 
                     return data
 
@@ -172,37 +242,24 @@ export default function useReviewSession() {
 
 
         const saved =
-            getSavedSession()
-
-
-        /*
-          Có session đang dang dở
-        */
+            currentSource === "sou-matome-kanji"
+                ? getN3ReviewSession()
+                : getSavedSession()
 
         if (saved?.session) {
-
-            setSession(
-                saved.session
-            )
-
+            setSession(saved.session)
             setLoading(false)
-
             return
-
         }
 
-
-        /*
-          Chưa có session
-          => tạo session mới
-        */
-
-        clearFlashcardProgress()
-
+        if (currentSource === "sou-matome-kanji") {
+            clearN3FlashcardProgress()
+        } else {
+            clearFlashcardProgress()
+        }
 
         loadSession({
-            config:
-                reviewConfig,
+            config: reviewConfig,
         }).catch(() => {})
 
     }, [])
@@ -216,8 +273,9 @@ export default function useReviewSession() {
         async () => {
 
             const saved =
-                getSavedSession()
-
+                currentSource === "sou-matome-kanji"
+                    ? getN3ReviewSession()
+                    : getSavedSession()
 
             if (!saved?.reviewId) {
 
@@ -237,9 +295,13 @@ export default function useReviewSession() {
                 saved.config || reviewConfig
 
 
-            clearFlashcardProgress()
-
-            clearReviewSession()
+            if (currentSource === "sou-matome-kanji") {
+                clearN3FlashcardProgress()
+                clearN3ReviewSession()
+            } else {
+                clearFlashcardProgress()
+                clearReviewSession()
+            }
 
 
             await loadSession({

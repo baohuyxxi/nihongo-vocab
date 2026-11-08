@@ -1,14 +1,18 @@
 import { useEffect, useState } from "react"
 
-const FLASHCARD_PROGRESS_KEY = "flashcardProgress"
+const DEFAULT_PROGRESS_KEY = "flashcardProgress"
+
 export default function FlashcardTimer({
   isFinished,
   onFinish,
+  progressKey = DEFAULT_PROGRESS_KEY,
 }) {
+  const storageKey = progressKey || DEFAULT_PROGRESS_KEY
+
   const [startTime] = useState(() => {
     try {
       const saved = JSON.parse(
-        localStorage.getItem(FLASHCARD_PROGRESS_KEY) || "null"
+        localStorage.getItem(storageKey) || "null"
       )
 
       if (saved?.startTime) return saved.startTime
@@ -16,7 +20,7 @@ export default function FlashcardTimer({
       const now = Date.now()
 
       localStorage.setItem(
-        FLASHCARD_PROGRESS_KEY,
+        storageKey,
         JSON.stringify({
           ...saved,
           startTime: now,
