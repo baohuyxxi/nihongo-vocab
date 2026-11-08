@@ -152,21 +152,32 @@ export default function ReviewSession() {
 
     <div
       className="
+        mx-auto
+        flex
+        w-full
+        max-w-6xl
+        flex-col
+        gap-2
+        rounded-xl
         bg-white
-        p-6
-        rounded
-        shadow
-        space-y-4
+        p-3
+        shadow-sm
+        sm:gap-3
+        sm:p-4
       "
     >
 
       <div
         className="
           flex
+          shrink-0
           items-center
           justify-between
+          gap-2
           border-b
-          pb-3
+          pb-2
+          text-xs
+          sm:text-sm
         "
       >
 
@@ -177,7 +188,6 @@ export default function ReviewSession() {
           }
 
           className="
-            text-sm
             text-blue-600
             hover:underline
           "
@@ -188,7 +198,7 @@ export default function ReviewSession() {
         </button>
 
 
-        <div className="text-sm text-gray-500">
+        <div className="truncate text-right text-gray-500">
 
           🧠 {session.mode}
 

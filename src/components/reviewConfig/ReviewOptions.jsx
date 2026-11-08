@@ -203,8 +203,10 @@ export default function ReviewOptions({
                 px-3
                 py-3
                 text-base
+                md:text-sm
                 outline-none
                 bg-transparent
+                [font-size:16px]
               "
                             inputMode="numeric"
                         />

@@ -111,7 +111,7 @@ export default function ReviewContent({
       <div
         role="tablist"
         aria-label="Curriculum selector"
-        className="flex w-full rounded-xl bg-gray-100 p-1 border border-gray-200 overflow-hidden min-w-0"
+        className="grid w-full grid-cols-3 gap-1 rounded-xl bg-gray-100 p-1 border border-gray-200 min-w-0"
       >
         {TABS.map((tab) => {
           const isActive = activeTab === tab.key;
@@ -125,8 +125,8 @@ export default function ReviewContent({
               aria-pressed={isActive}
               onClick={() => handleTabChange(tab.key)}
               className={`
-                flex-1 min-w-0 h-11 rounded-lg px-2 text-[11px] sm:text-sm font-medium transition
-                whitespace-nowrap touch-manipulation
+                min-h-[44px] rounded-lg px-2 text-[11px] sm:text-xs md:text-sm font-medium transition
+                whitespace-nowrap touch-manipulation focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500
                 ${
                   isActive
                     ? "bg-white text-gray-800 shadow-sm"

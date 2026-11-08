@@ -4,76 +4,26 @@ export default function FlashcardProgress({
   learned,
   total,
 }) {
-
-  const safeLearned =
-    Math.max(0, learned)
-
-  const percent = total
-    ? Math.round(
-      (safeLearned / total) * 100
-    )
-    : 0
+  const safeLearned = Math.max(0, learned)
+  const percent = total ? Math.round((safeLearned / total) * 100) : 0
 
   return (
-
-    <div
-      className="
-        w-full
-        max-w-xl
-
-        px-2
-      "
-    >
-
-      <div
-        className="
-          h-2
-          sm:h-3
-
-          bg-gray-200
-          rounded-full
-
-          overflow-hidden
-        "
-      >
-
-        <div
-          className="
-            h-full
-
-            bg-green-500
-
-            rounded-full
-
-            transition-all
-            duration-300
-          "
-
-          style={{
-            width: `${percent}%`
-          }}
-        />
-
+    <div className="w-full max-w-xl px-1">
+      <div className="flex items-center justify-between text-[11px] font-medium text-slate-600 sm:text-xs">
+        <span>Tiến độ</span>
+        <span>{percent}%</span>
       </div>
 
-      <p
-        className="
-          text-[11px]
-          sm:text-sm
+      <div className="mt-2 h-2.5 overflow-hidden rounded-full bg-slate-200 shadow-inner sm:h-3">
+        <div
+          className="h-full rounded-full bg-gradient-to-r from-emerald-400 via-green-500 to-emerald-600 transition-all duration-300"
+          style={{ width: `${percent}%` }}
+        />
+      </div>
 
-          text-center
-
-          mt-1
-          sm:mt-2
-
-          text-gray-600
-        "
-      >
+      <p className="mt-2 text-center text-[11px] text-slate-600 sm:text-sm">
         Đã nhớ {safeLearned}/{total}
-        {" "}
-        ({percent}%)
       </p>
-
     </div>
   )
 }

@@ -44,19 +44,12 @@ export default function FlashcardTimer({
     return () => clearInterval(timer)
   }, [isFinished, startTime, onFinish])
 
-  const minutes = Math.floor(
-    (now - startTime) / 60_000
-  )
+  const minutes = Math.floor((now - startTime) / 60_000)
 
   return (
-    <div className="
-      text-xs sm:text-sm
-      text-gray-500
-      bg-gray-100
-      px-3 py-1.5
-      rounded-full
-    ">
-      ⏱ {minutes} phút
+    <div className="inline-flex items-center gap-2 rounded-full border border-slate-200 bg-white/90 px-3 py-1.5 text-xs font-medium text-slate-600 shadow-sm sm:text-sm">
+      <span className="text-base">⏱</span>
+      <span>{minutes} phút</span>
     </div>
   )
 }
