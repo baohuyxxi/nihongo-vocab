@@ -17,6 +17,12 @@ export default function ReviewConfig({
   selectedN3Topics,
   setSelectedN3Topics,
 
+  selectedKanjiPairs,
+  setSelectedKanjiPairs,
+
+  n3Source,
+  setN3Source,
+
   selectedPartsOfSpeech,
   setSelectedPartsOfSpeech,
 
@@ -63,6 +69,7 @@ export default function ReviewConfig({
           setDirections={setDirections}
           reviewLimit={reviewLimit}
           setReviewLimit={setReviewLimit}
+          n3Source={n3Source}
         />
 
         <ReviewContent
@@ -76,6 +83,10 @@ export default function ReviewConfig({
           setSelectedUnits={setSelectedUnits}
           selectedN3Topics={selectedN3Topics}
           setSelectedN3Topics={setSelectedN3Topics}
+          selectedKanjiPairs={selectedKanjiPairs}
+          setSelectedKanjiPairs={setSelectedKanjiPairs}
+          n3Source={n3Source}
+          setN3Source={setN3Source}
           curriculumTab={curriculumTab}
           setCurriculumTab={setCurriculumTab}
           isDragging={isDragging}

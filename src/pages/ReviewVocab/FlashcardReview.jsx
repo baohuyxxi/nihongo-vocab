@@ -41,192 +41,78 @@ export default function FlashcardReview({
   onContinue,
   onResult,
   progressKey = FLASHCARD_PROGRESS_KEY,
+  sessionStorageKey = "reviewSessionData",
 }) {
-  const FLASHCARD_PROGRESS_KEY = progressKey
-
-  /* ======================
-      LOAD SAVED PROGRESS
-  ====================== */
+  const storageKey = progressKey || FLASHCARD_PROGRESS_KEY
 
   const savedProgress = (() => {
-
     try {
-
-      return JSON.parse(
-        localStorage.getItem(
-          FLASHCARD_PROGRESS_KEY
-        ) || "null"
-      )
-
+      return JSON.parse(localStorage.getItem(storageKey) || "null")
     } catch {
-
       return null
-
     }
-
   })()
 
+  const [list, setList] = useState(
+    Array.isArray(savedProgress?.list) && savedProgress.list.length > 0
+      ? savedProgress.list
+      : cards,
+  )
 
-  const [list, setList] =
-    useState(
-      savedProgress?.list || cards
-    )
+  const [index, setIndex] = useState(
+    Number.isInteger(savedProgress?.index) ? savedProgress.index : 0,
+  )
 
-
-  const [index, setIndex] =
-    useState(
-      savedProgress?.index || 0
-    )
-
-
-  const [showAnswer, setShowAnswer] =
-    useState(
-      savedProgress?.showAnswer || false
-    )
-
-
-  const [autoFlip, setAutoFlip] =
-    useState(false)
-
-
-  const [flipDelay, setFlipDelay] =
-    useState(4000)
-
-
-  const [currentJP, setCurrentJP] =
-    useState(null)
-
-
-  const [repeatMap, setRepeatMap] =
-    useState(
-      savedProgress?.repeatMap || {}
-    )
-
-
-  const [startTime, setStartTime] =
-    useState(
-      savedProgress?.startTime ||
-      Date.now()
-    )
-
-
-  const [totalTime, setTotalTime] =
-    useState(
-      savedProgress?.totalTime || null
-    )
-
-
+  const [showAnswer, setShowAnswer] = useState(Boolean(savedProgress?.showAnswer))
+  const [autoFlip, setAutoFlip] = useState(false)
+  const [flipDelay, setFlipDelay] = useState(4000)
+  const [currentJP, setCurrentJP] = useState(null)
+  const [processing, setProcessing] = useState(false)
+  const [repeatMap, setRepeatMap] = useState(savedProgress?.repeatMap || {})
+  const [startTime, setStartTime] = useState(savedProgress?.startTime || Date.now())
+  const [totalTime, setTotalTime] = useState(savedProgress?.totalTime ?? null)
 
   useEffect(() => {
+    if (!Array.isArray(cards) || cards.length === 0) return
 
-    const saved =
-      JSON.parse(
-        localStorage.getItem(
-          FLASHCARD_PROGRESS_KEY
-        ) || "null"
-      )
+    const currentSaved = (() => {
+      try {
+        return JSON.parse(localStorage.getItem(storageKey) || "null")
+      } catch {
+        return null
+      }
+    })()
 
-    if (saved?.startTime) {
-
-      setStartTime(
-        saved.startTime
-      )
-
-      return
-
-    }
-
-
-    const now =
-      Date.now()
-
-    setStartTime(now)
-
-
-    localStorage.setItem(
-
-      FLASHCARD_PROGRESS_KEY,
-
-      JSON.stringify({
-
-        list,
-
-        index,
-
-        repeatMap,
-
-        showAnswer,
-
-        startTime: now,
-
-        totalTime: null,
-
-      })
-
-    )
-
-  }, [])
-
-
-  /* ======================
-      DERIVED
-  ====================== */
-
-  const card =
-    list[index]
-
-
-  const finished =
-    list.length === 0
-
-
-  /* ======================
-      SAVE PROGRESS
-  ====================== */
-
-  useEffect(() => {
-
-    /*
-      Không lưu lại progress sau khi
-      session đã hoàn thành.
-    */
-
-    if (finished) {
+    if (currentSaved?.list && currentSaved.list.length > 0) {
       return
     }
 
+    setList(cards)
+    setIndex(0)
+    setRepeatMap({})
+    setShowAnswer(false)
+    setTotalTime(null)
+    setStartTime(Date.now())
+  }, [cards, storageKey])
+
+  const card = list[index] || null
+  const finished = list.length === 0
+
+  useEffect(() => {
+    if (finished) return
 
     localStorage.setItem(
-
-      FLASHCARD_PROGRESS_KEY,
-
+      storageKey,
       JSON.stringify({
-
         list,
-
         index,
-
         repeatMap,
-
         showAnswer,
-
         startTime,
-
         totalTime,
-
-      })
-
+      }),
     )
-
-  }, [
-    list,
-    index,
-    repeatMap,
-    showAnswer,
-    startTime,
-    totalTime,
-    finished,
-  ])
+  }, [list, index, repeatMap, showAnswer, startTime, totalTime, finished, storageKey])
 
 
   /* ======================
@@ -314,69 +200,53 @@ export default function FlashcardReview({
   ====================== */
 
   const markKnown = async () => {
-    if (onResult) { await onResult(card, true); return }
+    const current = list[index]
+    if (!current || processing) return
 
-    setList((l) =>
-      l.filter(
-        (_, i) =>
-          i !== index
-      )
-    )
+    setProcessing(true)
 
+    try {
+      if (onResult) {
+        await onResult(current, true)
+      }
 
-    setIndex((i) =>
-      Math.min(
-        i,
-        list.length - 2
-      )
-    )
-
-
-    setShowAnswer(false)
-
+      setList((prev) => prev.filter((_, i) => i !== index))
+      setIndex((prev) => Math.min(prev, Math.max(list.length - 2, 0)))
+      setShowAnswer(false)
+    } catch (error) {
+      console.error("Flashcard markKnown failed:", error)
+    } finally {
+      setProcessing(false)
+    }
   }
 
-
   const markUnknown = async () => {
-    if (onResult) { await onResult(card, false); return }
+    const current = list[index]
+    if (!current || processing) return
 
-    const current =
-      list[index]
+    setProcessing(true)
 
+    try {
+      if (onResult) {
+        await onResult(current, false)
+      }
 
-    if (!current) {
-      return
+      const id = current.id
+      setRepeatMap((m) => ({
+        ...m,
+        [id]: (m[id] || 0) + 1,
+      }))
+
+      setList((prev) => {
+        const next = prev.filter((_, i) => i !== index)
+        return [...next, current]
+      })
+      setShowAnswer(false)
+    } catch (error) {
+      console.error("Flashcard markUnknown failed:", error)
+    } finally {
+      setProcessing(false)
     }
-
-
-    const id =
-      current.id
-
-
-    setRepeatMap((m) => ({
-
-      ...m,
-
-      [id]:
-        (m[id] || 0) + 1,
-
-    }))
-
-
-    setList((l) => [
-
-      ...l.filter(
-        (_, i) =>
-          i !== index
-      ),
-
-      l[index],
-
-    ])
-
-
-    setShowAnswer(false)
-
   }
 
 
@@ -514,6 +384,7 @@ export default function FlashcardReview({
             startTime
           )
         }
+        sessionStorageKey={sessionStorageKey}
 
         onContinue={
           onContinue
@@ -556,7 +427,7 @@ export default function FlashcardReview({
 
 
           localStorage.removeItem(
-            FLASHCARD_PROGRESS_KEY
+            storageKey
           )
 
 
@@ -567,7 +438,7 @@ export default function FlashcardReview({
 
           localStorage.setItem(
 
-            FLASHCARD_PROGRESS_KEY,
+            storageKey,
 
             JSON.stringify({
 
@@ -634,7 +505,11 @@ export default function FlashcardReview({
     <div className="mx-auto flex w-full max-w-6xl flex-col gap-2 px-1 py-1 sm:gap-3 sm:px-2">
       <div className="rounded-2xl border border-slate-200 bg-white/90 p-2 shadow-sm backdrop-blur-sm sm:p-3">
         <div className="flex flex-col gap-2 md:flex-row md:items-center md:justify-between">
-          <FlashcardTimer isFinished={finished} onFinish={handleTimerFinish} />
+          <FlashcardTimer
+            isFinished={finished}
+            onFinish={handleTimerFinish}
+            progressKey={storageKey}
+          />
           <div className="w-full max-w-xl md:w-auto">
             <FlashcardProgress
               learned={Math.max(0, cards.length - list.length)}

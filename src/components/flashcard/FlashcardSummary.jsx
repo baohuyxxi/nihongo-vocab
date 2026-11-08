@@ -4,7 +4,7 @@ import {
 } from "react"
 
 
-const SESSION_STORAGE_KEY =
+const DEFAULT_SESSION_STORAGE_KEY =
   "reviewSessionData"
 
 
@@ -14,6 +14,7 @@ export default function FlashcardSummary({
   totalTime,
   onRestart,
   onContinue,
+  sessionStorageKey = DEFAULT_SESSION_STORAGE_KEY,
 }) {
 
   const [progressData, setProgressData] =
@@ -30,7 +31,7 @@ export default function FlashcardSummary({
 
       const saved =
         localStorage.getItem(
-          SESSION_STORAGE_KEY
+          sessionStorageKey || DEFAULT_SESSION_STORAGE_KEY
         )
 
 

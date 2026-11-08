@@ -2,6 +2,12 @@ import FlashcardFront from "./FlashcardFront"
 import FlashcardBack from "./FlashcardBack"
 import { useEffect } from "react"
 
+const getJapaneseText = (value) => {
+    if (!value) return ""
+    if (typeof value === "string") return value
+    return value.hiragana || value.jp || value.word || ""
+}
+
 export default function Flashcard({
     front,
     back,
@@ -13,70 +19,14 @@ export default function Flashcard({
     index,
     onExposeJP,
 }) {
-
-    // =========================
-    // JP TEXT FOR KEY "3"
-    // =========================
-
     const getJPText = () => {
-
-        // =========================
-        // JP → VI
-        // Front là tiếng Nhật
-        // =========================
-
-        if (
-            direction === "jp_vi" &&
-            !showAnswer
-        ) {
-            return front
+        if (direction === "jp_vi" && !showAnswer) {
+            return front || ""
         }
 
-
-        // =========================
-        // VI → JP
-        // Back là tiếng Nhật
-        // =========================
-
-        if (
-            direction === "vi_jp" &&
-            showAnswer
-        ) {
-            return back
+        if ((direction === "vi_jp" || direction === "kanji" || direction === "image") && showAnswer) {
+            return getJapaneseText(back)
         }
-
-
-        // =========================
-        // IMAGE
-        //
-        // Front là IMAGE
-        // Back mới có tiếng Nhật
-        //
-        // Chỉ cho phép đọc khi đã lật
-        // =========================
-
-        if (
-            direction === "image" &&
-            showAnswer
-        ) {
-            return back?.jp || null
-        }
-
-
-        // =========================
-        // KANJI
-        //
-        // Nếu muốn phím 3 đọc JP
-        // khi đang ở mặt sau Kanji
-        // =========================
-
-        if (
-            direction === "kanji" &&
-            showAnswer
-        ) {
-            return back?.jp || null
-        }
-
 
         return null
     }
