@@ -631,240 +631,50 @@ export default function FlashcardReview({
   ====================== */
 
   return (
-
-    <div
-      className="
-        w-full
-        max-w-6xl
-        mx-auto
-
-        flex
-        flex-col
-        items-center
-
-        gap-2
-        sm:gap-3
-        md:gap-4
-
-        px-2
-        sm:px-4
-
-        py-1
-        sm:py-2
-      "
-    >
-
-      {/* TIMER */}
-
-      <div
-        className="
-          w-full
-          flex
-          justify-center
-        "
-      >
-
-        <FlashcardTimer
-
-          isFinished={
-            finished
-          }
-
-          onFinish={
-            handleTimerFinish
-          }
-
-        />
-
+    <div className="mx-auto flex w-full max-w-6xl flex-col gap-2 px-1 py-1 sm:gap-3 sm:px-2">
+      <div className="rounded-2xl border border-slate-200 bg-white/90 p-2 shadow-sm backdrop-blur-sm sm:p-3">
+        <div className="flex flex-col gap-2 md:flex-row md:items-center md:justify-between">
+          <FlashcardTimer isFinished={finished} onFinish={handleTimerFinish} />
+          <div className="w-full max-w-xl md:w-auto">
+            <FlashcardProgress
+              learned={Math.max(0, cards.length - list.length)}
+              total={cards.length}
+            />
+          </div>
+        </div>
       </div>
 
-
-      {/* PROGRESS */}
-
-      <div
-        className="
-          w-full
-          max-w-2xl
-          flex
-          justify-center
-        "
-      >
-
-        <FlashcardProgress
-
-          learned={
-            Math.max(
-              0,
-              cards.length -
-              list.length
-            )
-          }
-
-          total={
-            cards.length
-          }
-
-        />
-
-      </div>
-
-
-      {/* CARD */}
-
-      <div
-        className="
-          w-full
-
-          flex
-          justify-center
-          items-center
-
-          min-h-[180px]
-          sm:min-h-[240px]
-          md:min-h-[300px]
-        "
-      >
-
+      <div className="flex items-center justify-center">
         <Flashcard
-
-          key={
-            card.id
-          }
-
-          front={
-            card.front
-          }
-
-          back={
-            card.back
-          }
-
-          showAnswer={
-            showAnswer
-          }
-
-          onFlip={() =>
-            setShowAnswer(
-              (s) => !s
-            )
-          }
-
-          onSpeak={
-            speak
-          }
-
-          touchHandlers={
-            touchHandlers
-          }
-
-          direction={
-            card.direction
-          }
-
-          index={
-            index
-          }
-
-          onExposeJP={
-            setCurrentJP
-          }
-
+          key={card.id}
+          front={card.front}
+          back={card.back}
+          showAnswer={showAnswer}
+          onFlip={() => setShowAnswer((s) => !s)}
+          onSpeak={speak}
+          touchHandlers={touchHandlers}
+          direction={card.direction}
+          index={index}
+          onExposeJP={setCurrentJP}
         />
-
       </div>
 
-
-      {/* NAVIGATION */}
-
-      <div
-        className="
-          w-full
-          flex
-          justify-center
-        "
-      >
-
-        <FlashcardNav
-
-          index={
-            index
-          }
-
-          total={
-            list.length
-          }
-
-          onPrev={
-            prev
-          }
-
-          onNext={
-            next
-          }
-
-        />
-
+      <div className="flex shrink-0 justify-center">
+        <FlashcardNav index={index} total={list.length} onPrev={prev} onNext={next} />
       </div>
 
-
-      {/* CONTROLS */}
-
-      <div
-        className="
-          w-full
-          flex
-          justify-center
-        "
-      >
-
-        <FlashcardControls
-
-          onKnown={
-            markKnown
-          }
-
-          onUnknown={
-            markUnknown
-          }
-
-        />
-
+      <div className="flex shrink-0 justify-center">
+        <FlashcardControls onKnown={markKnown} onUnknown={markUnknown} />
       </div>
 
-
-      {/* SETTINGS */}
-
-      <div
-        className="
-          w-full
-          flex
-          justify-center
-        "
-      >
-
+      <div className="flex shrink-0 justify-center">
         <FlashcardSettings
-
-          autoFlip={
-            autoFlip
-          }
-
-          setAutoFlip={
-            setAutoFlip
-          }
-
-          flipDelay={
-            flipDelay
-          }
-
-          setFlipDelay={
-            setFlipDelay
-          }
-
+          autoFlip={autoFlip}
+          setAutoFlip={setAutoFlip}
+          flipDelay={flipDelay}
+          setFlipDelay={setFlipDelay}
         />
-
       </div>
-
     </div>
-
   )
 }

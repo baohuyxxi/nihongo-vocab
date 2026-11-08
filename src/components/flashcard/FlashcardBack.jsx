@@ -53,6 +53,7 @@ export default function FlashcardBack({
                 overflow-hidden
             "
         >
+            <div className="flex h-full w-full min-h-0 items-center justify-center">
 
             {/* =========================
                 IMAGE MODE
@@ -63,7 +64,7 @@ export default function FlashcardBack({
                 <FlashCardBackImage
                     back={back}
                     onSpeak={onSpeak}
-                />  
+                />
 
             ) : isKanji && back ? (
 
@@ -82,19 +83,7 @@ export default function FlashcardBack({
                     JP MODE
                 ========================= */
 
-                <div
-                    className="
-                        w-full
-                        h-full
-                        text-[1.3rem]
-                        leading-snug
-                        sm:text-[2rem]
-                        md:text-[2.8rem]
-                        lg:text-[3rem]
-                        overflow-hidden
-                        break-words
-                    "
-                >
+                <div className="flex h-full w-full items-center justify-center px-2 py-4">
 
                     <JapaneseTextWithAudio
                         text={back}
@@ -110,12 +99,7 @@ export default function FlashcardBack({
                     VI MODE
                 ========================= */
 
-                <div
-                    className="
-                        w-full
-                        overflow-hidden
-                    "
-                >
+                <div className="flex h-full w-full items-center justify-center">
 
                     <VietnameseTextAutoFit
                         text={back}
@@ -125,6 +109,7 @@ export default function FlashcardBack({
 
             )}
 
+            </div>
         </div>
     )
 }

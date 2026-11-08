@@ -116,20 +116,19 @@ export default function Flashcard({
         <div
             className="
                 w-full
-
                 max-w-[95vw]
                 sm:max-w-2xl
                 md:max-w-3xl
                 lg:max-w-4xl
-
-                h-[220px]
-                xs:h-[240px]
-                sm:h-[320px]
-                md:h-[420px]
-                lg:h-[500px]
-
+                h-[clamp(220px,32vh,360px)]
+                min-h-[220px]
+                max-h-[360px]
                 px-1
                 sm:px-2
+                md:h-[clamp(260px,35vh,420px)]
+                md:max-h-[420px]
+                lg:h-[clamp(300px,38vh,460px)]
+                lg:max-h-[460px]
             "
 
             onClick={onFlip}

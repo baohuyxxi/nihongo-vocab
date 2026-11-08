@@ -6,6 +6,7 @@ import {
 
 import {
   getReviewConfig,
+  getSavedCurriculumTab,
   saveReviewConfig,
 } from "../utils/reviewStorage"
 
@@ -70,7 +71,14 @@ export default function useReviewConfig() {
 
     const saved = getReviewConfig()
 
+    const fallbackCurriculumTab = getSavedCurriculumTab()
+
     if (!saved) {
+      setCurriculumTab(
+        VALID_CURRICULUM_TABS.includes(fallbackCurriculumTab)
+          ? fallbackCurriculumTab
+          : "minna"
+      )
       setIsHydrated(true)
       return
     }
@@ -98,7 +106,9 @@ export default function useReviewConfig() {
     setCurriculumTab(
       VALID_CURRICULUM_TABS.includes(saved.curriculumTab)
         ? saved.curriculumTab
-        : "minna"
+        : VALID_CURRICULUM_TABS.includes(fallbackCurriculumTab)
+          ? fallbackCurriculumTab
+          : "minna"
     )
 
     setMode(

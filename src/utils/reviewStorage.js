@@ -3,11 +3,30 @@
 export const REVIEW_CONFIG_KEY =
   "reviewConfig"
 
+export const REVIEW_CURRICULUM_TAB_KEY =
+  "reviewCurriculumTab"
+
 export const REVIEW_SESSION_KEY =
   "reviewSessionData"
 
 export const FLASHCARD_PROGRESS_KEY =
   "flashcardProgress"
+
+export const getSavedCurriculumTab = () => {
+  try {
+    const raw = localStorage.getItem(REVIEW_CURRICULUM_TAB_KEY)
+
+    if (!raw) return null
+
+    const parsed = JSON.parse(raw)
+
+    return parsed && ["minna", "n3", "mixed"].includes(parsed)
+      ? parsed
+      : null
+  } catch {
+    return null
+  }
+}
 
 
 export const getReviewConfig = () => {
@@ -17,9 +36,12 @@ export const getReviewConfig = () => {
         REVIEW_CONFIG_KEY
       )
 
-    return data
-      ? JSON.parse(data)
-      : null
+    if (!data) {
+      const legacyTab = getSavedCurriculumTab()
+      return legacyTab ? { curriculumTab: legacyTab } : null
+    }
+
+    return JSON.parse(data)
 
   } catch {
     return null
@@ -34,6 +56,13 @@ export const saveReviewConfig = (
     REVIEW_CONFIG_KEY,
     JSON.stringify(config)
   )
+
+  if (config?.curriculumTab) {
+    localStorage.setItem(
+      REVIEW_CURRICULUM_TAB_KEY,
+      JSON.stringify(config.curriculumTab)
+    )
+  }
 }
 
 

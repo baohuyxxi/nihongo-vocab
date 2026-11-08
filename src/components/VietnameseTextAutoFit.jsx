@@ -10,83 +10,63 @@ export default function VietnameseTextAutoFit({
   maxLines = 2,
 
   maxFont = 72,
-  minFont = 20,
+  minFont = 18,
 
-  mobileMaxFont = 38,
-  tabletMaxFont = 54,
+  mobileMaxFont = 34,
+  tabletMaxFont = 48,
 
   step = 2,
 }) {
-
   const ref = useRef(null)
+  const wrapperRef = useRef(null)
 
-  const [fontSize, setFontSize]
-    = useState(maxFont)
+  const [fontSize, setFontSize] = useState(maxFont)
 
   useLayoutEffect(() => {
-
     const el = ref.current
+    const wrapper = wrapperRef.current
 
-    if (!el) return
-
-    /* ======================
-        RESPONSIVE MAX FONT
-    ====================== */
+    if (!el || !wrapper) return
 
     const width = window.innerWidth
 
     let responsiveMax = maxFont
-
-    // 📱 mobile
     if (width < 640) {
       responsiveMax = mobileMaxFont
-    }
-
-    // 📲 tablet
-    else if (width < 1024) {
+    } else if (width < 1024) {
       responsiveMax = tabletMaxFont
     }
 
-    /* ======================
-        RESET
-    ====================== */
-
     let size = responsiveMax
-
     el.style.fontSize = `${size}px`
+    el.style.lineHeight = "1.2"
 
-    /* ======================
-        CALCULATE HEIGHT
-    ====================== */
+    const fitText = () => {
+      const lineHeight = Number.parseFloat(getComputedStyle(el).lineHeight || "24")
+      const maxHeight = lineHeight * maxLines
+      const availableWidth = wrapper.clientWidth || el.parentElement?.clientWidth || 1
+      const availableHeight = wrapper.clientHeight || el.parentElement?.clientHeight || maxHeight
 
-    const lineHeight =
-      parseFloat(
-        getComputedStyle(el).lineHeight
-      )
+      while (
+        (el.scrollHeight > maxHeight || el.scrollWidth > availableWidth || el.scrollHeight > availableHeight) &&
+        size > minFont
+      ) {
+        size -= step
+        el.style.fontSize = `${size}px`
+      }
 
-    const maxHeight =
-      lineHeight * maxLines
-
-    /* ======================
-        AUTO SHRINK
-    ====================== */
-
-    while (
-      (
-        el.scrollHeight > maxHeight ||
-        el.scrollWidth > el.clientWidth
-      ) &&
-      size > minFont
-    ) {
-
-      size -= step
-
-      el.style.fontSize =
-        `${size}px`
+      setFontSize(size)
     }
 
-    setFontSize(size)
+    fitText()
 
+    const resizeObserver = new ResizeObserver(() => {
+      fitText()
+    })
+
+    resizeObserver.observe(wrapper)
+
+    return () => resizeObserver.disconnect()
   }, [
     text,
     maxLines,
@@ -101,45 +81,22 @@ export default function VietnameseTextAutoFit({
 
   return (
     <div
-      className="
-        w-full
-        h-full
-
-        flex
-        items-center
-        justify-center
-
-        px-3
-        sm:px-6
-        md:px-8
-      "
+      ref={wrapperRef}
+      className="flex h-full w-full items-center justify-center px-2 sm:px-4 md:px-6"
     >
-
       <span
         ref={ref}
-
         style={{
           fontSize,
-          lineHeight: 1.25,
+          lineHeight: 1.2,
+          overflowWrap: "anywhere",
+          wordBreak: "break-word",
+          whiteSpace: "normal",
         }}
-
-        className="
-          block
-
-          w-full
-
-          font-bold
-          text-center
-
-          break-words
-          overflow-hidden
-
-          leading-tight
-        "
+        className="block w-full text-center font-bold leading-tight text-slate-800"
       >
         {text}
       </span>
-
     </div>
   )
 }

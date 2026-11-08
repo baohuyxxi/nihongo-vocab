@@ -1,96 +1,99 @@
-import { useEffect, useLayoutEffect, useRef, useState } from "react"
 
-const MAX_SIZE = 72
-const MIN_SIZE = 32
-const STEP = 4
+import { useEffect, useRef } from "react";
+
+import AutoFitText from "./flashcard/AutoFitText";
 
 export default function JapaneseTextWithAudio({
   text,
   autoPlay = false,
   onSpeak,
 }) {
-  const hasPlayed = useRef(false)
-  const textRef = useRef(null)
-  const [fontSize, setFontSize] = useState(MAX_SIZE)
+  const hasPlayed = useRef(false);
 
-  /* ===== reset khi sang chữ mới ===== */
+  // Reset khi đổi từ
   useEffect(() => {
-    hasPlayed.current = false
-    setFontSize(MAX_SIZE)
-  }, [text])
+    hasPlayed.current = false;
+  }, [text]);
 
-  /* ===== auto play 1 lần ===== */
+  // Tự động phát âm một lần
   useEffect(() => {
-    if (!autoPlay || hasPlayed.current || !text) return
-    onSpeak(text)
-    hasPlayed.current = true
-  }, [autoPlay, text, onSpeak])
-
-  /* ===== auto shrink font để luôn 1 hàng ===== */
-  useLayoutEffect(() => {
-    const el = textRef.current
-    if (!el) return
-
-    let size = MAX_SIZE
-    el.style.fontSize = `${size}px`
-
-    // 🧠 shrink dần cho tới khi vừa 1 hàng
-    while (
-      size > MIN_SIZE &&
-      el.scrollWidth > el.clientWidth
+    if (
+      !autoPlay ||
+      hasPlayed.current ||
+      !text ||
+      typeof onSpeak !== "function"
     ) {
-      size -= STEP
-      el.style.fontSize = `${size}px`
+      return;
     }
 
-    setFontSize(size)
-  }, [text])
+    hasPlayed.current = true;
+    onSpeak(text);
+  }, [autoPlay, text, onSpeak]);
 
-  if (!text) return null
+  if (!text) return null;
+
+  const handleSpeak = (event) => {
+    event.stopPropagation();
+
+    if (typeof onSpeak === "function") {
+      onSpeak(text);
+    }
+  };
 
   return (
-    <div className="relative w-full h-full flex items-center justify-center">
-
-      <span
-        ref={textRef}
+    <div
+      className="
+        relative
+        flex h-full w-full
+        min-h-0 min-w-0
+        items-center justify-center
+      "
+    >
+      {/* JAPANESE AUTO FIT */}
+      <div
         className="
-      font-bold
-      whitespace-nowrap
-      overflow-hidden
-      text-center
-
-      px-4
-      sm:px-8
-    "
-        style={{ fontSize }}
+          h-full w-full
+          min-h-0 min-w-0
+          px-2 py-8
+          sm:px-6 sm:py-10
+        "
       >
-        {text}
-      </span>
+        <AutoFitText
+          text={text}
+          maxLines={2}
+          minFontSize={12}
+          maxFontSize={96}
+        />
+      </div>
 
-      <button
-        onClick={(e) => {
-          e.stopPropagation()
-          onSpeak(text)
-        }}
-        className="
-      absolute
-      top-2
-      right-2
-
-      sm:top-4
-      sm:right-4
-
-      text-2xl
-      sm:text-3xl
-
-      hover:scale-110
-      transition
-    "
-        aria-label="Phát âm tiếng Nhật"
-      >
-        🔊
-      </button>
-
+      {/* AUDIO BUTTON */}
+      {typeof onSpeak === "function" && (
+        <button
+          type="button"
+          onClick={handleSpeak}
+          className="
+            absolute
+            right-1 top-1
+            z-20
+            flex h-10 w-10
+            items-center justify-center
+            rounded-full
+            bg-white/90
+            text-xl
+            shadow-sm
+            transition
+            hover:bg-blue-50
+            active:scale-95
+            sm:right-3 sm:top-3
+            sm:h-12 sm:w-12
+            sm:text-2xl
+          "
+          aria-label="Phát âm tiếng Nhật"
+          title="Phát âm tiếng Nhật"
+        >
+          🔊
+        </button>
+      )}
     </div>
-  )
+  );
 }

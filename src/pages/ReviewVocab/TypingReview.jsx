@@ -106,49 +106,47 @@ export default function TypingReview({ questions = [], onResult }) {
       : q.question
 
   return (
-    <div className="relative max-w-2xl mx-auto space-y-8 p-4">
-      {/* HEADER */}
-      <div className="flex justify-between items-center bg-gray-50 p-3 rounded-lg">
-        <div className="font-semibold">
-          Câu <span className="text-blue-600">{index + 1}</span> / {total}
-        </div>
+    <div className="mx-auto w-full max-w-4xl space-y-5 px-3 py-4 sm:space-y-6 sm:px-4">
+      <div className="rounded-[28px] border border-slate-200 bg-white/90 p-3 shadow-sm backdrop-blur-sm sm:p-4">
+        <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+          <div className="text-sm font-semibold text-slate-600 sm:text-base">
+            Câu <span className="text-blue-600">{index + 1}</span> / {total}
+          </div>
 
-        <div className="flex gap-3 text-sm">
-          <span className="text-green-600 font-medium">✔ {correctCount}</span>
-          <span className="text-red-600 font-medium">✘ {wrongCount}</span>
-          <span className="text-gray-500">
-            ⏳ {total - correctCount - wrongCount}
-          </span>
+          <div className="flex items-center gap-2 text-xs sm:text-sm">
+            <span className="rounded-full bg-emerald-50 px-2.5 py-1 font-medium text-emerald-700">✔ {correctCount}</span>
+            <span className="rounded-full bg-red-50 px-2.5 py-1 font-medium text-red-700">✘ {wrongCount}</span>
+            <span className="rounded-full bg-slate-100 px-2.5 py-1 font-medium text-slate-600">
+              ⏳ {total - correctCount - wrongCount}
+            </span>
+          </div>
         </div>
       </div>
 
-      {/* QUESTION – fixed height */}
-      <div className="h-[160px] flex items-center justify-center">
-        <div className="text-center text-[64px] font-bold tracking-wide leading-tight">
+      <div className="flex min-h-[160px] items-center justify-center rounded-[28px] border border-slate-200 bg-white p-5 text-center shadow-sm sm:min-h-[200px] sm:p-8">
+        <div className="text-4xl font-bold tracking-wide text-slate-800 sm:text-6xl md:text-7xl">
           {displayQuestion}
         </div>
       </div>
 
+      <div className="rounded-[28px] border border-slate-200 bg-white p-4 shadow-sm sm:p-5">
+        <JapaneseIMEInput
+          key={index}
+          ref={inputRef}
+          direction={q.inputDirection || q.direction}
+          value={saved ? saved.input : answer}
+          onChange={setAnswer}
+          onSubmit={check}
+          disabled={isLocked}
+        />
+      </div>
 
-      {/* INPUT */}
-      <JapaneseIMEInput
-        key={index}
-        ref={inputRef}
-        direction={q.inputDirection || q.direction}
-        value={saved ? saved.input : answer}
-        onChange={setAnswer}
-        onSubmit={check}
-        disabled={isLocked}
-      />
-
-      {/* RESULT */}
-      <div className="h-[56px] flex justify-center items-center">
+      <div className="flex min-h-[56px] items-center justify-center">
         {isLocked && (
           <div
-            className={`px-6 py-2 rounded-full text-lg font-semibold ${saved.isCorrect
-              ? "bg-green-100 text-green-700"
-              : "bg-red-100 text-red-700"
-              }`}
+            className={`rounded-full px-5 py-2 text-base font-semibold sm:text-lg ${
+              saved.isCorrect ? "bg-emerald-100 text-emerald-700" : "bg-red-100 text-red-700"
+            }`}
           >
             {saved.isCorrect ? (
               "✔ Chính xác"
@@ -161,28 +159,25 @@ export default function TypingReview({ questions = [], onResult }) {
         )}
       </div>
 
-      {/* NAV – floating left/right */}
-      <button
-        disabled={index === 0}
-        onClick={() => setIndex((i) => i - 1)}
-        className="absolute left-[-150px] top-1/2 -translate-y-1/2
-                   px-3 py-2 rounded-full bg-gray-100
-                   text-gray-500 hover:text-black hover:bg-gray-200
-                   disabled:opacity-30"
-      >
-        ◀ Trước
-      </button>
+      <div className="flex items-center justify-center gap-3 sm:gap-4">
+        <button
+          type="button"
+          disabled={index === 0}
+          onClick={() => setIndex((i) => i - 1)}
+          className="min-h-[44px] rounded-full border border-slate-200 bg-white px-4 py-2 text-sm font-medium text-slate-700 shadow-sm transition hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-40 sm:text-base"
+        >
+          ◀ Trước
+        </button>
 
-      <button
-        disabled={!answeredMap.current[index] || index === total - 1}
-        onClick={() => setIndex((i) => i + 1)}
-        className="absolute right-[-150px] top-1/2 -translate-y-1/2
-                   px-3 py-2 rounded-full bg-gray-100
-                   text-gray-500 hover:text-black hover:bg-gray-200
-                   disabled:opacity-30"
-      >
-        Sau ▶
-      </button>
+        <button
+          type="button"
+          disabled={!answeredMap.current[index] || index === total - 1}
+          onClick={() => setIndex((i) => i + 1)}
+          className="min-h-[44px] rounded-full border border-slate-200 bg-white px-4 py-2 text-sm font-medium text-slate-700 shadow-sm transition hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-40 sm:text-base"
+        >
+          Sau ▶
+        </button>
+      </div>
     </div>
   )
 }

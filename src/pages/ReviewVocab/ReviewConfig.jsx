@@ -42,15 +42,17 @@ export default function ReviewConfig({
   const dragMode = useRef("add");
 
   return (
-    <div className="space-y-8">
+    <div className="space-y-6 sm:space-y-8 min-w-0 max-w-full overflow-x-hidden">
       <div
         className="
           grid
           grid-cols-1
-          gap-5
+          gap-4
           min-w-0
+          max-w-full
           overflow-x-hidden
-          lg:grid-cols-[minmax(260px,0.8fr)_minmax(0,1.7fr)]
+          md:gap-5
+          lg:grid-cols-[minmax(220px,0.82fr)_minmax(0,1.68fr)]
           xl:gap-6
         "
       >
