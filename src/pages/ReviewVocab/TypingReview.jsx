@@ -3,8 +3,9 @@ import { toHiragana } from "wanakana"
 import JapaneseIMEInput from "../../components/JapaneseIMEInput"
 import SummaryTyping from "../../components/SummaryTyping"
 import { removeKana } from "../../utils/japanese"
+import { acceptsKanjiAnswer } from "../../utils/kanjiAnswers"
 
-export default function TypingReview({ questions = [] }) {
+export default function TypingReview({ questions = [], onResult }) {
   const [index, setIndex] = useState(0)
   const [answer, setAnswer] = useState("")
   const [showResult, setShowResult] = useState(false)
@@ -42,12 +43,13 @@ export default function TypingReview({ questions = [] }) {
     s.toLowerCase().replace(/[^\p{L}\p{N}\s]/gu, "").trim()
 
   const getInput = () =>
-    q.direction === "vi_jp"
+    (q.inputDirection || q.direction) === "vi_jp"
       ? inputRef.current?.value || ""
       : answer
 
   const isCorrectAnswer = (input) => {
     if (!input.trim()) return false
+    if (q.answers) return acceptsKanjiAnswer(input, q)
 
     if (q.direction === "vi_jp") {
       return toHiragana(input) === toHiragana(q.answer)
@@ -55,11 +57,13 @@ export default function TypingReview({ questions = [] }) {
     return normalize(input) === normalize(q.answer)
   }
 
-  const check = () => {
+  const check = async () => {
     if (answeredMap.current[index]) return
 
     const input = getInput()
     const ok = isCorrectAnswer(input)
+
+    if (onResult) { await onResult(q, ok, input); return }
 
     answeredMap.current[index] = {
       input: input || "(bỏ trống)",
@@ -130,7 +134,7 @@ export default function TypingReview({ questions = [] }) {
       <JapaneseIMEInput
         key={index}
         ref={inputRef}
-        direction={q.direction}
+        direction={q.inputDirection || q.direction}
         value={saved ? saved.input : answer}
         onChange={setAnswer}
         onSubmit={check}

@@ -39,7 +39,10 @@ const FLASHCARD_PROGRESS_KEY =
 export default function FlashcardReview({
   cards = [],
   onContinue,
+  onResult,
+  progressKey = FLASHCARD_PROGRESS_KEY,
 }) {
+  const FLASHCARD_PROGRESS_KEY = progressKey
 
   /* ======================
       LOAD SAVED PROGRESS
@@ -310,7 +313,8 @@ export default function FlashcardReview({
       SRS
   ====================== */
 
-  const markKnown = () => {
+  const markKnown = async () => {
+    if (onResult) { await onResult(card, true); return }
 
     setList((l) =>
       l.filter(
@@ -333,7 +337,8 @@ export default function FlashcardReview({
   }
 
 
-  const markUnknown = () => {
+  const markUnknown = async () => {
+    if (onResult) { await onResult(card, false); return }
 
     const current =
       list[index]

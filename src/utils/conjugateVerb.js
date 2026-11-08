@@ -1,308 +1,283 @@
-import { godanMap } from "./godanMap"
+import { godanMap } from "./godanMap.js"
 
-/* =====================
-   GROUP 2
-===================== */
-
-function conjugateIchidan(verb) {
-
-  const stem = verb.slice(0, -2)
-
-  return {
-
-    dictionary: stem + "る",
-
-    masu: verb,
-
-    te: stem + "て",
-
-    ta: stem + "た",
-
-    nai: stem + "ない",
-
-    potential: stem + "られる",
-
-    volitional: stem + "よう",
-
-    imperative: stem + "ろ",
-
-    /* NEW */
-
-    conditionalBa: stem + "れば",
-
-    conditionalTara: stem + "たら",
-
-    prohibition: stem + "るな",
-
-    passive: stem + "られる",
-
-    causative: stem + "させる",
-  }
+export const VERB_GROUP_MAP = {
+  verb_g_1: 1,
+  verb_g_2: 2,
+  verb_g_3: 3,
 }
 
-/* =====================
-   GROUP 3
-===================== */
+function toTrimmedString(value) {
+  return typeof value === "string" ? value.trim() : ""
+}
 
-const SPECIAL_GROUP3_VERBS = [
-  "きます",
-]
+function conjugateIchidan(verb) {
+  const normalized = toTrimmedString(verb)
 
-function conjugateKuru() {
+  if (!normalized) return null
+
+  if (normalized.endsWith("ます")) {
+    const stem = normalized.slice(0, -2)
+
+    return {
+      dictionary: stem + "る",
+      masu: normalized,
+      te: stem + "て",
+      ta: stem + "た",
+      nai: stem + "ない",
+      potential: stem + "られる",
+      volitional: stem + "よう",
+      imperative: stem + "ろ",
+      conditionalBa: stem + "れば",
+      conditionalTara: stem + "たら",
+      prohibition: stem + "るな",
+      passive: stem + "られる",
+      causative: stem + "させる",
+    }
+  }
+
+  if (normalized.endsWith("る")) {
+    const stem = normalized.slice(0, -1)
+
+    return {
+      dictionary: normalized,
+      masu: stem + "ます",
+      te: stem + "て",
+      ta: stem + "た",
+      nai: stem + "ない",
+      potential: stem + "られる",
+      volitional: stem + "よう",
+      imperative: stem + "ろ",
+      conditionalBa: stem + "れば",
+      conditionalTara: stem + "たら",
+      prohibition: stem + "るな",
+      passive: stem + "られる",
+      causative: stem + "させる",
+    }
+  }
+
+  return null
+}
+
+function conjugateKuru(verb, kanji = "") {
+  const normalized = toTrimmedString(verb)
+
+  if (!normalized) return null
+
+  const isKuru =
+    normalized === "くる" ||
+    normalized === "来る" ||
+    normalized === "きます" ||
+    normalized === "来ます" ||
+    (kanji && /来/.test(kanji))
+
+  if (!isKuru) return null
 
   return {
-
     dictionary: "くる",
-
     masu: "きます",
-
     te: "きて",
-
     ta: "きた",
-
     nai: "こない",
-
     potential: "こられる",
-
     volitional: "こよう",
-
     imperative: "こい",
-
-    /* NEW */
-
     conditionalBa: "くれば",
-
     conditionalTara: "きたら",
-
     prohibition: "くるな",
-
     passive: "こられる",
-
     causative: "こさせる",
   }
 }
 
-function conjugateSuru(verb) {
+function conjugateSuru(verb, kanji = "") {
+  const normalized = toTrimmedString(verb)
+
+  if (!normalized) return null
 
   if (
-    SPECIAL_GROUP3_VERBS.includes(verb)
+    normalized === "きます" ||
+    normalized === "来ます" ||
+    normalized === "くる" ||
+    normalized === "来る" ||
+    (kanji && /来/.test(kanji))
   ) {
-
-    return conjugateKuru()
+    return conjugateKuru(normalized, kanji)
   }
 
-  const stem =
-    verb.replace("します", "")
-
-  return {
-
-    dictionary: stem + "する",
-
-    masu: verb,
-
-    te: stem + "して",
-
-    ta: stem + "した",
-
-    nai: stem + "しない",
-
-    potential: stem + "できる",
-
-    volitional: stem + "しよう",
-
-    imperative: stem + "しろ",
-
-    /* NEW */
-
-    conditionalBa: stem + "すれば",
-
-    conditionalTara: stem + "したら",
-
-    prohibition: stem + "するな",
-
-    passive: stem + "される",
-
-    causative: stem + "させる",
+  if (normalized === "できます" || normalized === "できる") {
+    return null
   }
+
+  if (normalized.endsWith("ます")) {
+    const stem = normalized.endsWith("します")
+      ? normalized.slice(0, -3)
+      : normalized.slice(0, -2)
+
+    return {
+      dictionary: stem + "する",
+      masu: normalized,
+      te: stem + "して",
+      ta: stem + "した",
+      nai: stem + "しない",
+      potential: stem + "できる",
+      volitional: stem + "しよう",
+      imperative: stem + "しろ",
+      conditionalBa: stem + "すれば",
+      conditionalTara: stem + "したら",
+      prohibition: stem + "するな",
+      passive: stem + "される",
+      causative: stem + "させる",
+    }
+  }
+
+  if (normalized === "する" || normalized.endsWith("する")) {
+    const stem = normalized.replace(/する$/, "")
+
+    return {
+      dictionary: normalized,
+      masu: stem + "します",
+      te: stem + "して",
+      ta: stem + "した",
+      nai: stem + "しない",
+      potential: stem + "できる",
+      volitional: stem + "しよう",
+      imperative: stem + "しろ",
+      conditionalBa: stem + "すれば",
+      conditionalTara: stem + "したら",
+      prohibition: stem + "するな",
+      passive: stem + "される",
+      causative: stem + "させる",
+    }
+  }
+
+  return null
 }
 
-/* =====================
-   GROUP 1 (GODAN)
-===================== */
-
-// 行く exception
-
 const IKU_SPECIAL = {
-
   dictionary: "いく",
-
   masu: "いきます",
-
   te: "いって",
-
   ta: "いった",
-
   nai: "いかない",
-
   potential: "いける",
-
   volitional: "いこう",
-
   imperative: "いけ",
-
-  /* NEW */
-
   conditionalBa: "いけば",
-
   conditionalTara: "いったら",
-
   prohibition: "いくな",
-
   passive: "いかれる",
-
   causative: "いかせる",
 }
 
 const ARIMASU_SPECIAL = {
-
   dictionary: "ある",
-
   masu: "あります",
-
   te: "あって",
-
   ta: "あった",
-
   nai: "ない",
-
   potential: "ありえる",
-
   volitional: "あろう",
-
   imperative: "あれ",
-
-  /* NEW */
-
   conditionalBa: "あれば",
-
   conditionalTara: "あったら",
-
   prohibition: "あるな",
-
   passive: "—",
-
   causative: "あらせる",
 }
 
-const SPECIAL_VERBS_GROUP1 = [
-  "いきます",
-  "あります",
-]
-
 function conjugateGodan(verb) {
+  const normalized = toTrimmedString(verb)
 
-  const ending =
-    verb.slice(-3, -2)
+  if (!normalized) return null
 
-  const stem =
-    verb.slice(0, -3)
+  if (normalized === "いきます") return IKU_SPECIAL
+  if (normalized === "あります") return ARIMASU_SPECIAL
 
-  if (
-    SPECIAL_VERBS_GROUP1.includes(verb)
-  ) {
+  if (normalized.endsWith("ます")) {
+    const stem = normalized.slice(0, -2)
+    const base = stem.slice(0, -1)
+    const ending = stem.slice(-1)
+    const map = godanMap[ending]
 
-    if (verb === "いきます") {
-      return IKU_SPECIAL
-    }
+    if (!map) return null
 
-    if (verb === "あります") {
-      return ARIMASU_SPECIAL
+    return {
+      dictionary: base + map.d,
+      masu: normalized,
+      te: base + map.te,
+      ta: base + map.ta,
+      nai: base + map.a + "ない",
+      potential: base + map.e + "る",
+      volitional: base + map.o + "う",
+      imperative: base + map.e,
+      conditionalBa: base + map.e + "ば",
+      conditionalTara: base + map.ta + "ら",
+      prohibition: base + map.d + "な",
+      passive: base + map.a + "れる",
+      causative: base + map.a + "せる",
     }
   }
 
+  const ending = normalized.slice(-1)
   const map = godanMap[ending]
 
   if (!map) return null
 
+  const stem = normalized.slice(0, -1)
+
   return {
-
-    dictionary:
-      stem + map.d,
-
-    masu: verb,
-
-    te:
-      stem + map.te,
-
-    ta:
-      stem + map.ta,
-
-    nai:
-      stem + map.a + "ない",
-
-    potential:
-      stem + map.e + "る",
-
-    volitional:
-      stem + map.o + "う",
-
-    imperative:
-      stem + map.e,
-
-    /* NEW */
-
-    conditionalBa:
-      stem + map.e + "ば",
-
-    conditionalTara:
-      stem + map.ta + "ら",
-
-    prohibition:
-      stem + map.d + "な",
-
-    passive:
-      stem + map.a + "れる",
-
-    causative:
-      stem + map.a + "せる",
+    dictionary: normalized,
+    masu: stem + map.i + "ます",
+    te: stem + map.te,
+    ta: stem + map.ta,
+    nai: stem + map.a + "ない",
+    potential: stem + map.e + "る",
+    volitional: stem + map.o + "う",
+    imperative: stem + map.e,
+    conditionalBa: stem + map.e + "ば",
+    conditionalTara: stem + map.ta + "ら",
+    prohibition: stem + map.d + "な",
+    passive: stem + map.a + "れる",
+    causative: stem + map.a + "せる",
   }
 }
 
-/* =====================
-   MAIN
-===================== */
+export function conjugateVerb(vocabOrHiragana, maybeGroup) {
+  if (typeof vocabOrHiragana === "string") {
+    const verb = toTrimmedString(vocabOrHiragana)
+    const group = maybeGroup
 
-export function conjugateVerb(
-  hiragana,
-  group,
-) {
+    if (!verb || ![1, 2, 3].includes(group)) return null
 
-  if (!hiragana)
-    return null
+    if (group === 3) {
+      return conjugateSuru(verb)
+    }
 
-  const verb =
-    hiragana.trim()
-
-  /* GROUP 3 */
-
-  if (group === 3) {
-
-    return conjugateSuru(verb)
-  }
-
-  /* GROUP 2 */
-
-  if (group === 2) {
-
-    return conjugateIchidan(verb)
-  }
-
-  /* GROUP 1 */
-
-  if (group === 1) {
+    if (group === 2) {
+      return conjugateIchidan(verb)
+    }
 
     return conjugateGodan(verb)
   }
 
-  return null
+  const item = vocabOrHiragana || {}
+  const verb = toTrimmedString(item.hiragana)
+
+  if (!verb) return null
+
+  const group = VERB_GROUP_MAP[item.partOfSpeech]
+
+  if (!group) return null
+
+  const kanji = toTrimmedString(item.kanji)
+
+  if (group === 3) {
+    return conjugateSuru(verb, kanji)
+  }
+
+  if (group === 2) {
+    return conjugateIchidan(verb)
+  }
+
+  return conjugateGodan(verb)
 }

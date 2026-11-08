@@ -9,6 +9,11 @@ import {
   saveReviewConfig,
 } from "../utils/reviewStorage"
 
+const VALID_CURRICULUM_TABS = [
+  "minna",
+  "n3",
+  "mixed",
+]
 
 export default function useReviewConfig() {
 
@@ -21,6 +26,9 @@ export default function useReviewConfig() {
 
   const [selectedTopics, setSelectedTopics] =
     useState([])
+
+  const [curriculumTab, setCurriculumTab] =
+    useState("minna")
 
 
   // ======================
@@ -50,6 +58,9 @@ export default function useReviewConfig() {
   const [reviewLimit, setReviewLimit] =
     useState(null)
 
+  const [isHydrated, setIsHydrated] =
+    useState(false)
+
 
   // ======================
   // LOAD CONFIG
@@ -59,7 +70,10 @@ export default function useReviewConfig() {
 
     const saved = getReviewConfig()
 
-    if (!saved) return
+    if (!saved) {
+      setIsHydrated(true)
+      return
+    }
 
     setSelectedLessons(
       saved.lessons || []
@@ -81,6 +95,12 @@ export default function useReviewConfig() {
       saved.partsOfSpeech || []
     )
 
+    setCurriculumTab(
+      VALID_CURRICULUM_TABS.includes(saved.curriculumTab)
+        ? saved.curriculumTab
+        : "minna"
+    )
+
     setMode(
       saved.mode || "flashcard"
     )
@@ -93,6 +113,7 @@ export default function useReviewConfig() {
       saved.limit ?? null
     )
 
+    setIsHydrated(true)
   }, [])
 
 
@@ -112,6 +133,8 @@ export default function useReviewConfig() {
 
     partsOfSpeech: selectedPartsOfSpeech,
 
+    curriculumTab,
+
     mode,
 
     directions,
@@ -124,6 +147,25 @@ export default function useReviewConfig() {
   // ======================
   // SAVE CONFIG
   // ======================
+
+  useEffect(() => {
+
+    if (!isHydrated) return
+
+    saveReviewConfig(config)
+
+  }, [
+    selectedLessons,
+    selectedTopics,
+    selectedUnits,
+    selectedN3Topics,
+    selectedPartsOfSpeech,
+    curriculumTab,
+    mode,
+    directions,
+    reviewLimit,
+    isHydrated,
+  ])
 
   const saveConfig = () => {
 
@@ -152,6 +194,9 @@ export default function useReviewConfig() {
 
     selectedPartsOfSpeech,
     setSelectedPartsOfSpeech,
+
+    curriculumTab,
+    setCurriculumTab,
 
     mode,
     setMode,

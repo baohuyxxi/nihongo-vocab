@@ -26,12 +26,14 @@ export default function VocabRowDesktop({
         meaningRef.current.scrollHeight + "px"
     }
   }, [row.meaning])
-
+  console.log(row)
   return (
+    
     <tr>
       {/* STT */}
       <TdCenter>
-        {index + 1}
+        {/* nếu có n3Order */}
+        {row.n3Order ? row.n3Order : index + 1}
       </TdCenter>
 
       {/* HIRA / KATA */}
