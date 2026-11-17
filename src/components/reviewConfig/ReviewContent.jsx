@@ -55,6 +55,34 @@ export default function ReviewContent({
     setCurriculumTab?.(nextTab);
   };
 
+  // Reset các lựa chọn theo tab hiện tại.
+  // Không xóa chế độ ôn, hướng ôn hay các cấu hình khác.
+  const selectedCount =
+    (activeTab !== "n3"
+      ? selectedLessons.length +
+        selectedTopics.length +
+        selectedPartsOfSpeech.length
+      : 0) +
+    (activeTab !== "minna"
+      ? selectedUnits.length + selectedKanjiPairs.length
+      : 0);
+
+  const handleResetSelection = () => {
+    if (activeTab !== "n3") {
+      setSelectedLessons([]);
+      setSelectedTopics([]);
+      setSelectedPartsOfSpeech([]);
+    }
+
+    if (activeTab !== "minna") {
+      setSelectedUnits([]);
+      setSelectedKanjiPairs([]);
+    }
+
+    if (isDragging) isDragging.current = false;
+    if (dragMode) dragMode.current = null;
+  };
+
   const isPairSelected = (week, day) =>
     selectedKanjiPairs.some(
       (item) => item.week === week && item.day === day,
@@ -261,9 +289,22 @@ export default function ReviewContent({
 
   return (
     <section className="min-w-0 w-full bg-white rounded-xl shadow p-3 sm:p-4 md:p-5 space-y-5 md:space-y-6">
-      <h2 className="font-semibold flex items-center gap-2 text-sm sm:text-base">
-        📚 <span>Chọn nội dung ôn</span>
-      </h2>
+      <div className="flex items-center justify-between gap-3">
+        <h2 className="font-semibold flex items-center gap-2 text-sm sm:text-base">
+          📚 <span>Chọn nội dung ôn</span>
+        </h2>
+
+        <button
+          type="button"
+          onClick={handleResetSelection}
+          disabled={selectedCount === 0}
+          title="Bỏ chọn nội dung trong tab hiện tại"
+          className="inline-flex shrink-0 items-center gap-1.5 rounded-lg border border-red-200 px-3 py-2 text-xs sm:text-sm font-medium text-red-600 transition hover:bg-red-50 disabled:cursor-not-allowed disabled:opacity-40"
+        >
+          <span aria-hidden="true">↺</span>
+          <span>Đặt lại ({selectedCount})</span>
+        </button>
+      </div>
 
       <div
         role="tablist"

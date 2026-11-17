@@ -21,7 +21,7 @@ const MyLessons = lazy(() => import("../pages/MyLessons/MyLessons"));
 const Adverbs = lazy(() => import("../pages/MyLessons/Adverbs"));
 const VerbConjugation = lazy(() => import("../pages/MyLessons/VerbConjugation"));
 const Homophones = lazy(() => import("../pages/MyLessons/Homophones"))
-const VocabStudied  = lazy(() => import("../pages/MyLessons/VocabStudied/index"))
+const VocabStudied  = lazy(() => import("../pages/MyLessons/VocabStudied/VocabStudied"))
 const TopicManagerPage = lazy(() => import("../pages/MyLessons/TopicManager/TopicManagerPage"))
 const GrammarPage = lazy(() => import("../pages/GrammarPage/index"))
 const KanjiFrequencyPage  = lazy(() => import("../pages/MyLessons/KanjiFrequency/KanjiFrequency"))
