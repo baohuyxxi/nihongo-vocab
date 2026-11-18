@@ -24,7 +24,7 @@ const DIRECTIONS_BY_MODE = {
   flashcard: [
     { key: "jp_vi", label: "Nhật → Việt" },
     { key: "vi_jp", label: "Việt → Nhật" },
-    { key: "kanji", label: "Kanji → Nhật" },
+    { key: "kanji", label: "Kanji" },
     // { key: "jp_kanji", label: "Nhật → Kanji" },
     { key: "image", label: "Hình ảnh" },
   ],
