@@ -1,11 +1,21 @@
 import { useNavigate } from "react-router-dom"
 import {
     BookOpen,
-    Settings,
+    Monitor,
+    Moon,
+    Sun,
 } from "lucide-react"
+import { useTheme } from "../../hooks/useTheme"
 
 export default function SettingsPage() {
     const navigate = useNavigate()
+    const { theme, setTheme } = useTheme()
+
+    const themeOptions = [
+        { id: "light", label: "Sáng", description: "Giao diện sáng", icon: Sun },
+        { id: "dark", label: "Tối", description: "Giao diện tối", icon: Moon },
+        { id: "system", label: "Hệ thống", description: "Theo thiết bị", icon: Monitor },
+    ]
 
     const options = [
         {
@@ -19,27 +29,52 @@ export default function SettingsPage() {
 
     return (
         <div className="flex flex-col gap-4">
+            <section className="theme-panel rounded-xl p-4 sm:p-5" aria-labelledby="theme-heading">
+                <div className="mb-4">
+                    <h2 id="theme-heading" className="text-base sm:text-lg font-bold">
+                        Giao diện
+                    </h2>
+                    <p className="theme-muted mt-1 text-sm">
+                        Chọn giao diện sáng, tối hoặc theo thiết bị.
+                    </p>
+                </div>
+
+                <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
+                    {themeOptions.map((option) => {
+                        const Icon = option.icon
+                        const selected = theme === option.id
+
+                        return (
+                            <button
+                                key={option.id}
+                                type="button"
+                                className="theme-selector-option flex min-h-16 items-center gap-3 rounded-lg p-3 text-left"
+                                aria-pressed={selected}
+                                onClick={() => setTheme(option.id)}
+                            >
+                                <Icon size={20} aria-hidden="true" />
+                                <span className="min-w-0 flex-1">
+                                    <span className="block font-semibold">{option.label}</span>
+                                    <span className="theme-muted block text-xs">{option.description}</span>
+                                </span>
+                                {selected && (
+                                    <span className="text-xs font-semibold" aria-label="Đang chọn">
+                                        Đang dùng
+                                    </span>
+                                )}
+                            </button>
+                        )
+                    })}
+                </div>
+            </section>
+
             {options.map((option) => {
                 const Icon = option.icon
 
                 return (
                     <div
                         key={option.id}
-                        className="
-                            group
-                            flex
-                            items-center
-                            gap-4
-                            p-4
-                            rounded-lg
-                            bg-gradient-to-r
-                            from-gray-100
-                            to-gray-200
-                            cursor-pointer
-                            hover:from-gray-200
-                            hover:to-gray-300
-                            transition-all
-                        "
+                        className="theme-panel group flex cursor-pointer items-center gap-4 rounded-lg p-4 transition-all hover:bg-gray-50"
                         onClick={() =>
                             navigate(`/settings/${option.id}`)
                         }
