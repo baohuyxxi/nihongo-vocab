@@ -1,0 +1,337 @@
+.kanji-print-root {
+  color: #111827;
+  font-family: "Noto Sans JP", "Yu Gothic", "Hiragino Kaku Gothic ProN", sans-serif;
+}
+
+.kanji-print-root :is(.text-slate-900, .text-slate-800, .text-slate-700) {
+  color: #111827;
+}
+
+.kanji-print-root :is(.text-slate-600, .text-slate-500, .text-slate-400) {
+  color: #4b5563;
+}
+
+.worksheet-preview-scale {
+  zoom: var(--worksheet-preview-zoom, 1);
+}
+
+.worksheet-page-frame {
+  box-sizing: border-box;
+  width: var(--worksheet-page-width);
+  height: var(--worksheet-page-height);
+  margin: 0 auto 1.5rem;
+  overflow: hidden;
+  background: #fff;
+  color: #111827;
+  box-shadow: 0 12px 30px rgb(15 23 42 / 14%);
+}
+
+.kanji-worksheet-page {
+  box-sizing: border-box;
+  display: flex;
+  width: 100%;
+  height: 100%;
+  flex-direction: column;
+  gap: 2mm;
+  overflow: hidden;
+  padding:
+    var(--worksheet-margin-top)
+    var(--worksheet-margin-right)
+    var(--worksheet-margin-bottom)
+    var(--worksheet-margin-left);
+  background: #fff;
+}
+
+.worksheet-page-header {
+  flex: 0 0 auto;
+  max-height: 23mm;
+  overflow: hidden;
+  border-bottom: 0.5mm solid #1f2937;
+  padding-bottom: 2mm;
+}
+
+.worksheet-page-content {
+  display: flex;
+  min-height: 0;
+  flex: 1 1 auto;
+  flex-direction: column;
+  justify-content: flex-start;
+}
+
+.worksheet-kanji-row {
+  box-sizing: border-box;
+  flex: 0 0 auto;
+  break-inside: avoid;
+  page-break-inside: avoid;
+  margin-bottom: var(--worksheet-row-gap);
+}
+
+.worksheet-row-heading {
+  display: flex;
+  min-height: 10mm;
+  align-items: center;
+  gap: 2mm;
+  overflow: hidden;
+}
+
+.worksheet-row-meta {
+  display: flex;
+  min-height: 4mm;
+  max-height: 14mm;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 1mm 3mm;
+  overflow: hidden;
+  padding: 0.5mm 0 1mm;
+  color: #4b5563;
+  font-size: 2.5mm;
+  line-height: 1.3;
+}
+
+.worksheet-meta-item {
+  display: inline-block;
+  max-width: 62mm;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.worksheet-practice-grid {
+  display: grid;
+  align-content: start;
+  justify-content: start;
+  width: max-content;
+  max-width: 100%;
+}
+
+.worksheet-practice-cell {
+  position: relative;
+  box-sizing: border-box;
+  display: flex;
+  width: var(--worksheet-cell-size);
+  height: var(--worksheet-cell-size);
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  border: 0.3mm solid #4b5563;
+  background: #fff;
+}
+
+.worksheet-guide {
+  position: absolute;
+  z-index: 0;
+  pointer-events: none;
+  border-color: #9ca3af;
+  border-style: dashed;
+  border-width: 0;
+}
+
+.worksheet-guide-horizontal {
+  top: 50%;
+  right: 0;
+  left: 0;
+  border-top-width: 0.2mm;
+}
+
+.worksheet-guide-vertical {
+  top: 0;
+  bottom: 0;
+  left: 50%;
+  border-left-width: 0.2mm;
+}
+
+.worksheet-guide-diagonal {
+  top: 50%;
+  left: 50%;
+  height: 141%;
+  border-left-width: 0.2mm;
+  transform-origin: center;
+}
+
+.worksheet-guide-diagonal-forward {
+  transform: translate(-50%, -50%) rotate(45deg);
+}
+
+.worksheet-guide-diagonal-backward {
+  transform: translate(-50%, -50%) rotate(-45deg);
+}
+
+.worksheet-practice-grid[data-grid-style="quadrants"] .worksheet-guide-horizontal,
+.worksheet-practice-grid[data-grid-style="diagonal"] .worksheet-guide-horizontal,
+.worksheet-practice-grid[data-grid-style="quadrants"] .worksheet-guide-vertical,
+.worksheet-practice-grid[data-grid-style="diagonal"] .worksheet-guide-vertical {
+  display: block;
+}
+
+.worksheet-practice-grid[data-grid-style="diagonal"] .worksheet-guide-diagonal {
+  display: block;
+}
+
+.worksheet-practice-grid[data-grid-style="standard"] .worksheet-guide,
+.worksheet-practice-grid[data-grid-style="border"] .worksheet-guide {
+  display: none;
+}
+
+.worksheet-kanji-character {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  width: 100%;
+  height: 100%;
+  align-items: center;
+  justify-content: center;
+  font-family: "Noto Serif JP", "Yu Mincho", "Hiragino Mincho ProN", serif;
+  font-size: var(--worksheet-kanji-font-size);
+  line-height: 1;
+}
+
+.worksheet-kanji-character.is-sample {
+  color: var(--worksheet-sample-color, #111827);
+}
+
+.worksheet-kanji-character.is-faded {
+  color: var(--worksheet-sample-color, #111827);
+  opacity: var(--worksheet-faded-opacity, 0.2);
+}
+
+.worksheet-page-number {
+  flex: 0 0 auto;
+  padding-top: 1mm;
+  color: #4b5563;
+  font-size: 2.5mm;
+  text-align: right;
+}
+
+.worksheet-page-hidden {
+  display: none;
+}
+
+@media print {
+  @page {
+    size: A4 portrait;
+    margin: 0;
+  }
+
+  html,
+  body,
+  #root {
+    width: auto !important;
+    min-width: 0 !important;
+    min-height: 0 !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    overflow: visible !important;
+    background: #fff !important;
+  }
+
+  .app-layout {
+    display: block !important;
+    width: 100% !important;
+    max-width: none !important;
+    overflow: visible !important;
+  }
+
+  body * {
+    visibility: hidden !important;
+  }
+
+  .kanji-print-root,
+  .kanji-print-root * {
+    visibility: visible !important;
+  }
+
+  .kanji-print-root {
+    position: fixed !important;
+    inset: 0 auto auto 0 !important;
+    width: auto !important;
+    height: auto !important;
+    color: #111827 !important;
+  }
+
+  .no-print {
+    display: none !important;
+  }
+
+  .worksheet-editor-layout {
+    display: block !important;
+  }
+
+  .app-sidebar,
+  .app-mobile-nav-trigger,
+  .worksheet-editor-sidebar,
+  .worksheet-mobile-panel {
+    display: none !important;
+  }
+
+  .app-main {
+    width: 100% !important;
+    min-height: 0 !important;
+    overflow: visible !important;
+    padding: 0 !important;
+  }
+
+  .worksheet-page {
+    width: 100% !important;
+    max-width: none !important;
+    margin: 0 !important;
+    padding: 0 !important;
+  }
+
+  .worksheet-preview-panel {
+    display: block !important;
+    min-width: 0 !important;
+    margin: 0 !important;
+    padding: 0 !important;
+  }
+
+  .worksheet-preview-scroll {
+    overflow: visible !important;
+    border: 0 !important;
+    padding: 0 !important;
+    background: transparent !important;
+  }
+
+  .worksheet-preview-scale {
+    width: auto !important;
+    height: auto !important;
+    zoom: 1 !important;
+  }
+
+  .kanji-print-root {
+    position: static !important;
+    display: block !important;
+    width: auto !important;
+    height: auto !important;
+  }
+
+  .worksheet-page-hidden {
+    display: block !important;
+  }
+
+  .worksheet-page-frame {
+    display: block !important;
+    width: var(--worksheet-page-width) !important;
+    height: var(--worksheet-page-height) !important;
+    min-height: 0 !important;
+    margin: 0 !important;
+    overflow: hidden !important;
+    box-shadow: none !important;
+    break-after: page;
+    page-break-after: always;
+  }
+
+  .worksheet-page-frame:last-child {
+    break-after: auto;
+    page-break-after: auto;
+  }
+
+  .kanji-worksheet-page {
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+
+  .worksheet-kanji-row {
+    break-inside: avoid;
+    page-break-inside: avoid;
+  }
+}

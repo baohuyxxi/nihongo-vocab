@@ -1,6 +1,6 @@
 export default function TableNode({ data }) {
   const cell = {
-    border: "1px solid #999",
+    border: "1px solid var(--color-border-primary)",
     padding: "6px 10px",
     textAlign: "center",
   };
@@ -8,16 +8,16 @@ export default function TableNode({ data }) {
   const header = {
     ...cell,
     fontWeight: "bold",
-    background: "#f5f5f5",
+    background: "var(--color-background-secondary)",
   };
 
   return (
     <div
       style={{
-        background: "#fff",
+        background: "var(--color-surface)",
         padding: 12,
         borderRadius: 10,
-        border: "2px solid #333",
+        border: "2px solid var(--color-border-primary)",
       }}
     >
       <table style={{ borderCollapse: "collapse", fontSize: 14 }}>

@@ -11,7 +11,7 @@ export default function Sidebar() {
       {/* MOBILE MENU BUTTON */}
       <button
         onClick={() => setMobileOpen(true)}
-        className="lg:hidden fixed top-3 left-3 z-50 p-2 bg-white rounded shadow"
+        className="app-mobile-nav-trigger lg:hidden fixed top-3 left-3 z-50 p-2 bg-white rounded shadow"
       >
         <Menu size={20} />
       </button>
@@ -20,13 +20,14 @@ export default function Sidebar() {
       {mobileOpen && (
         <div
           onClick={() => setMobileOpen(false)}
-          className="fixed inset-0 bg-black/40 z-40 lg:hidden"
+          className="theme-overlay fixed inset-0 z-40 lg:hidden"
         />
       )}
 
       {/* SIDEBAR */}
       <aside
         className={`
+          app-sidebar
           bg-white shadow-lg h-screen flex flex-col
           transition-all duration-300 ease-in-out
 

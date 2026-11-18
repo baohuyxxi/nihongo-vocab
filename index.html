@@ -4,6 +4,23 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Japanese Vocabulary</title>
+    <script>
+      let savedTheme = null;
+      try {
+        savedTheme = localStorage.getItem("nihongo-vocab-theme");
+      } catch (error) {
+        console.warn("Unable to read the saved theme preference.", error);
+      }
+      const theme = ["light", "dark", "system"].includes(savedTheme)
+        ? savedTheme
+        : "light";
+      const isDark =
+        theme === "dark" ||
+        (theme === "system" &&
+          window.matchMedia("(prefers-color-scheme: dark)").matches);
+      document.documentElement.dataset.theme = isDark ? "dark" : "light";
+      document.documentElement.style.colorScheme = isDark ? "dark" : "light";
+    </script>
 
     <!-- Favicon -->
     <link rel="icon" type="image/png" href="/images/education.png" />

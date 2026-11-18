@@ -167,6 +167,14 @@ export default function AppRoutes() {
         }
       />
       <Route
+        path="/kanji-worksheet"
+        element={
+          <Suspense fallback={<div>Loading...</div>}>
+            <KanjiWorksheetPage />
+          </Suspense>
+        }
+      />
+      <Route
         path="/settings"
         element={
           <Suspense fallback={<div>Loading...</div>}>
