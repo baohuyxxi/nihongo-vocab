@@ -4,135 +4,231 @@ import {
   useRef,
   useState,
 } from "react";
+
 import {
   toHiragana,
   toKatakana,
 } from "wanakana";
 
-const KANA = /^[\u3040-\u309F\u30A0-\u30FFー]+$/u;
+// ======================================
+// CONFIG
+// ======================================
+
+const KANA_REGEX =
+  /^[\u3040-\u309F\u30A0-\u30FFー]+$/u;
 
 const SHORTCUTS = {
   ms: "ます",
   sms: "します",
 };
 
-const splitKana = (text) => {
-  const chars = Array.from(text);
-  const result = [];
+const MODES = [
+  "hiragana",
+  "katakana",
+  "auto",
+];
+
+const SHORTCUT_PREFIXES = [
+  "s",
+  "sm",
+  "m",
+];
+
+function splitConverted(text) {
+  const chars = [];
   let pending = "";
 
-  for (const char of chars) {
-    if (!pending && KANA.test(char)) {
-      result.push(char);
+  for (const char of Array.from(text)) {
+    if (!pending && KANA_REGEX.test(char)) {
+      chars.push(char);
     } else {
       pending += char;
     }
   }
 
-  return { chars: result, pending };
-};
+  return { chars, pending };
+}
+
+// ======================================
+// COMPONENT
+// ======================================
 
 export default function KanaAnswerInput({
   cells = [],
   hints = [],
+
   onChange,
   onHint,
   onCheck,
+
   canCheck = false,
   canHint = true,
   disabled = false,
+
+  resetKey,
 }) {
-  const inputRef = useRef(null);
+  const inputRefs = useRef([]);
+
   const composingRef = useRef(false);
+
   const draftRef = useRef("");
+
   const cellsRef = useRef(cells);
   const hintsRef = useRef(hints);
+
   const selectedRef = useRef(0);
   const scriptRef = useRef("hiragana");
 
   const [selected, setSelected] = useState(0);
   const [draft, setDraft] = useState("");
+
   const [script, setScript] = useState("hiragana");
+
   const [isFocused, setIsFocused] = useState(false);
+
   const [choosingHint, setChoosingHint] = useState(false);
 
   const total = cells.length;
 
   cellsRef.current = cells;
   hintsRef.current = hints;
-  selectedRef.current = selected;
-  scriptRef.current = script;
 
-  const isHint = (index) =>
-    hintsRef.current.includes(index);
+  // ======================================
+  // HELPERS
+  // ======================================
+
+  const isHint = (index) => {
+    return hintsRef.current.includes(index);
+  };
 
   const findEditable = (start, step = 1) => {
-    let i = start;
+    let index = start;
 
-    while (i >= 0 && i < total) {
-      if (!isHint(i)) return i;
-      i += step;
+    while (
+      index >= 0 &&
+      index < cellsRef.current.length
+    ) {
+      if (!isHint(index)) {
+        return index;
+      }
+
+      index += step;
     }
 
     return -1;
   };
 
+  const setActive = (index) => {
+    selectedRef.current = index;
+    setSelected(index);
+  };
+
   const clearDraft = () => {
     draftRef.current = "";
     setDraft("");
-
-    if (inputRef.current) {
-      inputRef.current.value = "";
-    }
   };
 
-  const selectCell = (index, focus = true) => {
-    if (disabled || index < 0 || index >= total) return;
-    if (isHint(index)) return;
+  // ======================================
+  // FOCUS
+  //
+  // Focus trực tiếp input thật.
+  // Không scrollIntoView.
+  // Không window.scrollTo.
+  // ======================================
 
-    selectedRef.current = index;
-    setSelected(index);
+  const focusCell = (index, preventScroll = true) => {
+    if (
+      disabled ||
+      index < 0 ||
+      index >= total ||
+      isHint(index)
+    ) {
+      return;
+    }
 
-    if (focus) {
-      inputRef.current?.focus({
-        preventScroll: true,
+    setActive(index);
+
+    const input = inputRefs.current[index];
+
+    if (!input) return;
+
+    if (document.activeElement !== input) {
+      input.focus({
+        preventScroll,
       });
-      setIsFocused(true);
     }
   };
+
+  // ======================================
+  // RESET QUESTION
+  // ======================================
 
   useEffect(() => {
-    const first = cells.findIndex(
-      (_, index) => !hints.includes(index)
+    const first = cellsRef.current.findIndex(
+      (_, index) =>
+        !hintsRef.current.includes(index)
     );
 
-    if (first >= 0) {
-      selectedRef.current = first;
-      setSelected(first);
+    setActive(first >= 0 ? first : 0);
+
+    clearDraft();
+
+    composingRef.current = false;
+
+    setChoosingHint(false);
+    setIsFocused(false);
+
+    scriptRef.current = "hiragana";
+    setScript("hiragana");
+
+    if (
+      inputRefs.current.some(
+        (input) => input === document.activeElement
+      )
+    ) {
+      document.activeElement.blur();
     }
+
+  }, [resetKey, total]);
+
+  // ======================================
+  // DISABLED
+  // ======================================
+
+  useEffect(() => {
+    if (!disabled) return;
 
     clearDraft();
     setChoosingHint(false);
-  }, [total]);
+    setIsFocused(false);
 
-  useEffect(() => {
-    if (disabled) {
-      clearDraft();
-      setChoosingHint(false);
+    const active = document.activeElement;
+
+    if (inputRefs.current.includes(active)) {
+      active.blur();
     }
   }, [disabled]);
 
-  const writeCharacters = (characters, pending = "") => {
+  // ======================================
+  // WRITE CHARACTERS
+  // ======================================
+
+  const writeCharacters = (
+    characters,
+    pending = ""
+  ) => {
     const next = [...cellsRef.current];
+
     let position = selectedRef.current;
     let written = 0;
 
-    for (const char of characters) {
+    for (const character of characters) {
       position = findEditable(position);
 
-      if (position === -1) break;
+      if (position < 0) break;
 
-      next[position] = char;
+      next[position] = character;
+
       written++;
       position++;
     }
@@ -144,25 +240,37 @@ export default function KanaAnswerInput({
 
     const nextPosition = findEditable(position);
 
-    clearDraft();
+    draftRef.current = pending;
+    setDraft(pending);
 
     if (nextPosition >= 0) {
-      selectedRef.current = nextPosition;
-      setSelected(nextPosition);
+      setActive(nextPosition);
 
-      if (pending) {
-        draftRef.current = pending;
-        setDraft(pending);
+      // Chuyển giữa các input thật.
+      // Không tạo input mới.
+      // Không cuộn trang bằng JS.
+      const input = inputRefs.current[nextPosition];
 
-        if (inputRef.current) {
-          inputRef.current.value = pending;
-        }
-      }
+      input?.focus({
+        preventScroll: true,
+      });
+
     } else {
-      inputRef.current?.blur();
+      clearDraft();
+
+      const active = document.activeElement;
+
+      if (inputRefs.current.includes(active)) {
+        active.blur();
+      }
+
+      setIsFocused(false);
     }
   };
 
+  // ======================================
+  // PROCESS ROMAJI / KANA
+  // ======================================
 
   const processText = (value) => {
     if (disabled || choosingHint) return;
@@ -174,64 +282,66 @@ export default function KanaAnswerInput({
 
     if (!raw) return;
 
-    // 1. Nhập Kana trực tiếp bằng Japanese IME
-    if (KANA.test(raw)) {
+    // Kana trực tiếp từ bàn phím Nhật
+
+    if (KANA_REGEX.test(raw)) {
       writeCharacters(Array.from(raw));
       return;
     }
 
     const lower = raw.toLowerCase();
 
-    // 2. Nhận diện từ viết tắt
-    const shortcut = SHORTCUTS[raw.toLowerCase()];
+    const useKatakana =
+      scriptRef.current === "katakana" ||
+      (
+        scriptRef.current === "auto" &&
+        /[A-Z]/.test(raw)
+      );
 
-    if (shortcut) {
-      const useKatakana =
-        scriptRef.current === "katakana" ||
-        (
-          scriptRef.current === "auto" &&
-          /^[A-Z]/.test(raw)
-        );
+    // SHORTCUT ms / sms
+
+    if (SHORTCUTS[lower]) {
+      const kana = SHORTCUTS[lower];
 
       const output = useKatakana
-        ? toKatakana(shortcut)
-        : shortcut;
+        ? toKatakana(kana)
+        : kana;
 
       writeCharacters(Array.from(output));
       return;
     }
 
-    // 3. Giữ nguyên tiền tố của từ viết tắt
-    // s -> chờ sh, shi hoặc sms
-    // sm -> chờ sms
-    // m -> chờ ms
-    const shortcutPrefixes = ["s", "sm", "m"];
+    // Giữ các tiền tố shortcut
 
-    if (shortcutPrefixes.includes(lower)) {
+    if (SHORTCUT_PREFIXES.includes(lower)) {
       return;
     }
 
-    // 4. Chuyển Romaji thông thường
-    const useKatakana =
-      scriptRef.current === "katakana" ||
-      (
-        scriptRef.current === "auto" &&
-        /^[A-Z]/.test(raw)
-      );
+    // ROMAJI -> KANA
 
     const converted = useKatakana
       ? toKatakana(raw, { IMEMode: true })
       : toHiragana(raw, { IMEMode: true });
 
-    const { chars, pending } = splitKana(converted);
+    const { chars, pending } =
+      splitConverted(converted);
 
-    if (chars.length) {
+    if (chars.length > 0) {
       writeCharacters(chars, pending);
     }
   };
 
+  // ======================================
+  // INPUT CHANGE
+  // ======================================
 
-  const handleChange = (event) => {
+  const handleChange = (index, event) => {
+    if (disabled || isHint(index)) return;
+
+    if (selectedRef.current !== index) {
+      setActive(index);
+    }
+
     const value = event.currentTarget.value;
 
     if (
@@ -246,33 +356,44 @@ export default function KanaAnswerInput({
     processText(value);
   };
 
-  const handleCompositionEnd = (event) => {
+  // ======================================
+  // COMPOSITION
+  // ======================================
+
+  const handleCompositionStart = (index) => {
+    setActive(index);
+    composingRef.current = true;
+  };
+
+  const handleCompositionEnd = (index, event) => {
     composingRef.current = false;
+
+    setActive(index);
+
     processText(event.currentTarget.value);
   };
 
-  const handleBackspace = () => {
+  // ======================================
+  // BACKSPACE
+  // ======================================
+
+  const handleBackspace = (index) => {
     if (draftRef.current) {
       const next = draftRef.current.slice(0, -1);
+
       draftRef.current = next;
       setDraft(next);
-
-      if (inputRef.current) {
-        inputRef.current.value = next;
-      }
-
       return;
     }
 
     const next = [...cellsRef.current];
-    const index = selectedRef.current;
 
-    if (index < 0 || index >= total) return;
-
-    if (next[index]) {
+    if (next[index] && !isHint(index)) {
       next[index] = "";
+
       cellsRef.current = next;
       onChange?.(next);
+
       return;
     }
 
@@ -280,41 +401,66 @@ export default function KanaAnswerInput({
 
     if (previous >= 0) {
       next[previous] = "";
+
       cellsRef.current = next;
       onChange?.(next);
-      selectCell(previous, false);
+
+      focusCell(previous);
     }
   };
 
-  const handleKeyDown = (event) => {
-    if (disabled || composingRef.current ||
+  // ======================================
+  // CHECK
+  // ======================================
+
+  const submitAnswer = () => {
+    if (!canCheck || disabled) return;
+
+    clearDraft();
+
+    const active = document.activeElement;
+
+    if (inputRefs.current.includes(active)) {
+      active.blur();
+    }
+
+    setIsFocused(false);
+
+    onCheck?.();
+  };
+
+  // ======================================
+  // KEYDOWN
+  // ======================================
+
+  const handleKeyDown = (index, event) => {
+    if (
+      disabled ||
+      composingRef.current ||
       event.nativeEvent?.isComposing ||
-      event.keyCode === 229) {
+      event.keyCode === 229
+    ) {
       return;
     }
 
     if (event.key === "Enter") {
       event.preventDefault();
-
-      if (!canCheck || disabled) return;
-
-      clearDraft();
-      inputRef.current?.blur();
-      onCheck?.();
-
+      submitAnswer();
       return;
     }
 
     if (event.key === "ArrowLeft") {
       event.preventDefault();
+
+      clearDraft();
+
       const previous = findEditable(
-        selectedRef.current - 1,
+        index - 1,
         -1
       );
 
       if (previous >= 0) {
-        clearDraft();
-        selectCell(previous);
+        focusCell(previous);
       }
 
       return;
@@ -322,13 +468,13 @@ export default function KanaAnswerInput({
 
     if (event.key === "ArrowRight") {
       event.preventDefault();
-      const next = findEditable(
-        selectedRef.current + 1
-      );
+
+      clearDraft();
+
+      const next = findEditable(index + 1);
 
       if (next >= 0) {
-        clearDraft();
-        selectCell(next);
+        focusCell(next);
       }
 
       return;
@@ -336,81 +482,98 @@ export default function KanaAnswerInput({
 
     if (event.key === "Backspace") {
       event.preventDefault();
-      handleBackspace();
+
+      handleBackspace(index);
     }
   };
 
+  // ======================================
+  // SCRIPT TOGGLE
+  // ======================================
+
   const toggleScript = () => {
-    const modes = ["hiragana", "katakana", "auto"];
+    const currentIndex = MODES.indexOf(
+      scriptRef.current
+    );
 
-    const currentIndex = modes.indexOf(scriptRef.current);
+    const next = MODES[
+      (currentIndex + 1) % MODES.length
+    ];
 
-    const next = modes[(currentIndex + 1) % modes.length];
-
-    setScript(next);
     scriptRef.current = next;
+    setScript(next);
 
     clearDraft();
   };
 
-  const handleCellClick = (index) => {
-    if (disabled) return;
-
-    if (choosingHint) {
-      if (isHint(index)) return;
-
-      clearDraft();
-      onHint?.(index);
-      setChoosingHint(false);
-
-      return;
-    }
-
-    selectCell(index);
-  };
+  // ======================================
+  // HINT
+  // ======================================
 
   const handleHintButton = () => {
-    setIsFocused(false);
     if (!canHint || disabled) return;
 
     clearDraft();
-    inputRef.current?.blur();
-    setChoosingHint((old) => !old);
+
+    const active = document.activeElement;
+
+    if (inputRefs.current.includes(active)) {
+      active.blur();
+    }
+
+    setIsFocused(false);
+
+    setChoosingHint((previous) => !previous);
   };
 
-  const filled = cells.filter(
-    (value) => String(value).trim()
-  ).length;
+  const handleHintCell = (index) => {
+    if (
+      disabled ||
+      !choosingHint ||
+      isHint(index)
+    ) {
+      return;
+    }
+
+    clearDraft();
+
+    onHint?.(index);
+
+    setChoosingHint(false);
+  };
+
+  // ======================================
+  // RENDER
+  // ======================================
 
   return (
     <div className="w-full">
 
-      {/* NÚT CHẾ ĐỘ + CÁC Ô ĐÁP ÁN */}
+      {/* INPUT CELLS */}
 
-      <div className="relative flex min-h-16 items-center justify-center">
+      <div className="
+        relative flex min-h-[76px]
+        items-center justify-center
+      ">
 
-        {/* NÚT HIRAGANA / KATAKANA - BÊN TRÁI */}
+        {/* SCRIPT BUTTON */}
 
         <button
           type="button"
           disabled={disabled}
           onClick={toggleScript}
-          title={
-            script === "hiragana"
-              ? "Chuyển sang Katakana"
-              : "Chuyển sang Hiragana"
-          }
           className="
-      absolute left-0 top-1/2 z-10
-      flex h-11 w-11 -translate-y-1/2
-      items-center justify-center
-      rounded-xl border border-slate-600
-      bg-slate-800 text-xl font-bold
-      text-white transition
-      hover:bg-slate-700
-      disabled:opacity-40
-      sm:h-12 sm:w-12
-    "
+            absolute left-0 top-1/2 z-10
+            flex h-11 w-11
+            -translate-y-1/2
+            items-center justify-center
+            rounded-xl border border-slate-600
+            bg-slate-800 text-xl font-bold
+            text-white transition-colors
+            hover:bg-slate-700
+            disabled:opacity-40
+            sm:h-12 sm:w-12
+          "
         >
           {script === "hiragana"
             ? "あ"
@@ -419,119 +582,146 @@ export default function KanaAnswerInput({
               : "アあ"}
         </button>
 
-        {/* CÁC Ô KANA */}
+        <div className="
+          flex flex-wrap
+          items-center justify-center
+          gap-2.5 px-12
+          sm:gap-3 sm:px-14
+        ">
 
-        <div
-          className="
-      flex flex-wrap items-center justify-center
-      gap-2.5 px-12
-      sm:gap-3 sm:px-14
-    "
-        >
           {cells.map((value, index) => {
             const hinted = hints.includes(index);
 
             const active =
               isFocused &&
               selected === index &&
-              !hinted &&
               !disabled &&
-              !choosingHint;
+              !choosingHint &&
+              !hinted;
 
-            const showDraft =
-              active && draft && !choosingHint;
+            const displayValue =
+              active && draft
+                ? draft
+                : value || "";
 
             return (
-              <button
+              <div
                 key={index}
-                type="button"
-                disabled={
-                  disabled ||
-                  (hinted && !choosingHint)
-                }
-                onClick={() => handleCellClick(index)}
-                className={`
-            relative flex h-14 w-12
-            shrink-0 items-center justify-center
-            overflow-hidden rounded-xl border-2
-            text-center text-2xl font-bold
-            transition-colors
-            sm:h-16 sm:w-14 sm:text-3xl
-
-            ${hinted
-                    ? "border-amber-400 bg-amber-50 text-amber-700"
-                    : choosingHint
-                      ? "border-amber-300 bg-amber-50 text-slate-700"
-                      : active
-                        ? "border-blue-500 bg-blue-50 text-blue-800"
-                        : "border-slate-200 bg-white text-slate-800"
-                  }
-
-            disabled:cursor-default
-          `}
+                className="
+                  relative h-14 w-12 shrink-0
+                  sm:h-16 sm:w-14
+                "
               >
-                <span
-                  className="
-              block max-w-full overflow-hidden
-              text-ellipsis whitespace-nowrap
-            "
-                >
-                  {showDraft ? draft : value}
-                </span>
+
+                {/* REAL INPUT */}
+
+                <input
+                  ref={(element) => {
+                    inputRefs.current[index] = element;
+                  }}
+                  type="text"
+                  value={displayValue}
+                  disabled={
+                    disabled ||
+                    hinted ||
+                    choosingHint
+                  }
+                  onFocus={() => {
+                    setActive(index);
+                    setIsFocused(true);
+                  }}
+                  onBlur={() => {
+                    if (
+                      selectedRef.current === index
+                    ) {
+                      setIsFocused(false);
+                    }
+                  }}
+                  onChange={(event) =>
+                    handleChange(index, event)
+                  }
+                  onCompositionStart={() =>
+                    handleCompositionStart(index)
+                  }
+                  onCompositionEnd={(event) =>
+                    handleCompositionEnd(index, event)
+                  }
+                  onKeyDown={(event) =>
+                    handleKeyDown(index, event)
+                  }
+                  onClick={() => {
+                    setActive(index);
+                  }}
+                  autoComplete="off"
+                  autoCorrect="off"
+                  autoCapitalize="off"
+                  spellCheck={false}
+                  lang="ja"
+                  enterKeyHint="done"
+                  inputMode="text"
+                  className={`
+                    h-full w-full
+                    rounded-xl border-2
+                    bg-white px-1
+                    text-center text-2xl
+                    font-bold text-slate-800
+                    outline-none
+                    transition-colors
+                    sm:text-3xl
+
+                    ${
+                      hinted
+                        ? "border-amber-400 bg-amber-50 text-amber-700"
+                        : active
+                          ? "border-blue-500 bg-blue-50 text-blue-800"
+                          : "border-slate-200 bg-white text-slate-800"
+                    }
+
+                    disabled:opacity-100
+                  `}
+                  style={{
+                    fontSize: "max(16px, 1.5rem)",
+                    WebkitAppearance: "none",
+                  }}
+                />
+
+                {/* HINT SELECTION OVERLAY */}
 
                 {choosingHint && !hinted && (
-                  <span
+                  <button
+                    type="button"
+                    onClick={() =>
+                      handleHintCell(index)
+                    }
                     className="
-                absolute right-0.5 top-0
-                text-[11px] text-amber-600
-              "
+                      absolute inset-0 z-10
+                      flex items-start
+                      justify-end
+                      rounded-xl border-2
+                      border-amber-400
+                      bg-amber-50/70
+                      p-1 text-xs
+                      font-bold text-amber-700
+                    "
                   >
                     ?
-                  </span>
+                  </button>
                 )}
-              </button>
+
+              </div>
             );
           })}
+
         </div>
       </div>
 
+      {/* ACTIONS */}
 
-
-      {/* INPUT THẬT - CHỈ NHẬN BÀN PHÍM */}
-      <div className="relative h-0 overflow-visible">
-        <input
-          ref={inputRef}
-          type="text"
-          className="
-            absolute left-1/2 top-0
-            h-px w-px -translate-x-1/2
-            opacity-0
-          "
-          aria-label="Nhập đáp án tiếng Nhật"
-          autoComplete="off"
-          autoCorrect="off"
-          autoCapitalize="off"
-          spellCheck={false}
-          lang="ja"
-          enterKeyHint="done"
-          disabled={disabled || choosingHint}
-          onChange={handleChange}
-          onCompositionStart={() => {
-            composingRef.current = true;
-          }}
-          onCompositionEnd={handleCompositionEnd}
-          onKeyDown={handleKeyDown}
-          onFocus={() => setIsFocused(true)}
-          onBlur={() => setIsFocused(false)}
-        />
-      </div>
-
-
-      {/* NÚT */}
       <div className="
         mt-3 flex items-center
         justify-center gap-2.5
       ">
+
         <button
           type="button"
           onClick={handleHintButton}
@@ -539,38 +729,41 @@ export default function KanaAnswerInput({
           className={`
             min-h-11 rounded-full
             border px-5 py-2
-            text-sm font-semibold transition
-            ${choosingHint
-              ? "border-amber-500 bg-amber-200 text-amber-900"
-              : "border-amber-200 bg-amber-50 text-amber-700"
+            text-sm font-semibold
+            transition-colors
+
+            ${
+              choosingHint
+                ? "border-amber-500 bg-amber-200 text-amber-900"
+                : "border-amber-200 bg-amber-50 text-amber-700"
             }
+
             disabled:opacity-40
           `}
         >
-          {choosingHint ? "Hủy gợi ý" : "💡 Gợi ý"}
+          {choosingHint
+            ? "Hủy gợi ý"
+            : "💡 Gợi ý"}
         </button>
 
         <button
           type="button"
-          onClick={() => {
-            if (!canCheck || disabled) return;
-
-            clearDraft();
-            inputRef.current?.blur();
-            onCheck?.();
-          }}
+          onClick={submitAnswer}
           disabled={!canCheck || disabled}
           className="
             min-h-11 rounded-full
             bg-blue-600 px-7 py-2
             text-sm font-bold text-white
-            transition hover:bg-blue-700
+            transition-colors
+            hover:bg-blue-700
             disabled:opacity-40
           "
         >
           Kiểm tra
         </button>
+
       </div>
+
     </div>
   );
 }

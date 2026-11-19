@@ -1,332 +1,391 @@
-// hooks/useReviewSession.js
 
 import {
-    useEffect,
-    useState,
-    useCallback,
-} from "react"
+  useEffect,
+  useState,
+  useCallback,
+  useRef,
+} from "react";
 
 import {
-    getReviewSession as getSavedSession,
-    getReviewConfig,
-    saveReviewSession,
-    clearFlashcardProgress,
-    clearReviewSession,
-    clearN3ReviewSession,
-    getN3ReviewSession,
-    saveN3ReviewSession,
-    clearN3FlashcardProgress,
-    getN3ReviewConfig,
-} from "../utils/reviewStorage"
+  getReviewSession as getSavedSession,
+  getReviewConfig,
+  saveReviewSession,
+  clearFlashcardProgress,
+  clearReviewSession,
+  clearN3ReviewSession,
+  getN3ReviewSession,
+  saveN3ReviewSession,
+  clearN3FlashcardProgress,
+  getN3ReviewConfig,
+} from "../utils/reviewStorage";
 
 import {
-    getReviewSession,
-} from "../services/vocab.service"
+  getReviewSession,
+} from "../services/vocab.service";
 
 import {
-    getKanjiSession,
-} from "../services/kanjiCurriculum.service"
+  getKanjiSession,
+} from "../services/kanjiCurriculum.service";
 
 import {
-    getN3KanjiSelectionPayload,
-    normalizeN3KanjiReviewSession,
-} from "../adapters/n3KanjiReviewAdapter"
+  getN3KanjiSelectionPayload,
+  normalizeN3KanjiReviewSession,
+} from "../adapters/n3KanjiReviewAdapter";
 
 
 export default function useReviewSession() {
+  const [session, setSession] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
 
-    const [session, setSession] =
-        useState(null)
+  const initializedRef = useRef(false);
 
-    const [loading, setLoading] =
-        useState(true)
+  const reviewConfig = getReviewConfig();
 
-    const [error, setError] =
-        useState(null)
+  const currentSource =
+    reviewConfig?.n3Source ?? null;
 
+  const isN3Kanji =
+    currentSource === "sou-matome-kanji";
 
-    const reviewConfig =
-        getReviewConfig()
+  /* =========================================
+     GET SAVED SESSION
+  ========================================= */
 
-    const currentSource =
-        reviewConfig?.n3Source ?? null
-
-    const isN3Review =
-        currentSource === "sou-matome-kanji" || currentSource === "mimi-kara"
-
-
-    /* ======================
-        LOAD FROM API
-    ====================== */
-
-    const loadSession =
-        useCallback(
-            async ({
-                config,
-                reviewId = "",
-            }) => {
-
-                try {
-
-                    setLoading(true)
-
-                    setError(null)
+  const getCurrentSavedSession = useCallback(() => {
+    return isN3Kanji
+      ? getN3ReviewSession()
+      : getSavedSession();
+  }, [isN3Kanji]);
 
 
-                    const {
-                        lessons = [],
-                        topics = [],
+  /* =========================================
+     SAVE SESSION
+  ========================================= */
 
-                        // N3
-                        units = [],
-                        n3Topics = [],
-                        n3KanjiPairs = [],
+  const persistSession = useCallback(
+    (config, data, progress, reviewId) => {
+      const payload = {
+        config,
+        progress: {
+          ...progress,
+          completed: progress?.completed ?? false,
+        },
+        reviewId,
+        session: data,
+      };
 
-                        partsOfSpeech = [],
-                        mode = "flashcard",
-                        directions = ["jp_vi"],
-                        limit = null,
-                    } = config
+      if (config?.n3Source === "sou-matome-kanji") {
+        saveN3ReviewSession(payload);
+      } else {
+        saveReviewSession(payload);
+      }
+    },
+    []
+  );
 
-                    const resolvedSource =
-                        config?.n3Source === "sou-matome-kanji"
-                            ? "sou-matome-kanji"
-                            : config?.n3Source === "mimi-kara"
-                                ? "mimi-kara"
-                                : "unknown"
 
-                    const isN3KanjiFlow =
-                        resolvedSource === "sou-matome-kanji" &&
-                        Array.isArray(n3KanjiPairs) &&
-                        n3KanjiPairs.length > 0
+  /* =========================================
+     LOAD SESSION FROM API
+     Chỉ gọi khi chưa có phiên đã lưu
+  ========================================= */
 
-                    if (config?.curriculumTab === "n3" && resolvedSource === "unknown") {
-                        throw new Error("Vui lòng chọn rõ nguồn ôn tập N3: Mimi kara Oboeru hoặc Sou Matome N3 Kanji.")
-                    }
+  const loadSession = useCallback(
+    async ({
+      config,
+      reviewId = "",
+    }) => {
+      try {
+        setLoading(true);
+        setError(null);
 
-                    let res
-                    let data
+        const {
+          lessons = [],
+          topics = [],
+          units = [],
+          n3Topics = [],
+          n3KanjiPairs = [],
+          partsOfSpeech = [],
+          mode = "flashcard",
+          directions = ["jp_vi"],
+          limit = null,
+        } = config;
 
-                    if (isN3KanjiFlow) {
-                        const selection =
-                            getN3KanjiSelectionPayload(n3KanjiPairs)
+        const source = config?.n3Source ?? "unknown";
 
-                        if (!selection.weeks || !selection.days) {
-                            throw new Error("Chưa chọn bài Sou Matome N3 nào")
-                        }
+        const isSouMatome =
+          source === "sou-matome-kanji" &&
+          Array.isArray(n3KanjiPairs) &&
+          n3KanjiPairs.length > 0;
 
-                        if (resolvedSource !== "sou-matome-kanji") {
-                            throw new Error("Vui lòng chọn rõ nguồn ôn tập N3: Mimi kara hoặc Sou Matome Kanji.")
-                        }
+        if (
+          config?.curriculumTab === "n3" &&
+          !["sou-matome-kanji", "mimi-kara"].includes(source)
+        ) {
+          throw new Error(
+            "Vui lòng chọn nguồn ôn tập N3."
+          );
+        }
 
-                        res = await getKanjiSession({
-                            curriculum: "sou-matome-n3-kanji",
-                            weeks: selection.weeks,
-                            days: selection.days,
-                            contentType: "both",
-                            mode,
-                            directions: Array.isArray(directions)
-                                ? directions.filter((item) => ["kanji", "kanji_meaning", "meaning_kanji", "onyomi", "kunyomi", "hanviet", "kanji_reading", "reading_kanji", "vocab_meaning", "meaning_vocab"].includes(item)).join(",")
-                                : directions,
-                            limit: limit ?? null,
-                            reviewId,
-                        })
+        let data;
+        let res;
 
-                        data = normalizeN3KanjiReviewSession(res)
+        /* =====================================
+           SOU MATOME KANJI
+        ===================================== */
 
-                        setSession(data)
+        if (isSouMatome) {
+          const selection =
+            getN3KanjiSelectionPayload(n3KanjiPairs);
 
-                        saveN3ReviewSession({
-                            config,
-                            progress: {
-                                ...res.progress,
-                                completed: res.progress?.completed ?? false,
-                            },
-                            reviewId: res.reviewId,
-                            session: data,
-                        })
+          if (!selection.weeks || !selection.days) {
+            throw new Error(
+              "Chưa chọn bài Sou Matome N3 nào."
+            );
+          }
 
-                        return data
-                    }
+          const validDirections = [
+            "kanji",
+            "kanji_meaning",
+            "meaning_kanji",
+            "onyomi",
+            "kunyomi",
+            "hanviet",
+            "kanji_reading",
+            "reading_kanji",
+            "vocab_meaning",
+            "meaning_vocab",
+          ];
 
-                    res = await getReviewSession({
+          res = await getKanjiSession({
+            curriculum: "sou-matome-n3-kanji",
+            weeks: selection.weeks,
+            days: selection.days,
+            contentType: "both",
+            mode,
+            directions: Array.isArray(directions)
+              ? directions
+                  .filter((item) =>
+                    validDirections.includes(item)
+                  )
+                  .join(",")
+              : directions,
+            limit: limit ?? null,
+            reviewId,
+          });
 
-                        lessons:
-                            lessons.join(","),
+          data = normalizeN3KanjiReviewSession(res);
 
-                        topics:
-                            topics.join(","),
+          setSession(data);
 
-                        // N3
-                        units:
-                            units.join(","),
+          persistSession(
+            config,
+            data,
+            res.progress,
+            res.reviewId
+          );
 
-                        n3Topics:
-                            n3Topics.join(","),
+          return data;
+        }
 
-                        partsOfSpeech:
-                            partsOfSpeech.join(","),
+        /* =====================================
+           MINNA / MIMI KARA
+        ===================================== */
 
-                        mode,
+        res = await getReviewSession({
+          lessons: lessons.join(","),
+          topics: topics.join(","),
+          units: units.join(","),
+          n3Topics: n3Topics.join(","),
+          partsOfSpeech: partsOfSpeech.join(","),
+          mode,
+          directions: directions.join(","),
+          limit: limit ?? "",
+          reviewId,
+        });
 
-                        directions:
-                            directions.join(","),
+        data = res.data;
 
-                        limit:
-                            limit ?? "",
+        if (!data) {
+          throw new Error(
+            "API không trả về dữ liệu phiên ôn."
+          );
+        }
 
-                        reviewId,
+        setSession(data);
 
-                    })
+        persistSession(
+          config,
+          data,
+          res.progress,
+          res.reviewId
+        );
 
-                    data = res.data
+        return data;
 
-                    setSession(
-                        data
-                    )
+      } catch (err) {
+        console.error("loadReviewSession:", err);
 
-                    saveReviewSession({
-                        config,
-                        progress: {
-                            ...res.progress,
-                            completed:
-                                res.progress?.completed ?? false,
-                        },
-                        reviewId:
-                            res.reviewId,
-                        session:
-                            data,
-                    })
+        setError(
+          err.message || "Không tải được phiên ôn tập."
+        );
 
-                    return data
+        throw err;
 
-                }
-                catch (err) {
+      } finally {
+        setLoading(false);
+      }
+    },
+    [persistSession]
+  );
 
-                    console.error(
-                        "loadReviewSession:",
-                        err
-                    )
 
-                    setError(
-                        "Không tải được phiên ôn tập"
-                    )
+  /* =========================================
+     INITIAL LOAD
+     Ưu tiên LocalStorage, không gọi API nếu có
+  ========================================= */
 
-                    throw err
+  useEffect(() => {
+    if (initializedRef.current) return;
 
-                }
-                finally {
+    initializedRef.current = true;
 
-                    setLoading(false)
+    const initialize = async () => {
+      if (!reviewConfig) {
+        setLoading(false);
+        return;
+      }
 
-                }
+      const saved = getCurrentSavedSession();
 
-            },
-            []
+      /* Có phiên đã lưu */
+      if (
+        saved?.session &&
+        Array.isArray(
+          saved.session.questions ??
+          saved.session.cards ??
+          []
         )
+      ) {
+        console.log(
+          "Restored review session from LocalStorage"
+        );
+
+        setSession(saved.session);
+        setError(null);
+        setLoading(false);
+
+        return;
+      }
+
+      /* Chưa có phiên thì mới gọi API */
+      if (isN3Kanji) {
+        clearN3FlashcardProgress();
+      } else {
+        clearFlashcardProgress();
+      }
+
+      try {
+        await loadSession({
+          config: reviewConfig,
+        });
+      } catch {
+        // Error đã được cập nhật trong loadSession.
+      }
+    };
+
+    initialize();
+
+  }, []);
 
 
-    /* ======================
-        INITIAL LOAD
-    ====================== */
+  /* =========================================
+     CONTINUE REVIEW
 
-    useEffect(() => {
+     TYPING:
+     Không gọi API, dùng session đã lưu.
 
-        if (!reviewConfig) {
+     FLASHCARD / QUIZ:
+     Giữ nguyên cơ chế cũ.
+  ========================================= */
 
-            setLoading(false)
+  const continueReview = useCallback(async () => {
+    const saved = getCurrentSavedSession();
 
-            return
-
-        }
-
-
-        const saved =
-            currentSource === "sou-matome-kanji"
-                ? getN3ReviewSession()
-                : getSavedSession()
-
-        if (saved?.session) {
-            setSession(saved.session)
-            setLoading(false)
-            return
-        }
-
-        if (currentSource === "sou-matome-kanji") {
-            clearN3FlashcardProgress()
-        } else {
-            clearFlashcardProgress()
-        }
-
-        loadSession({
-            config: reviewConfig,
-        }).catch(() => {})
-
-    }, [])
-
-
-    /* ======================
-        CONTINUE REVIEW
-    ====================== */
-
-    const continueReview =
-        async () => {
-
-            const saved =
-                currentSource === "sou-matome-kanji"
-                    ? getN3ReviewSession()
-                    : getSavedSession()
-
-            if (!saved?.reviewId) {
-
-                setError(
-                    "Không tìm thấy review session"
-                )
-
-                return
-
-            }
-
-
-            const reviewId =
-                saved.reviewId
-
-            const config =
-                saved.config || reviewConfig
-
-
-            if (currentSource === "sou-matome-kanji") {
-                clearN3FlashcardProgress()
-                clearN3ReviewSession()
-            } else {
-                clearFlashcardProgress()
-                clearReviewSession()
-            }
-
-
-            await loadSession({
-
-                config,
-
-                reviewId,
-
-            })
-
-        }
-
-
-    return {
-
-        reviewConfig,
-
-        session,
-
-        loading,
-
-        error,
-
-        continueReview,
-
+    if (!saved) {
+      setError("Không tìm thấy phiên ôn tập.");
+      return;
     }
 
+    const config = saved.config || reviewConfig;
+
+    const savedMode =
+      saved.session?.mode ||
+      config?.mode;
+
+    /* =====================================
+       TYPING: KHÔI PHỤC TẠI CHỖ
+    ===================================== */
+
+    if (
+      savedMode === "typing" &&
+      saved.session?.questions?.length
+    ) {
+      setLoading(false);
+      setError(null);
+
+      setSession(saved.session);
+
+      console.log(
+        "Continue typing session from LocalStorage"
+      );
+
+      return saved.session;
+    }
+
+    /* =====================================
+       OTHER MODES: GIỮ CƠ CHẾ CŨ
+    ===================================== */
+
+    if (!saved.reviewId) {
+      setError(
+        "Không tìm thấy reviewId của phiên ôn."
+      );
+      return;
+    }
+
+    const reviewId = saved.reviewId;
+
+    if (isN3Kanji) {
+      clearN3FlashcardProgress();
+      clearN3ReviewSession();
+    } else {
+      clearFlashcardProgress();
+      clearReviewSession();
+    }
+
+    return loadSession({
+      config,
+      reviewId,
+    });
+
+  }, [
+    getCurrentSavedSession,
+    reviewConfig,
+    isN3Kanji,
+    loadSession,
+  ]);
+
+
+  /* =========================================
+     RETURN
+  ========================================= */
+
+  return {
+    reviewConfig,
+    session,
+    loading,
+    error,
+    continueReview,
+  };
 }
