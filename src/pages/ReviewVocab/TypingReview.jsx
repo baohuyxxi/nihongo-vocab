@@ -11,13 +11,12 @@ import { toHiragana } from "wanakana";
 
 import KanaAnswerInput from "../../components/JPInput/KanaAnswerInput";
 import SummaryTyping from "../../components/SummaryTyping";
-// import { removeKana } from "../../utils/japanese";
 
 /* =========================================
    CONFIG
 ========================================= */
 
-const STORAGE_PREFIX = "typingReviewProgress_v4";
+const STORAGE_PREFIX = "typingReviewProgress_v5";
 const AUTO_NEXT_DELAY = 1500;
 
 const getQuestionId = (question, index) =>
@@ -32,7 +31,8 @@ const getAnswerCells = (question) => {
   }
 
   return Array.from(
-    String(question.answer || question.correct || "").normalize("NFKC")
+    String(question.answer || question.correct || "")
+      .normalize("NFKC")
   );
 };
 
@@ -78,6 +78,7 @@ const loadProgress = (key, questions) => {
       return {
         index: 0,
         entries: {},
+        completed: false,
       };
     }
 
@@ -121,17 +122,23 @@ const loadProgress = (key, questions) => {
         Math.max(0, Number(saved.index) || 0),
         Math.max(0, questions.length - 1)
       ),
+
       entries,
+
+      completed: saved.completed === true,
     };
+
   } catch (error) {
     console.error("Load Typing progress:", error);
 
     return {
       index: 0,
       entries: {},
+      completed: false,
     };
   }
 };
+
 
 /* =========================================
    MAIN COMPONENT
@@ -142,32 +149,93 @@ export default function TypingReview({
   onResult,
   sessionKey = "",
 }) {
+  /* =========================================
+     SESSION IDENTITY
+  ========================================= */
+
   const questionIdentity = useMemo(
-    () => questions.map(getQuestionId).join("_"),
+    () =>
+      questions
+        .map((question, index) =>
+          getQuestionId(question, index)
+        )
+        .join("_"),
+
     [questions]
   );
 
   const storageKey = useMemo(
     () =>
       `${STORAGE_PREFIX}:${sessionKey || questionIdentity || "empty"}`,
+
     [sessionKey, questionIdentity]
   );
+
+  /* =========================================
+     STATE
+  ========================================= */
 
   const [progress, setProgress] = useState({
     storageKey: "",
     index: 0,
     entries: {},
+    completed: false,
   });
 
   const [ready, setReady] = useState(false);
+
   const [showSummary, setShowSummary] = useState(false);
 
   const timerRef = useRef(null);
 
+  const progressRef = useRef(progress);
+
   const total = questions.length;
 
-  // Tổng số lượt gợi ý của cả phiên.
   const maxTotalHints = Math.floor(total / 2);
+
+  /* =========================================
+     KEEP LATEST PROGRESS
+  ========================================= */
+
+  useEffect(() => {
+    progressRef.current = progress;
+  }, [progress]);
+
+  /* =========================================
+     SAVE FUNCTION
+
+     Ghi đồng bộ vào LocalStorage.
+  ========================================= */
+
+  const saveProgress = useCallback(
+    (value = progressRef.current) => {
+      if (
+        !value ||
+        value.storageKey !== storageKey ||
+        !storageKey
+      ) {
+        return;
+      }
+
+      try {
+        localStorage.setItem(
+          storageKey,
+          JSON.stringify({
+            version: 5,
+            index: value.index,
+            entries: value.entries,
+            completed: value.completed,
+            updatedAt: Date.now(),
+          })
+        );
+
+      } catch (error) {
+        console.error("Save Typing progress:", error);
+      }
+    },
+    [storageKey]
+  );
 
   /* =========================================
      LOAD
@@ -177,37 +245,93 @@ export default function TypingReview({
     setReady(false);
     setShowSummary(false);
 
-    const saved = loadProgress(storageKey, questions);
+    const saved = loadProgress(
+      storageKey,
+      questions
+    );
 
-    setProgress({
+    const restored = {
       storageKey,
       ...saved,
-    });
+    };
+
+    progressRef.current = restored;
+
+    setProgress(restored);
+
+    setShowSummary(saved.completed);
 
     setReady(true);
+
+    return () => {
+      if (timerRef.current) {
+        clearTimeout(timerRef.current);
+        timerRef.current = null;
+      }
+    };
+
   }, [storageKey]);
 
   /* =========================================
-     SAVE
+     AUTO SAVE AFTER EVERY CHANGE
   ========================================= */
 
   useEffect(() => {
-    if (!ready || progress.storageKey !== storageKey) {
+    if (
+      !ready ||
+      progress.storageKey !== storageKey
+    ) {
       return;
     }
 
-    try {
-      localStorage.setItem(
-        storageKey,
-        JSON.stringify({
-          index: progress.index,
-          entries: progress.entries,
-        })
+    progressRef.current = progress;
+
+    saveProgress(progress);
+
+  }, [progress, storageKey, ready, saveProgress]);
+
+  /* =========================================
+     SAVE WHEN LEAVING PAGE
+
+     Hỗ trợ F5 / đóng tab / Safari.
+  ========================================= */
+
+  useEffect(() => {
+    if (!ready) return;
+
+    const handlePageHide = () => {
+      saveProgress(progressRef.current);
+    };
+
+    const handleBeforeUnload = () => {
+      saveProgress(progressRef.current);
+    };
+
+    window.addEventListener(
+      "pagehide",
+      handlePageHide
+    );
+
+    window.addEventListener(
+      "beforeunload",
+      handleBeforeUnload
+    );
+
+    return () => {
+      saveProgress(progressRef.current);
+
+      window.removeEventListener(
+        "pagehide",
+        handlePageHide
       );
-    } catch (error) {
-      console.error("Save Typing progress:", error);
-    }
-  }, [progress, storageKey, ready]);
+
+      window.removeEventListener(
+        "beforeunload",
+        handleBeforeUnload
+      );
+    };
+
+  }, [ready, saveProgress]);
 
   /* =========================================
      TIMER CLEANUP
@@ -217,6 +341,7 @@ export default function TypingReview({
     return () => {
       if (timerRef.current) {
         clearTimeout(timerRef.current);
+        timerRef.current = null;
       }
     };
   }, []);
@@ -226,13 +351,17 @@ export default function TypingReview({
   ========================================= */
 
   const index = progress.index;
+
   const q = questions[index];
 
   const getEntry = useCallback(
     (question, questionIndex) => {
       if (!question) return null;
 
-      const id = getQuestionId(question, questionIndex);
+      const id = getQuestionId(
+        question,
+        questionIndex
+      );
 
       return (
         progress.entries[id] ||
@@ -278,13 +407,14 @@ export default function TypingReview({
       remaining: total - answered,
       hintsUsed,
     };
+
   }, [questions, getEntry, total]);
 
   const isLocked = !!currentEntry?.submitted;
 
   /* =========================================
      UPDATE ENTRY
-========================================= */
+  ========================================= */
 
   const updateEntry = useCallback(
     (questionIndex, updater) => {
@@ -309,6 +439,7 @@ export default function TypingReview({
 
         return {
           ...previous,
+
           entries: {
             ...previous.entries,
             [id]: newEntry,
@@ -321,7 +452,7 @@ export default function TypingReview({
 
   /* =========================================
      DISPLAY QUESTION
-========================================= */
+  ========================================= */
 
   const displayQuestion = useMemo(() => {
     if (!q) return "";
@@ -330,12 +461,14 @@ export default function TypingReview({
       return capitalizeVietnamese(q.question);
     }
 
+    // Giữ nguyên đầy đủ Kanji + Kana.
     return q.question || "";
+
   }, [q]);
 
   /* =========================================
      UPDATE CELLS
-========================================= */
+  ========================================= */
 
   const handleCellsChange = useCallback(
     (nextCells) => {
@@ -351,99 +484,119 @@ export default function TypingReview({
   );
 
   /* =========================================
-     RANDOM HINT
-========================================= */
+     HINT
+  ========================================= */
 
+  const handleHint = useCallback(
+    (selectedIndex) => {
+      if (!q || isLocked) return;
 
-  const handleHint = (selectedIndex) => {
-    if (!q || isLocked) return;
+      if (
+        !Number.isInteger(selectedIndex) ||
+        selectedIndex < 0 ||
+        selectedIndex >= answerCells.length
+      ) {
+        return;
+      }
 
-    if (
-      !Number.isInteger(selectedIndex) ||
-      selectedIndex < 0 ||
-      selectedIndex >= answerCells.length
-    ) {
-      return;
-    }
+      // Giới hạn gợi ý toàn phiên.
+      if (statistics.hintsUsed >= maxTotalHints) {
+        return;
+      }
 
-    // Giới hạn lượt gợi ý toàn phiên.
-    if (statistics.hintsUsed >= maxTotalHints) {
-      return;
-    }
+      // Giới hạn 50% số ô mỗi câu.
+      const maxQuestionHints = Math.floor(
+        answerCells.length / 2
+      );
 
-    // Giới hạn tối đa 50% số ô mỗi câu.
-    const maxQuestionHints = Math.floor(
-      answerCells.length / 2
-    );
+      if (
+        currentEntry.hints.length >= maxQuestionHints
+      ) {
+        return;
+      }
 
-    if (
-      currentEntry.hints.length >= maxQuestionHints
-    ) {
-      return;
-    }
+      if (currentEntry.hints.includes(selectedIndex)) {
+        return;
+      }
 
-    // Không mở lại ô đã gợi ý.
-    if (currentEntry.hints.includes(selectedIndex)) {
-      return;
-    }
+      updateEntry(index, (old) => ({
+        ...old,
 
-    updateEntry(index, (old) => ({
-      ...old,
+        cells: old.cells.map((cell, i) =>
+          i === selectedIndex
+            ? answerCells[selectedIndex]
+            : cell
+        ),
 
-      cells: old.cells.map((cell, i) =>
-        i === selectedIndex
-          ? answerCells[selectedIndex]
-          : cell
-      ),
+        hints: [...old.hints, selectedIndex],
 
-      hints: [...old.hints, selectedIndex],
-
-      lastAttempt: null,
-    }));
-  };
-
+        lastAttempt: null,
+      }));
+    },
+    [
+      q,
+      isLocked,
+      answerCells,
+      statistics.hintsUsed,
+      maxTotalHints,
+      currentEntry,
+      updateEntry,
+      index,
+    ]
+  );
 
   /* =========================================
      NAVIGATION
-========================================= */
+  ========================================= */
 
-  const goToQuestion = (nextIndex) => {
-    if (nextIndex < 0 || nextIndex >= total) return;
+  const goToQuestion = useCallback(
+    (nextIndex) => {
+      if (
+        nextIndex < 0 ||
+        nextIndex >= total
+      ) {
+        return;
+      }
 
-    if (timerRef.current) {
-      clearTimeout(timerRef.current);
-      timerRef.current = null;
-    }
+      if (timerRef.current) {
+        clearTimeout(timerRef.current);
+        timerRef.current = null;
+      }
 
-    setShowSummary(false);
+      setShowSummary(false);
 
-    setProgress((previous) => ({
-      ...previous,
-      index: nextIndex,
-    }));
-  };
+      setProgress((previous) => ({
+        ...previous,
+        index: nextIndex,
+        completed: false,
+      }));
+    },
+    [total]
+  );
 
   /* =========================================
      CHECK ANSWER
-========================================= */
+  ========================================= */
 
-  const handleCheck = () => {
+  const handleCheck = useCallback(() => {
     if (!q || isLocked) return;
 
     const input = currentEntry.cells.join("");
 
     if (!input.trim()) return;
 
-    const expected = q.answer || q.correct || "";
+    const expected =
+      q.answer || q.correct || "";
 
     const isCorrect =
-      normalizeKana(input) === normalizeKana(expected);
+      normalizeKana(input) ===
+      normalizeKana(expected);
 
+    // Sai: cho phép sửa và nhập lại.
     if (!isCorrect) {
-      // Sai: không khóa câu, không tự chuyển.
-      // Cho phép sửa và nhập lại.
       updateEntry(index, (old) => ({
         ...old,
+
         lastAttempt: {
           input,
           isCorrect: false,
@@ -456,21 +609,25 @@ export default function TypingReview({
     // Đúng: hoàn thành câu.
     updateEntry(index, (old) => ({
       ...old,
+
       submitted: true,
       isCorrect: true,
       userAnswer: input,
+
       lastAttempt: {
         input,
         isCorrect: true,
       },
     }));
 
-    // Chỉ ghi nhận hoàn thành khi trả lời đúng.
     if (onResult) {
       Promise.resolve(
         onResult(q, true, input)
       ).catch((error) => {
-        console.error("Lưu kết quả Typing:", error);
+        console.error(
+          "Lưu kết quả Typing:",
+          error
+        );
       });
     }
 
@@ -486,16 +643,31 @@ export default function TypingReview({
           index: index + 1,
         }));
       } else {
+        setProgress((previous) => ({
+          ...previous,
+          completed: true,
+        }));
+
         setShowSummary(true);
       }
 
       timerRef.current = null;
+
     }, AUTO_NEXT_DELAY);
-  };
+
+  }, [
+    q,
+    isLocked,
+    currentEntry,
+    index,
+    total,
+    updateEntry,
+    onResult,
+  ]);
 
   /* =========================================
      HISTORY
-========================================= */
+  ========================================= */
 
   const history = useMemo(
     () =>
@@ -503,7 +675,10 @@ export default function TypingReview({
         .map((question, i) => {
           const entry = getEntry(question, i);
 
-          if (!entry?.submitted || !entry.isCorrect) {
+          if (
+            !entry?.submitted ||
+            !entry.isCorrect
+          ) {
             return null;
           }
 
@@ -515,19 +690,26 @@ export default function TypingReview({
           return {
             question: question.question,
             display,
+
             input: entry.userAnswer || "",
-            answer: question.answer || question.correct,
+
+            answer:
+              question.answer ||
+              question.correct,
+
             isCorrect: true,
+
             hints: entry.hints.length,
           };
         })
         .filter(Boolean),
+
     [questions, getEntry]
   );
 
   /* =========================================
      LOADING
-========================================= */
+  ========================================= */
 
   if (!ready) {
     return (
@@ -547,9 +729,9 @@ export default function TypingReview({
 
   /* =========================================
      SUMMARY
-========================================= */
+  ========================================= */
 
-  if (showSummary) {
+  if (showSummary || progress.completed) {
     return (
       <SummaryTyping
         total={total}
@@ -563,7 +745,7 @@ export default function TypingReview({
 
   /* =========================================
      HINT LIMITS
-========================================= */
+  ========================================= */
 
   const maxQuestionHints = Math.floor(
     answerCells.length / 2
@@ -572,22 +754,22 @@ export default function TypingReview({
   const canHint =
     !isLocked &&
     statistics.hintsUsed < maxTotalHints &&
-    currentEntry.hints.length <
-    Math.floor(answerCells.length / 2) &&
-    currentEntry.hints.length < answerCells.length;
+    currentEntry.hints.length < maxQuestionHints;
 
   /* =========================================
      CHECK
-========================================= */
+  ========================================= */
 
   const canCheck =
     !isLocked &&
     currentEntry.cells.length === answerCells.length &&
-    currentEntry.cells.every((cell) => cell.trim());
+    currentEntry.cells.every((cell) =>
+      cell.trim()
+    );
 
   /* =========================================
      UI
-========================================= */
+  ========================================= */
 
   return (
     <div className="
@@ -643,6 +825,7 @@ export default function TypingReview({
           <span>
             Gợi ý: {statistics.hintsUsed}/{maxTotalHints}
           </span>
+
           <span>
             Câu này: {currentEntry.hints.length}/{maxQuestionHints}
           </span>
@@ -651,20 +834,22 @@ export default function TypingReview({
 
       {/* QUESTION */}
 
+      {/* QUESTION */}
+
       <section className="
-        flex min-h-[105px]
-        items-center justify-center
-        rounded-2xl border border-slate-200
-        bg-white px-4 py-5
-        text-center shadow-sm
-        sm:min-h-[135px] sm:px-6 sm:py-6
-      ">
+  flex min-h-[80px]
+  items-center justify-center
+  rounded-2xl border border-slate-200
+  bg-white px-4 py-3
+  text-center shadow-sm
+  sm:min-h-[100px] sm:px-6 sm:py-4
+">
         <div className="
-          break-words
-          text-3xl font-bold tracking-wide
-          text-slate-800
-          sm:text-5xl md:text-6xl
-        ">
+  break-words
+  text-3xl font-bold tracking-wide
+  text-slate-800
+  sm:text-4xl md:text-5xl
+">
           {displayQuestion}
         </div>
       </section>
@@ -672,10 +857,10 @@ export default function TypingReview({
       {/* ANSWER */}
 
       <section className="
-        rounded-2xl border border-slate-200
-        bg-white px-3 py-4 shadow-sm
-        sm:px-5 sm:py-5
-      ">
+  rounded-2xl border border-slate-200
+  bg-white px-3 py-2 shadow-sm
+  sm:px-5 sm:py-3
+">
         <KanaAnswerInput
           key={`${getQuestionId(q, index)}-${index}`}
           cells={currentEntry.cells}
