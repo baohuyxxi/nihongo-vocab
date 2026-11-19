@@ -18,6 +18,10 @@ export default function Flashcard({
     direction,
     index,
     onExposeJP,
+    kanji,
+    hiragana,
+    hanViet,
+    showFurigana = true,
 }) {
     const getJPText = () => {
         if (direction === "jp_vi" && !showAnswer) {
@@ -112,6 +116,9 @@ export default function Flashcard({
 
                 <FlashcardFront
                     text={frontText}
+                    kanji={kanji}
+                    hiragana={hiragana}
+                    showFurigana={showFurigana}
 
                     isJP={
                         direction === "jp_vi"
@@ -135,6 +142,10 @@ export default function Flashcard({
 
                 <FlashcardBack
                     back={back}
+                    kanji={kanji}
+                    hanViet={hanViet}
+                    hiragana={hiragana}
+                    showFurigana={showFurigana}
 
                     isKanji={
                         direction === "kanji"

@@ -42,6 +42,8 @@ export default function FlashcardReview({
   onResult,
   progressKey = FLASHCARD_PROGRESS_KEY,
   sessionStorageKey = "reviewSessionData",
+  showFurigana = true,
+  setShowFurigana,
 }) {
   const storageKey = progressKey || FLASHCARD_PROGRESS_KEY
 
@@ -531,6 +533,10 @@ export default function FlashcardReview({
           direction={card.direction}
           index={index}
           onExposeJP={setCurrentJP}
+          kanji={card.kanji}
+          hiragana={card.hiragana}
+          hanViet={card.hanViet}
+          showFurigana={showFurigana}
         />
       </div>
 
@@ -548,6 +554,9 @@ export default function FlashcardReview({
           setAutoFlip={setAutoFlip}
           flipDelay={flipDelay}
           setFlipDelay={setFlipDelay}
+          showFurigana={showFurigana}
+          setShowFurigana={setShowFurigana}
+          hasJpVi={cards.some((item) => item?.direction === "jp_vi")}
         />
       </div>
     </div>

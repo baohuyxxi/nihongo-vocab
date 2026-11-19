@@ -5,6 +5,9 @@ export default function FlashcardSettings({
   setAutoFlip,
   flipDelay,
   setFlipDelay,
+  showFurigana,
+  setShowFurigana,
+  hasJpVi = false,
 }) {
   return (
     <div className="flex flex-wrap items-center justify-center gap-3 px-2 text-xs sm:text-sm">
@@ -27,6 +30,18 @@ export default function FlashcardSettings({
         <option value={4000}>4 giây</option>
         <option value={6000}>6 giây</option>
       </select>
+
+      {hasJpVi && (
+        <label className="flex items-center gap-2 rounded-full border border-slate-200 bg-white px-3 py-2 font-medium text-slate-700 shadow-sm">
+          <input
+            type="checkbox"
+            checked={showFurigana !== false}
+            onChange={(event) => setShowFurigana?.(event.target.checked)}
+            className="h-4 w-4 accent-blue-600"
+          />
+          Hiện Furigana
+        </label>
+      )}
     </div>
   )
 }

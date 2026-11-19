@@ -56,6 +56,7 @@ export default function useReviewConfig() {
   const [selectedPartsOfSpeech, setSelectedPartsOfSpeech] = useState([])
   const [mode, setMode] = useState("flashcard")
   const [directions, setDirections] = useState(["jp_vi"])
+  const [showFurigana, setShowFurigana] = useState(true)
   const [reviewLimit, setReviewLimit] = useState(null)
   const [isHydrated, setIsHydrated] = useState(false)
 
@@ -94,6 +95,7 @@ export default function useReviewConfig() {
     setCurriculumTab(nextTab)
     setMode(saved.mode || "flashcard")
     setDirections(Array.isArray(saved.directions) && saved.directions.length > 0 ? saved.directions : ["jp_vi"])
+    setShowFurigana(typeof saved.showFurigana === "boolean" ? saved.showFurigana : true)
     setReviewLimit(saved.limit ?? null)
     setN3Source(VALID_N3_SOURCES.includes(saved.n3Source) ? saved.n3Source : null)
     setIsHydrated(true)
@@ -110,6 +112,7 @@ export default function useReviewConfig() {
     curriculumTab,
     mode,
     directions,
+    showFurigana,
     limit: reviewLimit,
   }
 
@@ -129,6 +132,7 @@ export default function useReviewConfig() {
     mode,
     directions,
     reviewLimit,
+    showFurigana,
     isHydrated,
   ])
 
@@ -157,6 +161,8 @@ export default function useReviewConfig() {
     setMode,
     directions,
     setDirections,
+    showFurigana,
+    setShowFurigana,
     reviewLimit,
     setReviewLimit,
     config,

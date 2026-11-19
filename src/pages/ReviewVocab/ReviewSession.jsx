@@ -1,4 +1,5 @@
 
+import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 
 import FlashcardReview from "./FlashcardReview";
@@ -27,6 +28,26 @@ export default function ReviewSession() {
     reviewConfig?.n3Source === "sou-matome-kanji";
 
   const mode = session?.mode || reviewConfig?.mode;
+  const [showFurigana, setShowFuriganaState] = useState(
+    reviewConfig?.showFurigana !== false
+  );
+
+  useEffect(() => {
+    setShowFuriganaState(reviewConfig?.showFurigana !== false);
+  }, [reviewConfig?.showFurigana]);
+
+  const setShowFurigana = (value) => {
+    setShowFuriganaState(value);
+    const nextConfig = { ...reviewConfig, showFurigana: value };
+    try {
+      localStorage.setItem("reviewConfig", JSON.stringify(nextConfig));
+      if (reviewConfig?.n3Source === "sou-matome-kanji") {
+        localStorage.setItem("n3ReviewConfig", JSON.stringify(nextConfig));
+      }
+    } catch (error) {
+      console.warn("Không thể lưu cài đặt Furigana:", error);
+    }
+  };
 
   // Mã phiên ổn định để lưu tiến độ Typing.
   const typingSessionKey =
@@ -81,7 +102,7 @@ export default function ReviewSession() {
   if (loading) {
     return (
       <div className="rounded-xl bg-white p-6 text-center shadow">
-        ⏳ Đang khôi phục phiên ôn tập...
+        ⏳ Đang tải phiên ôn tập...
       </div>
     );
   }
@@ -166,6 +187,8 @@ export default function ReviewSession() {
               ? "n3ReviewSessionData"
               : "reviewSessionData"
           }
+          showFurigana={showFurigana}
+          setShowFurigana={setShowFurigana}
         />
       )}
 
@@ -174,6 +197,7 @@ export default function ReviewSession() {
       {mode === "quiz" && (
         <QuizReview
           questions={session.questions || []}
+          showFurigana={showFurigana}
         />
       )}
 
