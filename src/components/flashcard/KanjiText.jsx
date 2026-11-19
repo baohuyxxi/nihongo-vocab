@@ -18,15 +18,10 @@ export default function KanjiText({
 
     <div
       className="
-        w-full
-        h-full
-
-        flex
-        items-center
-        justify-center
-
-        overflow-hidden
-        text-center
+        flashcard-japanese
+        w-full h-full
+        flex items-center justify-center
+        overflow-hidden text-center
       "
     >
 

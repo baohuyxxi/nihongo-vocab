@@ -29,6 +29,15 @@
   --color-information-surface: #eff6ff;
   --color-overlay: rgb(17 24 39 / 45%);
   --color-shadow: rgb(15 23 42 / 12%);
+  --flashcard-front-background: #ffffff;
+  --flashcard-back-background: #f0fdf4;
+  --flashcard-japanese: #0f172a;
+  --flashcard-vietnamese: #0f172a;
+  --flashcard-hanviet: #334155;
+  --flashcard-muted: #475569;
+  --flashcard-control-background: rgb(255 255 255 / 92%);
+  --flashcard-control-hover: #eff6ff;
+  --flashcard-control-border: #e2e8f0;
 }
 
 [data-theme="dark"] {
@@ -58,6 +67,15 @@
   --color-information-surface: #1e3049;
   --color-overlay: rgb(0 0 0 / 62%);
   --color-shadow: rgb(0 0 0 / 30%);
+  --flashcard-front-background: #222833;
+  --flashcard-back-background: #1e293b;
+  --flashcard-japanese: #f1f5f9;
+  --flashcard-vietnamese: #f1f5f9;
+  --flashcard-hanviet: #e2e8f0;
+  --flashcard-muted: #cbd5e1;
+  --flashcard-control-background: rgb(42 50 64 / 92%);
+  --flashcard-control-hover: #304157;
+  --flashcard-control-border: #485262;
 }
 
 html,
@@ -352,4 +370,67 @@ body {
 
 svg {
   transition: opacity 0.15s ease;
+}
+/* ==============================
+   JAPANESE RUBY - FLASHCARD
+============================== */
+
+.japanese-ruby {
+  display: inline-block;
+  color: var(--flashcard-japanese);
+  font-weight: 400;
+  line-height: 1.9;
+  letter-spacing: 0.015em;
+}
+
+.japanese-ruby ruby {
+  ruby-position: over;
+  ruby-align: center;
+}
+
+.japanese-ruby rt {
+  font-size: 0.42em;
+  font-weight: 400;
+  color: inherit;
+  line-height: 1;
+  letter-spacing: 0.025em;
+  padding-bottom: 0.16em;
+  white-space: nowrap;
+}
+
+.flashcard-front {
+  background-color: var(--flashcard-front-background);
+  color: var(--flashcard-japanese);
+}
+
+.flashcard-back {
+  background-color: var(--flashcard-back-background);
+  color: var(--flashcard-japanese);
+}
+
+.flashcard-japanese {
+  color: var(--flashcard-japanese);
+}
+
+.flashcard-vietnamese {
+  color: var(--flashcard-vietnamese);
+  font-weight: 400;
+}
+
+.flashcard-hanviet {
+  color: var(--flashcard-hanviet);
+  font-weight: 400;
+  font-style: italic;
+}
+
+.flashcard-control {
+  background-color: var(--flashcard-control-background);
+  color: var(--flashcard-japanese);
+  border-color: var(--flashcard-control-border);
+}
+
+[data-theme="dark"] .flashcard-control {
+  background-color: var(--flashcard-control-background);
+  color: var(--flashcard-japanese);
+  border-color: var(--flashcard-control-border);
 }

@@ -2,71 +2,107 @@
 import { useEffect, useRef } from "react";
 
 import AutoFitText from "./flashcard/AutoFitText";
+import JapaneseRubyText from "./JapaneseRubyText";
 
 export default function JapaneseTextWithAudio({
   text,
   autoPlay = false,
   onSpeak,
+  kanji,
+  hiragana,
+  showFurigana = true,
 }) {
+  const normalizedText =
+    typeof text === "string"
+      ? text
+      : text?.hiragana ||
+        text?.jp ||
+        text?.word ||
+        "";
+
   const hasPlayed = useRef(false);
 
-  // Reset khi đổi từ
   useEffect(() => {
     hasPlayed.current = false;
   }, [text]);
 
-  // Tự động phát âm một lần
   useEffect(() => {
     if (
       !autoPlay ||
       hasPlayed.current ||
-      !text ||
+      !normalizedText ||
       typeof onSpeak !== "function"
     ) {
       return;
     }
 
     hasPlayed.current = true;
-    onSpeak(text);
-  }, [autoPlay, text, onSpeak]);
+    onSpeak(normalizedText);
+  }, [autoPlay, normalizedText, onSpeak]);
 
-  if (!text) return null;
+  if (!normalizedText) return null;
 
   const handleSpeak = (event) => {
     event.stopPropagation();
 
     if (typeof onSpeak === "function") {
-      onSpeak(text);
+      onSpeak(normalizedText);
     }
   };
+
+  const hasKanji =
+    typeof kanji === "string" &&
+    /[\p{Script=Han}々〆ヶ]/u.test(kanji);
 
   return (
     <div
       className="
+        flashcard-japanese
         relative
         flex h-full w-full
         min-h-0 min-w-0
         items-center justify-center
       "
     >
-      {/* JAPANESE AUTO FIT */}
       <div
         className="
+          flashcard-japanese
           h-full w-full
           min-h-0 min-w-0
           px-2 py-8
           sm:px-6 sm:py-10
         "
       >
-        <AutoFitText
-          text={text}
-          maxLines={2}
-          minFontSize={12}
-          maxFontSize={96}
-        />
+        {hasKanji ? (
+          <div className="
+            flex h-full w-full
+            items-center justify-center
+            overflow-hidden
+            text-center
+          ">
+            <JapaneseRubyText
+              kanji={kanji}
+              hiragana={hiragana}
+              showFurigana={showFurigana}
+              className="
+                block max-w-full
+                text-[clamp(2rem,8vw,5.5rem)]
+                font-normal
+                leading-[1.35]
+                [overflow-wrap:anywhere]
+              "
+            />
+          </div>
+        ) : (
+          <AutoFitText
+            text={normalizedText}
+            maxLines={2}
+            minFontSize={12}
+            maxFontSize={96}
+          />
+        )}
       </div>
 
-      {/* AUDIO BUTTON */}
       {typeof onSpeak === "function" && (
         <button
           type="button"
@@ -87,6 +123,7 @@ export default function JapaneseTextWithAudio({
             sm:right-3 sm:top-3
             sm:h-12 sm:w-12
             sm:text-2xl
+            flashcard-control
           "
           aria-label="Phát âm tiếng Nhật"
           title="Phát âm tiếng Nhật"

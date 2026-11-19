@@ -6,6 +6,7 @@ import {
   useRef,
   useState,
 } from "react";
+import JapaneseRubyText from "../../components/JapaneseRubyText";
 
 const STORAGE_KEY = "quizReviewProgress_v2";
 const FEEDBACK_DELAY = 950;
@@ -16,6 +17,10 @@ const FEEDBACK_DELAY = 950;
 
 const normalizeText = (value) =>
   String(value ?? "").trim();
+
+const hasJapaneseKanji = (value) =>
+  typeof value === "string" &&
+  /[\p{Script=Han}々〆ヶ]/u.test(value);
 
 const capitalizeVietnamese = (value) => {
   if (typeof value !== "string") return value;
@@ -180,6 +185,7 @@ function QuestionContent({
 export default function QuizReview({
   questions = [],
   onResult,
+  showFurigana = true,
 }) {
   const sessionKey = useMemo(
     () => createSessionKey(questions),
@@ -374,6 +380,9 @@ export default function QuizReview({
       id: q.id,
       direction: q.direction,
       question: q.question,
+      kanji: q.kanji,
+      hiragana: q.hiragana,
+      hanViet: q.hanViet,
       selected: value,
       correct: q.correct,
       choices: q.choices,
@@ -486,6 +495,7 @@ export default function QuizReview({
         total={questions.length}
         correct={correctCount}
         history={history}
+        showFurigana={showFurigana}
       />
     );
   }
@@ -589,12 +599,34 @@ export default function QuizReview({
             tracking-wide text-slate-800
           "
         >
-          <QuestionContent
-            value={q.question}
-            direction={q.direction}
-            isQuestion
-          />
+          {q.direction === "jp_vi" ? (
+            <JapaneseRubyText
+              kanji={hasJapaneseKanji(q.kanji) ? q.kanji : q.question}
+              hiragana={q.hiragana}
+              showFurigana={showFurigana}
+              className="block max-w-full text-center [overflow-wrap:anywhere]"
+            />
+          ) : (
+            <QuestionContent
+              value={q.question}
+              direction={q.direction}
+              isQuestion
+            />
+          )}
         </div>
+
+        {showResult && q.direction === "jp_vi" && (
+          <div className="pointer-events-none absolute bottom-2 left-2 z-10 max-w-[calc(100%-8rem)] rounded-full bg-white/95 px-3 py-1.5 text-xs font-semibold text-slate-700 shadow-sm sm:bottom-3 sm:left-3 sm:text-sm">
+            <span>{normalizeText(q.correct)}</span>
+            {hasJapaneseKanji(q.kanji) &&
+              typeof q.hanViet === "string" &&
+              q.hanViet.trim() && (
+                <span className="ml-2 text-amber-700">
+                  • Hán Việt: {q.hanViet.trim()}
+                </span>
+              )}
+          </div>
+        )}
 
         {showResult && (
           <div
@@ -849,6 +881,7 @@ export default function QuizReview({
                 <ReviewCard
                   data={reviewData}
                   number={reviewIndex + 1}
+                  showFurigana={showFurigana}
                 />
               ) : (
                 <p className="text-center text-xs text-slate-400">
@@ -901,7 +934,7 @@ export default function QuizReview({
    REVIEW CARD
 ========================================= */
 
-function ReviewCard({ data, number }) {
+function ReviewCard({ data, number, showFurigana = true }) {
   return (
     <div
       className={`
@@ -918,12 +951,34 @@ function ReviewCard({ data, number }) {
       </div>
 
       <div className="mb-4 text-center text-xl font-bold leading-relaxed text-slate-800 sm:text-3xl">
-        <QuestionContent
-          value={data.question}
-          direction={data.direction}
-          isQuestion
-        />
+        {data.direction === "jp_vi" ? (
+          <JapaneseRubyText
+            kanji={hasJapaneseKanji(data.kanji) ? data.kanji : data.question}
+            hiragana={data.hiragana}
+            showFurigana={showFurigana}
+            className="block max-w-full text-center [overflow-wrap:anywhere]"
+          />
+        ) : (
+          <QuestionContent
+            value={data.question}
+            direction={data.direction}
+            isQuestion
+          />
+        )}
       </div>
+
+      {data.direction === "jp_vi" && (
+        <div className="mb-3 text-center text-sm font-semibold text-slate-700 sm:text-base">
+          <span>{normalizeText(data.correct)}</span>
+          {hasJapaneseKanji(data.kanji) &&
+            typeof data.hanViet === "string" &&
+            data.hanViet.trim() && (
+              <span className="ml-2 text-amber-700">
+                • Hán Việt: {data.hanViet.trim()}
+              </span>
+            )}
+        </div>
+      )}
 
       <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
         {data.choices.map((choice, index) => {
@@ -986,6 +1041,7 @@ function Summary({
   total,
   correct,
   history,
+  showFurigana = true,
 }) {
   const percent = total
     ? Math.round((correct / total) * 100)
@@ -1036,6 +1092,7 @@ function Summary({
             key={index}
             data={item}
             number={index + 1}
+            showFurigana={showFurigana}
           />
         ))}
       </div>

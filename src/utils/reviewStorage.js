@@ -97,6 +97,10 @@ export const resolveReviewConfig = (config) => {
     n3Source: normalizeN3Source(config.n3Source),
     mode: config.mode || "flashcard",
     directions: normalizeDirections(config.directions),
+    showFurigana:
+      typeof config.showFurigana === "boolean"
+        ? config.showFurigana
+        : true,
     limit: config.limit ?? null,
   }
 

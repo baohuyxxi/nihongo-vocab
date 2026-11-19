@@ -51,6 +51,8 @@ export default function ReviewOptions({
   setDirections,
   reviewLimit,
   setReviewLimit,
+  showFurigana,
+  setShowFurigana,
 }) {
   const [showLimitOptions, setShowLimitOptions] =
     useState(false);
@@ -216,6 +218,23 @@ export default function ReviewOptions({
           </p>
         )}
       </section>
+
+      {directions.includes("jp_vi") && (
+        <section className="bg-white rounded-xl shadow p-4 sm:p-5">
+          <h2 className="font-semibold mb-4 text-sm sm:text-base">
+            🈂️ Tiếng Nhật
+          </h2>
+          <label className="flex items-center gap-3 min-h-[44px] cursor-pointer">
+            <input
+              type="checkbox"
+              checked={showFurigana !== false}
+              onChange={(event) => setShowFurigana(event.target.checked)}
+              className="h-4 w-4 accent-blue-600"
+            />
+            <span className="text-sm sm:text-base">Hiện Furigana</span>
+          </label>
+        </section>
+      )}
 
       {/* ================= LIMIT ================= */}
       <section className="bg-white rounded-xl shadow p-4 sm:p-5">

@@ -139,7 +139,7 @@ export default function AutoFitText({
           invisible
           whitespace-normal
           break-words
-          text-center font-bold
+          text-center font-normal
         "
         style={{
           width: "100%",
@@ -165,7 +165,7 @@ export default function AutoFitText({
             block max-w-full
             whitespace-normal
             break-words
-            font-bold
+            font-normal
           "
           style={{
             fontSize: `${fontSize}px`,

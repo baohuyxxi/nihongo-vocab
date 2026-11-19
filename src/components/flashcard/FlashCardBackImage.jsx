@@ -1,171 +1,86 @@
-import {
-  useLayoutEffect,
-  useRef,
-  useState,
-} from "react"
 
-const MAX_SIZE = 82
-const MIN_SIZE = 30
-const STEP = 2
-import JapaneseTextWithAudio from "../JapaneseTextWithAudio"
+import JapaneseTextWithAudio from "../JapaneseTextWithAudio";
+import JapaneseRubyText from "../JapaneseRubyText";
 
 export default function FlashCardBackImage({
   back,
   onSpeak,
+  kanji,
+  hiragana,
+  showFurigana = true,
 }) {
+  if (!back) return null;
 
-  const jpRef = useRef(null)
+  const meaning =
+    typeof back.meaning === "string"
+      ? back.meaning.trim()
+      : "";
 
-  const [fontSize, setFontSize]
-    = useState(MAX_SIZE)
+  const capitalize = (value) => {
+    if (!value) return "";
 
-
-  // =========================
-  // AUTO FIT JP TEXT
-  // =========================
-
-  useLayoutEffect(() => {
-
-    const el = jpRef.current
-
-    if (!el || !back?.jp) return
-
-    let size = MAX_SIZE
-
-    el.style.fontSize = `${size}px`
-
-    const parent = el.parentElement
-
-    while (
-      size > MIN_SIZE &&
-      el.scrollHeight > parent.clientHeight
-    ) {
-
-      size -= STEP
-
-      el.style.fontSize = `${size}px`
-    }
-
-    setFontSize(size)
-
-  }, [back?.jp])
-
-
-  if (!back) return null
-
+    return (
+      value.charAt(0).toLocaleUpperCase("vi-VN") +
+      value.slice(1)
+    );
+  };
 
   return (
-
     <div
       className="
-        w-full
-        h-full
-
-        flex
-        flex-col
-        items-center
-        justify-center
-
-        gap-3
-        sm:gap-4
-        md:gap-5
-
-        px-3
-        sm:px-5
-        md:px-7
-
-        py-4
-        sm:py-5
-
-        text-center
-        overflow-hidden
+        flashcard-japanese
+        flex h-full w-full
+        flex-col items-center justify-center
+        gap-3 sm:gap-4 md:gap-5
+        overflow-hidden px-3 sm:px-5 md:px-7
+        py-4 sm:py-5 text-center
       "
     >
-
-      {/* =========================
-          KANJI
-      ========================= */}
+      {/* KANJI */}
 
       {back.kanji && (
-
-        <div
-          className="
-            w-full
-
-            font-bold
-            text-gray-900
-
-            leading-[1.15]
-
-            text-[2rem]
-            sm:text-[2.8rem]
-            md:text-[3.5rem]
-            lg:text-[4rem]
-
-            break-words
-          "
-        >
-          {back.kanji}
+        <div className="flashcard-japanese w-full text-[clamp(2rem,6vw,4rem)] leading-tight">
+          <JapaneseRubyText
+            kanji={back.kanji || kanji}
+            hiragana={back.hiragana || hiragana}
+            showFurigana={showFurigana}
+            className="max-w-full"
+          />
         </div>
-
       )}
 
+      {/* JP / HIRAGANA */}
 
-      {/* =========================
-          JP / HIRAGANA
-      ========================= */}
-
-      <div
-        className="
-          relative
-
-          w-full
-
-          flex
-          items-center
-          justify-center
-
-          min-h-[60px]
-          sm:min-h-[80px]
-          md:min-h-[100px]
-
-          overflow-hidden
-        "
-      >
-
+      <div className="
+        flex min-h-[60px] w-full
+        items-center justify-center
+        overflow-hidden
+        sm:min-h-[80px]
+        md:min-h-[100px]
+      ">
         <JapaneseTextWithAudio
           text={back.jp}
           autoPlay={false}
           onSpeak={onSpeak}
         />
-
       </div>
 
+      {/* MEANING */}
 
-      {/* =========================
-          MEANING
-      ========================= */}
-
-      <div
-        className="
-          w-full
-
-          font-bold
-          text-gray-700
-
-          leading-[1.2]
-
-          text-[1.6rem]
-          sm:text-[2.2rem]
-          md:text-[3rem]
-          lg:text-[3.5rem]
-
-          break-words
-        "
-      >
-        {back.meaning}
-      </div>
-
+      {meaning && (
+        <div
+          className="
+            flashcard-vietnamese
+            w-full
+            break-words
+            text-[clamp(1.5rem,4vw,3rem)]
+            font-normal
+            leading-snug
+          "
+        >
+          {capitalize(meaning)}
+        </div>
+      )}
     </div>
-  )
+  );
 }

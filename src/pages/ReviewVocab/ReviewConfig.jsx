@@ -38,6 +38,9 @@ export default function ReviewConfig({
   reviewLimit,
   setReviewLimit,
 
+  showFurigana,
+  setShowFurigana,
+
   onStart,
   onContinue,
 
@@ -70,6 +73,8 @@ export default function ReviewConfig({
           reviewLimit={reviewLimit}
           setReviewLimit={setReviewLimit}
           n3Source={n3Source}
+          showFurigana={showFurigana}
+          setShowFurigana={setShowFurigana}
         />
 
         <ReviewContent
