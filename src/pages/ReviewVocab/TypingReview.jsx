@@ -11,7 +11,7 @@ import { toHiragana } from "wanakana";
 
 import KanaAnswerInput from "../../components/JPInput/KanaAnswerInput";
 import SummaryTyping from "../../components/SummaryTyping";
-import { removeKana } from "../../utils/japanese";
+// import { removeKana } from "../../utils/japanese";
 
 /* =========================================
    CONFIG
@@ -326,15 +326,11 @@ export default function TypingReview({
   const displayQuestion = useMemo(() => {
     if (!q) return "";
 
-    if (q.direction === "kanji") {
-      return removeKana(q.question) || q.question;
-    }
-
     if (q.direction === "vi_jp") {
       return capitalizeVietnamese(q.question);
     }
 
-    return q.question;
+    return q.question || "";
   }, [q]);
 
   /* =========================================
@@ -358,15 +354,24 @@ export default function TypingReview({
      RANDOM HINT
 ========================================= */
 
-  const handleHint = () => {
+
+  const handleHint = (selectedIndex) => {
     if (!q || isLocked) return;
 
-    // Giới hạn tổng gợi ý của phiên.
+    if (
+      !Number.isInteger(selectedIndex) ||
+      selectedIndex < 0 ||
+      selectedIndex >= answerCells.length
+    ) {
+      return;
+    }
+
+    // Giới hạn lượt gợi ý toàn phiên.
     if (statistics.hintsUsed >= maxTotalHints) {
       return;
     }
 
-    // Giới hạn gợi ý của từng câu.
+    // Giới hạn tối đa 50% số ô mỗi câu.
     const maxQuestionHints = Math.floor(
       answerCells.length / 2
     );
@@ -377,31 +382,26 @@ export default function TypingReview({
       return;
     }
 
-    // Chỉ chọn ô chưa được gợi ý và chưa nhập.
-    const candidates = answerCells
-      .map((character, i) => i)
-      .filter(
-        (i) =>
-          !currentEntry.hints.includes(i) &&
-          !currentEntry.cells[i]
-      );
-
-    if (!candidates.length) return;
-
-    const selectedIndex =
-      candidates[Math.floor(Math.random() * candidates.length)];
+    // Không mở lại ô đã gợi ý.
+    if (currentEntry.hints.includes(selectedIndex)) {
+      return;
+    }
 
     updateEntry(index, (old) => ({
       ...old,
+
       cells: old.cells.map((cell, i) =>
         i === selectedIndex
           ? answerCells[selectedIndex]
           : cell
       ),
+
       hints: [...old.hints, selectedIndex],
+
       lastAttempt: null,
     }));
   };
+
 
   /* =========================================
      NAVIGATION
@@ -508,11 +508,9 @@ export default function TypingReview({
           }
 
           const display =
-            question.direction === "kanji"
-              ? removeKana(question.question) || question.question
-              : question.direction === "vi_jp"
-                ? capitalizeVietnamese(question.question)
-                : question.question;
+            question.direction === "vi_jp"
+              ? capitalizeVietnamese(question.question)
+              : question.question;
 
           return {
             question: question.question,
@@ -574,11 +572,9 @@ export default function TypingReview({
   const canHint =
     !isLocked &&
     statistics.hintsUsed < maxTotalHints &&
-    currentEntry.hints.length < maxQuestionHints &&
-    currentEntry.cells.some(
-      (cell, i) =>
-        !cell && !currentEntry.hints.includes(i)
-    );
+    currentEntry.hints.length <
+    Math.floor(answerCells.length / 2) &&
+    currentEntry.hints.length < answerCells.length;
 
   /* =========================================
      CHECK
@@ -701,10 +697,9 @@ export default function TypingReview({
             className={`
               rounded-full px-4 py-2
               text-center text-sm font-semibold
-              ${
-                currentEntry.lastAttempt.isCorrect
-                  ? "bg-emerald-50 text-emerald-700"
-                  : "bg-red-50 text-red-700"
+              ${currentEntry.lastAttempt.isCorrect
+                ? "bg-emerald-50 text-emerald-700"
+                : "bg-red-50 text-red-700"
               }
             `}
           >
