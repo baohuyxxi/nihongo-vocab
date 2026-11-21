@@ -16,30 +16,59 @@ import SummaryTyping from "../../components/SummaryTyping";
    CONFIG
 ========================================= */
 
-const STORAGE_PREFIX = "typingReviewProgress_v5";
+const STORAGE_PREFIX = "typingReviewProgress_v6";
 const AUTO_NEXT_DELAY = 1500;
 
-const getQuestionId = (question, index) =>
-  String(question.id || question._id || `question_${index}`);
+const getQuestionId = (question, index) => {
+  const vocabId = String(
+    question.vocabId ||
+    question.id ||
+    question._id ||
+    "unknown"
+  );
+
+  const direction = String(
+    question.direction || "unknown"
+  );
+
+  return JSON.stringify([
+    index,
+    vocabId,
+    direction,
+    String(question.question || ""),
+    String(question.answer || question.correct || ""),
+  ]);
+};
+
+const normalizeAnswerText = (value = "") =>
+  String(value)
+    .normalize("NFKC")
+    .replace(/[~〜～]/g, "")
+    .trim();
+
 
 const getAnswerCells = (question) => {
   if (
     Array.isArray(question.answerCells) &&
     question.answerCells.length
   ) {
-    return question.answerCells;
+    return question.answerCells.filter(
+      (cell) => !/[~〜～]/.test(String(cell))
+    );
   }
 
-  return Array.from(
-    String(question.answer || question.correct || "")
-      .normalize("NFKC")
+  const answer = normalizeAnswerText(
+    question.answer || question.correct || ""
   );
+
+  return Array.from(answer);
 };
 
 const normalizeKana = (value = "") =>
   toHiragana(
     String(value)
       .normalize("NFKC")
+      .replace(/[~〜～]/g, "")
       .replace(/\s+/g, "")
       .trim()
   );
@@ -155,18 +184,18 @@ export default function TypingReview({
 
   const questionIdentity = useMemo(
     () =>
-      questions
-        .map((question, index) =>
+      JSON.stringify(
+        questions.map((question, index) =>
           getQuestionId(question, index)
         )
-        .join("_"),
-
+      ),
     [questions]
   );
 
   const storageKey = useMemo(
     () =>
-      `${STORAGE_PREFIX}:${sessionKey || questionIdentity || "empty"}`,
+      `${STORAGE_PREFIX}:${sessionKey || "no-session"
+      }:${questionIdentity}`,
 
     [sessionKey, questionIdentity]
   );
@@ -222,7 +251,7 @@ export default function TypingReview({
         localStorage.setItem(
           storageKey,
           JSON.stringify({
-            version: 5,
+            version: 6,
             index: value.index,
             entries: value.entries,
             completed: value.completed,
@@ -578,10 +607,16 @@ export default function TypingReview({
      CHECK ANSWER
   ========================================= */
 
-  const handleCheck = useCallback(() => {
+  const handleCheck = useCallback((latestCells) => {
     if (!q || isLocked) return;
 
-    const input = currentEntry.cells.join("");
+    const input = (
+      Array.isArray(latestCells)
+        ? latestCells
+        : currentEntry.cells
+    ).join("");
+
+    if (!input.trim()) return;
 
     if (!input.trim()) return;
 
