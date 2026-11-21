@@ -1,84 +1,52 @@
-import { useState } from "react"
-import GrammarDetail from "./GrammarDetail"
-import GrammarStructure from "./GrammarStructure"
-
-export default function GrammarList({ grammars, loading }) {
-    const [selected, setSelected] = useState(null)
-
-    if (loading) {
-        return (
-            <div className="py-10 text-center font-medium text-gray-600">
-                Đang tải dữ liệu...
-            </div>
-        )
+export default function GrammarList({ grammars, loading, searching, showAll, onShowAll, onSelect }) {
+    if (loading && !grammars.length) {
+        return <p role="status" className="py-10 text-center text-gray-600">Đang tải ngữ pháp…</p>
     }
 
-    if (!grammars?.length) {
+    if (!grammars.length) {
         return (
-            <div className="py-10 text-center text-gray-500 border border-dashed rounded-2xl bg-gray-50">
-                Không tìm thấy cấu trúc ngữ pháp nào.
+            <div className="rounded-2xl border border-dashed bg-gray-50 py-10 text-center text-gray-600">
+                <p role="status">{searching ? "Không tìm thấy mẫu ngữ pháp khớp từ khóa." : "Chưa có dữ liệu ngữ pháp trong mục này."}</p>
+                {!showAll && (
+                    <button type="button" onClick={onShowAll} className="mt-2 font-semibold text-blue-700 underline">
+                        Xem tất cả bài
+                    </button>
+                )}
             </div>
         )
     }
 
     return (
-        <>
-            <div className="space-y-4">
-                {grammars.map((item) => (
-                    <div
-                        key={item._id}
-                        onClick={() => setSelected(item)}
-                        className="bg-white border border-gray-200 rounded-2xl p-5 cursor-pointer hover:shadow-md hover:border-blue-300 transition-all duration-200 space-y-3"
-                    >
-                        {/* HEADER BADGES */}
-                        <div className="flex items-center gap-2">
-                            <span className="text-xs font-semibold bg-blue-50 text-blue-600 px-2.5 py-1 rounded-full">
-                                Bài {item.lesson}
-                            </span>
-                            <span className="text-xs font-medium bg-gray-100 text-gray-600 px-2.5 py-1 rounded-full">
-                                #{item.order}
-                            </span>
-                            <span className="text-xs font-semibold bg-purple-50 text-purple-600 px-2.5 py-1 rounded-full">
-                                {item.level}
-                            </span>
-                        </div>
-
-                        {/* KEY & MEANING */}
-                        <div>
-                            <div className="text-lg font-bold text-gray-900 font-sans">
-                                {item.key}
-                            </div>
-                            <div className="text-blue-600 text-sm font-medium mt-0.5">
-                                {item.meaning}
-                            </div>
-                        </div>
-
-                        {/* STRUCTURE PREVIEW (Hiển thị đồ thị trực quan ngay tại danh sách) */}
-                        {!!item.structure?.length && (
-                            <div 
-                                className="pointer-events-none transform scale-[0.95] origin-left -my-2"
-                                onClick={(e) => e.stopPropagation()} // Đề phòng lỗi nổi bọt sự kiện
+        <div className="space-y-3">
+            {searching && <p role="status" className="text-sm text-gray-600">{grammars.length} mẫu ngữ pháp</p>}
+            <ul className="space-y-3">
+                {grammars.map(item => {
+                    const example = item.examples?.find(entry => entry.jp)
+                    return (
+                        <li key={item._id}>
+                            <button
+                                type="button"
+                                onClick={() => onSelect(item)}
+                                className="block w-full space-y-2 rounded-2xl border border-gray-200 bg-white p-4 text-left hover:border-blue-400 focus-visible:outline-blue-500"
                             >
-                                <GrammarStructure structure={item.structure} />
-                            </div>
-                        )}
-
-                        {/* EXAMPLE PREVIEW */}
-                        {item.examples?.[0] && (
-                            <div className="text-xs text-gray-500 border-t pt-2 mt-1 truncate font-sans italic">
-                                <span className="font-medium text-gray-400 not-italic mr-1">Ví dụ:</span>
-                                {item.examples[0].jp}
-                            </div>
-                        )}
-                    </div>
-                ))}
-            </div>
-
-            {/* MODAL XEM CHI TIẾT */}
-            <GrammarDetail
-                grammar={selected}
-                onClose={() => setSelected(null)}
-            />
-        </>
+                                <span className="block text-xs font-semibold text-gray-600">
+                                    Bài {item.lesson}{item.level && ` · ${item.level}`}
+                                </span>
+                                <span lang="ja" className="block text-lg font-bold text-gray-900">{item.key}</span>
+                                <span className="block font-medium text-blue-700">{item.meaning}</span>
+                                {item.explanation && <span className="block whitespace-pre-line text-sm text-gray-700">{item.explanation}</span>}
+                                {example && (
+                                    <span className="block border-t pt-2 text-sm text-gray-700">
+                                        <span lang="ja" className="block">{example.jp}</span>
+                                        {example.vi && <span className="block text-gray-600">{example.vi}</span>}
+                                    </span>
+                                )}
+                            </button>
+                        </li>
+                    )
+                })}
+            </ul>
+        </div>
     )
 }
+

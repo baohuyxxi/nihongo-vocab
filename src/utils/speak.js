@@ -1,8 +1,9 @@
-export const speakJP = (text, rate = 1) => {
+export const speakJP = (text, rate = 1, voice) => {
   if (!window.speechSynthesis || !text) return;
 
   const utterance = new SpeechSynthesisUtterance(text);
-  utterance.lang = "ja-JP";
+  utterance.lang = voice?.lang || "ja-JP";
+  if (voice) utterance.voice = voice;
   utterance.rate = rate; // 0.7 = chậm, 1 = nhanh
   utterance.pitch = 1;
 

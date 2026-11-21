@@ -23,6 +23,7 @@ const VerbConjugation = lazy(() => import("../pages/MyLessons/VerbConjugation"))
 const Homophones = lazy(() => import("../pages/MyLessons/Homophones"))
 const VocabStudied  = lazy(() => import("../pages/MyLessons/VocabStudied/VocabStudied"))
 const TopicManagerPage = lazy(() => import("../pages/MyLessons/TopicManager/TopicManagerPage"))
+const KaiwaPage = lazy(() => import("../pages/Kaiwa/KaiwaPage"))
 const GrammarPage = lazy(() => import("../pages/GrammarPage/index"))
 const KanjiFrequencyPage  = lazy(() => import("../pages/MyLessons/KanjiFrequency/KanjiFrequency"))
 
@@ -139,6 +140,14 @@ export default function AppRoutes() {
         element={
           <Suspense fallback={<div>Loading...</div>}>
             <TopicManagerPage />
+          </Suspense>
+        }
+      />
+      <Route
+        path="/kaiwa"
+        element={
+          <Suspense fallback={<div>Loading...</div>}>
+            <KaiwaPage />
           </Suspense>
         }
       />
