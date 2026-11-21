@@ -23,9 +23,10 @@ const SHORTCUTS = {
 };
 
 const MODES = [
+  "auto",
   "hiragana",
   "katakana",
-  "auto",
+
 ];
 
 const SHORTCUT_PREFIXES = [
@@ -77,12 +78,12 @@ export default function KanaAnswerInput({
   const hintsRef = useRef(hints);
 
   const selectedRef = useRef(0);
-  const scriptRef = useRef("hiragana");
+  const scriptRef = useRef("auto");
 
   const [selected, setSelected] = useState(0);
   const [draft, setDraft] = useState("");
 
-  const [script, setScript] = useState("hiragana");
+  const [script, setScript] = useState("auto");
 
   const [isFocused, setIsFocused] = useState(false);
 
@@ -90,8 +91,20 @@ export default function KanaAnswerInput({
 
   const total = cells.length;
 
+
   cellsRef.current = cells;
   hintsRef.current = hints;
+
+  const isDesktopKeyboard = () => {
+    if (typeof window === "undefined") return false;
+
+    return (
+      window.matchMedia(
+        "(min-width: 768px) and (hover: hover) and (pointer: fine)"
+      ).matches &&
+      (!navigator.maxTouchPoints || navigator.maxTouchPoints === 0)
+    );
+  };
 
   // ======================================
   // HELPERS
@@ -165,8 +178,7 @@ export default function KanaAnswerInput({
 
   useEffect(() => {
     const first = cellsRef.current.findIndex(
-      (_, index) =>
-        !hintsRef.current.includes(index)
+      (_, index) => !hintsRef.current.includes(index)
     );
 
     setActive(first >= 0 ? first : 0);
@@ -189,8 +201,17 @@ export default function KanaAnswerInput({
       document.activeElement.blur();
     }
 
-  }, [resetKey, total]);
+    // Chỉ tự focus trên máy tính.
+    // Không mở bàn phím ảo trên điện thoại/iPad.
+    if (!isDesktopKeyboard() || first < 0) return;
 
+    const frame = requestAnimationFrame(() => {
+      focusCell(first, true);
+    });
+
+    return () => cancelAnimationFrame(frame);
+
+  }, [resetKey, total]);
   // ======================================
   // DISABLED
   // ======================================
@@ -258,6 +279,26 @@ export default function KanaAnswerInput({
     } else {
       clearDraft();
 
+      // Máy tính: giữ focus ở ô cuối để có thể nhấn Enter.
+      if (isDesktopKeyboard()) {
+        const lastEditable = findEditable(
+          cellsRef.current.length - 1,
+          -1
+        );
+
+        if (lastEditable >= 0) {
+          setActive(lastEditable);
+          setIsFocused(true);
+
+          inputRefs.current[lastEditable]?.focus({
+            preventScroll: true,
+          });
+        }
+
+        return;
+      }
+
+      // Điện thoại/iPad: giữ nguyên hành vi cũ.
       const active = document.activeElement;
 
       if (inputRefs.current.includes(active)) {
@@ -414,7 +455,17 @@ export default function KanaAnswerInput({
   // ======================================
 
   const submitAnswer = () => {
-    if (!canCheck || disabled) return;
+    if (disabled) return;
+
+    // Đọc dữ liệu mới nhất trực tiếp từ ref.
+    // Tránh trường hợp state React chưa kịp cập nhật.
+    const latestCells = cellsRef.current;
+
+    const isComplete =
+      latestCells.length > 0 &&
+      latestCells.every((cell) => cell.trim());
+
+    if (!isComplete) return;
 
     clearDraft();
 
@@ -426,7 +477,7 @@ export default function KanaAnswerInput({
 
     setIsFocused(false);
 
-    onCheck?.();
+    onCheck?.([...latestCells]);
   };
 
   // ======================================
@@ -669,12 +720,11 @@ export default function KanaAnswerInput({
                     transition-colors
                     sm:text-3xl
 
-                    ${
-                      hinted
-                        ? "border-amber-400 bg-amber-50 text-amber-700"
-                        : active
-                          ? "border-blue-500 bg-blue-50 text-blue-800"
-                          : "border-slate-200 bg-white text-slate-800"
+                    ${hinted
+                      ? "border-amber-400 bg-amber-50 text-amber-700"
+                      : active
+                        ? "border-blue-500 bg-blue-50 text-blue-800"
+                        : "border-slate-200 bg-white text-slate-800"
                     }
 
                     disabled:opacity-100
@@ -732,10 +782,9 @@ export default function KanaAnswerInput({
             text-sm font-semibold
             transition-colors
 
-            ${
-              choosingHint
-                ? "border-amber-500 bg-amber-200 text-amber-900"
-                : "border-amber-200 bg-amber-50 text-amber-700"
+            ${choosingHint
+              ? "border-amber-500 bg-amber-200 text-amber-900"
+              : "border-amber-200 bg-amber-50 text-amber-700"
             }
 
             disabled:opacity-40
