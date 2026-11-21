@@ -1,5 +1,7 @@
 
 import { useEffect, useMemo, useState } from "react";
+import { EXAM_DURATION_OPTIONS } from "../../utils/reviewStorage";
+import { isSouMatomeExam } from "../../utils/typingExam";
 
 const REVIEW_MODES = [
   { key: "typing", label: "✍️ Điền từ" },
@@ -31,6 +33,11 @@ const DIRECTIONS_BY_MODE = {
 };
 
 const LIMIT_OPTIONS = [10, 20, 30, 50, 100];
+const TYPING_MODES = [
+  { key: "practice", label: "📖 Ôn tập" },
+  { key: "exam", label: "📝 Kiểm tra" },
+];
+const OPTION_CLASS = "theme-selector-option min-h-11 min-w-0 rounded-lg px-1 py-2 text-sm font-medium";
 
 const readProgress = () => {
   try {
@@ -49,6 +56,11 @@ export default function ReviewOptions({
   setMode,
   directions = [],
   setDirections,
+  typingMode,
+  setTypingMode,
+  examDurationMinutes,
+  setExamDurationMinutes,
+  n3Source,
   reviewLimit,
   setReviewLimit,
   showFurigana,
@@ -58,6 +70,7 @@ export default function ReviewOptions({
     useState(false);
 
   const [progress, setProgress] = useState(readProgress);
+  const souMatomeExam = isSouMatomeExam({ mode, typingMode, n3Source });
 
   // Danh sách hướng ôn tương ứng với mode
   const availableDirections = useMemo(() => {
@@ -187,7 +200,9 @@ export default function ReviewOptions({
         </h2>
 
         <div className="space-y-3">
-          {availableDirections.map((item) => (
+          {souMatomeExam ? (
+            <p className="text-sm text-gray-700">Việt → Nhật (nhập chữ Nhật theo nghĩa)</p>
+          ) : availableDirections.map((item) => (
             <label
               key={item.key}
               className="
@@ -211,13 +226,59 @@ export default function ReviewOptions({
           ))}
         </div>
 
-        {mode === "typing" && (
+        {mode === "typing" && !souMatomeExam && (
           <p className="mt-4 text-xs text-gray-500">
             Điền từ chỉ hỗ trợ nhập tiếng Nhật
             từ nghĩa tiếng Việt hoặc Kanji.
           </p>
         )}
       </section>
+
+      {mode === "typing" && (
+        <section className="bg-white rounded-xl shadow p-4 sm:p-5">
+          <h2 id="typing-mode-label" className="font-semibold mb-4 text-sm sm:text-base">
+            Hình thức học
+          </h2>
+          <div
+            role="group"
+            aria-labelledby="typing-mode-label"
+            className="grid grid-cols-2 gap-2 rounded-xl bg-gray-100 p-1.5"
+          >
+            {TYPING_MODES.map(({ key, label }) => (
+              <button
+                key={key}
+                type="button"
+                aria-pressed={typingMode === key}
+                onClick={() => setTypingMode(key)}
+                className={OPTION_CLASS}
+              >
+                {label}
+              </button>
+            ))}
+          </div>
+
+          {typingMode === "exam" && (
+            <div className="mt-4">
+              <h3 id="exam-duration-label" className="mb-2 text-sm font-semibold">
+                Thời gian làm bài
+              </h3>
+              <div role="group" aria-labelledby="exam-duration-label" className="grid grid-cols-2 gap-2 xl:grid-cols-4">
+                {EXAM_DURATION_OPTIONS.map((minutes) => (
+                  <button
+                    key={minutes}
+                    type="button"
+                    aria-pressed={examDurationMinutes === minutes}
+                    onClick={() => setExamDurationMinutes(minutes)}
+                    className={OPTION_CLASS}
+                  >
+                    {minutes} phút
+                  </button>
+                ))}
+              </div>
+            </div>
+          )}
+        </section>
+      )}
 
       {directions.includes("jp_vi") && (
         <section className="bg-white rounded-xl shadow p-4 sm:p-5">

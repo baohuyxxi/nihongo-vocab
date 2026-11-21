@@ -7,71 +7,16 @@ import {
   useState,
 } from "react";
 
-import { toHiragana } from "wanakana";
-
 import KanaAnswerInput from "../../components/JPInput/KanaAnswerInput";
 import SummaryTyping from "../../components/SummaryTyping";
+import { getTypingProgressKey } from "../../utils/typingSession";
+import { getAnswerCells, getExpectedAnswer, normalizeKana } from "../../utils/typingAnswers";
 
 /* =========================================
    CONFIG
 ========================================= */
 
-const STORAGE_PREFIX = "typingReviewProgress_v6";
 const AUTO_NEXT_DELAY = 1500;
-
-const getQuestionId = (question, index) => {
-  const vocabId = String(
-    question.vocabId ||
-    question.id ||
-    question._id ||
-    "unknown"
-  );
-
-  const direction = String(
-    question.direction || "unknown"
-  );
-
-  return JSON.stringify([
-    index,
-    vocabId,
-    direction,
-    String(question.question || ""),
-    String(question.answer || question.correct || ""),
-  ]);
-};
-
-const normalizeAnswerText = (value = "") =>
-  String(value)
-    .normalize("NFKC")
-    .replace(/[~〜～]/g, "")
-    .trim();
-
-
-const getAnswerCells = (question) => {
-  if (
-    Array.isArray(question.answerCells) &&
-    question.answerCells.length
-  ) {
-    return question.answerCells.filter(
-      (cell) => !/[~〜～]/.test(String(cell))
-    );
-  }
-
-  const answer = normalizeAnswerText(
-    question.answer || question.correct || ""
-  );
-
-  return Array.from(answer);
-};
-
-const normalizeKana = (value = "") =>
-  toHiragana(
-    String(value)
-      .normalize("NFKC")
-      .replace(/[~〜～]/g, "")
-      .replace(/\s+/g, "")
-      .trim()
-  );
 
 const capitalizeVietnamese = (value = "") => {
   const text = String(value).trim();
@@ -113,8 +58,8 @@ const loadProgress = (key, questions) => {
 
     const entries = {};
 
-    questions.forEach((question, index) => {
-      const id = getQuestionId(question, index);
+    questions.forEach((question) => {
+      const id = question.questionId;
       const oldEntry = saved.entries?.[id];
 
       if (!oldEntry) return;
@@ -174,31 +119,15 @@ const loadProgress = (key, questions) => {
 ========================================= */
 
 export default function TypingReview({
-  questions = [],
+  questions,
   onResult,
-  sessionKey = "",
+  sessionId,
 }) {
   /* =========================================
      SESSION IDENTITY
   ========================================= */
 
-  const questionIdentity = useMemo(
-    () =>
-      JSON.stringify(
-        questions.map((question, index) =>
-          getQuestionId(question, index)
-        )
-      ),
-    [questions]
-  );
-
-  const storageKey = useMemo(
-    () =>
-      `${STORAGE_PREFIX}:${sessionKey || "no-session"
-      }:${questionIdentity}`,
-
-    [sessionKey, questionIdentity]
-  );
+  const storageKey = getTypingProgressKey(sessionId);
 
   /* =========================================
      STATE
@@ -299,7 +228,7 @@ export default function TypingReview({
       }
     };
 
-  }, [storageKey]);
+  }, [storageKey, questions]);
 
   /* =========================================
      AUTO SAVE AFTER EVERY CHANGE
@@ -384,13 +313,10 @@ export default function TypingReview({
   const q = questions[index];
 
   const getEntry = useCallback(
-    (question, questionIndex) => {
+    (question) => {
       if (!question) return null;
 
-      const id = getQuestionId(
-        question,
-        questionIndex
-      );
+      const id = question.questionId;
 
       return (
         progress.entries[id] ||
@@ -400,7 +326,7 @@ export default function TypingReview({
     [progress.entries]
   );
 
-  const currentEntry = getEntry(q, index);
+  const currentEntry = getEntry(q);
 
   const answerCells = useMemo(
     () => (q ? getAnswerCells(q) : []),
@@ -416,8 +342,8 @@ export default function TypingReview({
     let answered = 0;
     let hintsUsed = 0;
 
-    questions.forEach((question, i) => {
-      const entry = getEntry(question, i);
+    questions.forEach((question) => {
+      const entry = getEntry(question);
 
       if (!entry) return;
 
@@ -451,10 +377,7 @@ export default function TypingReview({
 
       if (!question) return;
 
-      const id = getQuestionId(
-        question,
-        questionIndex
-      );
+      const id = question.questionId;
 
       setProgress((previous) => {
         const oldEntry =
@@ -620,8 +543,7 @@ export default function TypingReview({
 
     if (!input.trim()) return;
 
-    const expected =
-      q.answer || q.correct || "";
+    const expected = getExpectedAnswer(q);
 
     const isCorrect =
       normalizeKana(input) ===
@@ -707,8 +629,8 @@ export default function TypingReview({
   const history = useMemo(
     () =>
       questions
-        .map((question, i) => {
-          const entry = getEntry(question, i);
+        .map((question) => {
+          const entry = getEntry(question);
 
           if (
             !entry?.submitted ||
@@ -897,7 +819,7 @@ export default function TypingReview({
   sm:px-5 sm:py-3
 ">
         <KanaAnswerInput
-          key={`${getQuestionId(q, index)}-${index}`}
+          key={q.questionId}
           cells={currentEntry.cells}
           hints={currentEntry.hints}
           onChange={handleCellsChange}

@@ -1,12 +1,19 @@
 
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 
 import FlashcardReview from "./FlashcardReview";
 import QuizReview from "./QuizReview";
 import TypingReview from "./TypingReview";
+import TypingExam from "./TypingExam";
 
 import useReviewSession from "../../hooks/useReviewSession";
+import {
+  getReviewConfig,
+  getN3ReviewConfig,
+  saveReviewConfig,
+  saveN3ReviewConfig,
+} from "../../utils/reviewStorage";
 
 import {
   completeKanjiQuestion,
@@ -28,33 +35,28 @@ export default function ReviewSession() {
     reviewConfig?.n3Source === "sou-matome-kanji";
 
   const mode = session?.mode || reviewConfig?.mode;
-  const [showFurigana, setShowFuriganaState] = useState(
-    reviewConfig?.showFurigana !== false
-  );
-
-  useEffect(() => {
-    setShowFuriganaState(reviewConfig?.showFurigana !== false);
-  }, [reviewConfig?.showFurigana]);
+  const [furiganaOverride, setFuriganaOverride] = useState(null);
+  const showFurigana = furiganaOverride ??
+    getReviewConfig()?.showFurigana ??
+    (reviewConfig?.showFurigana !== false);
 
   const setShowFurigana = (value) => {
-    setShowFuriganaState(value);
-    const nextConfig = { ...reviewConfig, showFurigana: value };
+    setFuriganaOverride(value);
     try {
-      localStorage.setItem("reviewConfig", JSON.stringify(nextConfig));
-      if (reviewConfig?.n3Source === "sou-matome-kanji") {
-        localStorage.setItem("n3ReviewConfig", JSON.stringify(nextConfig));
+      const draft = getReviewConfig();
+      if (draft) {
+        saveReviewConfig({ ...draft, showFurigana: value });
+      }
+      if (isN3KanjiSession) {
+        saveN3ReviewConfig({
+          ...(getN3ReviewConfig() ?? reviewConfig),
+          showFurigana: value,
+        });
       }
     } catch (error) {
       console.warn("Không thể lưu cài đặt Furigana:", error);
     }
   };
-
-  // Mã phiên ổn định để lưu tiến độ Typing.
-  const typingSessionKey =
-    session?.reviewId ||
-    session?.sessionId ||
-    reviewConfig?.reviewId ||
-    null;
 
   const handleFlashcardResult = async (card, isKnown) => {
     if (
@@ -204,20 +206,19 @@ export default function ReviewSession() {
       {/* TYPING */}
 
       {mode === "typing" && (
-        <TypingReview
-          key={typingSessionKey || "typing-session"}
-          questions={session.questions || []}
-          sessionKey={
-            typingSessionKey ||
-            `typing-${reviewConfig.n3Source || "minna"}-${JSON.stringify({
-              lessons: reviewConfig.lessons || [],
-              topics: reviewConfig.topics || [],
-              units: reviewConfig.units || [],
-              n3Topics: reviewConfig.n3Topics || [],
-              directions: reviewConfig.directions || [],
-            })}`
-          }
-        />
+        session.exam ? (
+          <TypingExam
+            key={session.exam.examSessionId}
+            session={session}
+            onBack={() => navigate("/vocabulary")}
+          />
+        ) : (
+          <TypingReview
+            key={session.typingSessionId}
+            questions={session.questions}
+            sessionId={session.typingSessionId}
+          />
+        )
       )}
     </div>
   );

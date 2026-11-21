@@ -55,6 +55,8 @@ export default function useReviewConfig() {
 
   const [selectedPartsOfSpeech, setSelectedPartsOfSpeech] = useState([])
   const [mode, setMode] = useState("flashcard")
+  const [typingMode, setTypingMode] = useState("practice")
+  const [examDurationMinutes, setExamDurationMinutes] = useState(30)
   const [directions, setDirections] = useState(["jp_vi"])
   const [showFurigana, setShowFurigana] = useState(true)
   const [reviewLimit, setReviewLimit] = useState(null)
@@ -94,6 +96,8 @@ export default function useReviewConfig() {
 
     setCurriculumTab(nextTab)
     setMode(saved.mode || "flashcard")
+    setTypingMode(saved.typingMode)
+    setExamDurationMinutes(saved.examDurationMinutes)
     setDirections(Array.isArray(saved.directions) && saved.directions.length > 0 ? saved.directions : ["jp_vi"])
     setShowFurigana(typeof saved.showFurigana === "boolean" ? saved.showFurigana : true)
     setReviewLimit(saved.limit ?? null)
@@ -111,6 +115,8 @@ export default function useReviewConfig() {
     partsOfSpeech: selectedPartsOfSpeech,
     curriculumTab,
     mode,
+    typingMode,
+    examDurationMinutes,
     directions,
     showFurigana,
     limit: reviewLimit,
@@ -130,6 +136,8 @@ export default function useReviewConfig() {
     curriculumTab,
     n3Source,
     mode,
+    typingMode,
+    examDurationMinutes,
     directions,
     reviewLimit,
     showFurigana,
@@ -159,6 +167,10 @@ export default function useReviewConfig() {
     setN3Source,
     mode,
     setMode,
+    typingMode,
+    setTypingMode,
+    examDurationMinutes,
+    setExamDurationMinutes,
     directions,
     setDirections,
     showFurigana,

@@ -5,6 +5,15 @@ import {
   useCallback,
   useRef,
 } from "react";
+import { useLocation } from "react-router-dom";
+import { identifyTypingSession, migrateTypingSnapshot } from "../utils/typingSession";
+import {
+  createExamAttempt,
+  isSouMatomeExam,
+  readExamSnapshot,
+  resolveExamConfig,
+  saveExamSnapshot,
+} from "../utils/typingExam";
 
 import {
   getReviewSession as getSavedSession,
@@ -16,7 +25,7 @@ import {
   getN3ReviewSession,
   saveN3ReviewSession,
   clearN3FlashcardProgress,
-  getN3ReviewConfig,
+  resolveReviewConfig,
 } from "../utils/reviewStorage";
 
 import {
@@ -33,20 +42,35 @@ import {
 } from "../adapters/n3KanjiReviewAdapter";
 
 
+function prepareSession(data, config, examStartId) {
+  if (config.mode !== "typing") return data;
+
+  const session = identifyTypingSession(data, examStartId);
+  if (config.typingMode !== "exam") return session;
+  if (!session.questions.length) throw new Error("Không có câu hỏi để bắt đầu kiểm tra.");
+
+  return {
+    ...session,
+    exam: createExamAttempt(session.typingSessionId, config.examDurationMinutes),
+  };
+}
+
 export default function useReviewSession() {
+  const { state } = useLocation();
   const [session, setSession] = useState(null);
+  const [sessionConfig, setSessionConfig] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
   const initializedRef = useRef(false);
 
-  const reviewConfig = getReviewConfig();
-
-  const currentSource =
-    reviewConfig?.n3Source ?? null;
+  const [draftConfig] = useState(getReviewConfig);
+  const reviewConfig = sessionConfig ?? draftConfig;
+  const examStart = state?.examStart;
 
   const isN3Kanji =
-    currentSource === "sou-matome-kanji";
+    state?.resumeN3Kanji ??
+    (resolveExamConfig(examStart?.config ?? draftConfig)?.n3Source === "sou-matome-kanji");
 
   /* =========================================
      GET SAVED SESSION
@@ -64,7 +88,7 @@ export default function useReviewSession() {
   ========================================= */
 
   const persistSession = useCallback(
-    (config, data, progress, reviewId) => {
+    async (config, data, progress, reviewId) => {
       const payload = {
         config,
         progress: {
@@ -75,11 +99,18 @@ export default function useReviewSession() {
         session: data,
       };
 
-      if (config?.n3Source === "sou-matome-kanji") {
-        saveN3ReviewSession(payload);
-      } else {
-        saveReviewSession(payload);
+      const save = config?.n3Source === "sou-matome-kanji"
+        ? saveN3ReviewSession
+        : saveReviewSession;
+
+      if (data.exam) {
+        const snapshot = await saveExamSnapshot(payload);
+        save({ examSessionId: snapshot.session.exam.examSessionId, progress: snapshot.progress });
+        return snapshot;
       }
+
+      save(payload);
+      return payload;
     },
     []
   );
@@ -92,12 +123,16 @@ export default function useReviewSession() {
 
   const loadSession = useCallback(
     async ({
-      config,
+      config: requestedConfig,
       reviewId = "",
+      examStartId,
     }) => {
       try {
         setLoading(true);
         setError(null);
+        const config = resolveExamConfig(requestedConfig);
+        const souMatomeExam = isSouMatomeExam(config);
+        setSessionConfig(config);
 
         const {
           lessons = [],
@@ -113,10 +148,8 @@ export default function useReviewSession() {
 
         const source = config?.n3Source ?? "unknown";
 
-        const isSouMatome =
-          source === "sou-matome-kanji" &&
-          Array.isArray(n3KanjiPairs) &&
-          n3KanjiPairs.length > 0;
+        const isSouMatome = source === "sou-matome-kanji" &&
+          (souMatomeExam || (Array.isArray(n3KanjiPairs) && n3KanjiPairs.length > 0));
 
         if (
           config?.curriculumTab === "n3" &&
@@ -163,7 +196,7 @@ export default function useReviewSession() {
             days: selection.days,
             contentType: "both",
             mode,
-            directions: Array.isArray(directions)
+            directions: souMatomeExam ? directions.join(",") : Array.isArray(directions)
               ? directions
                   .filter((item) =>
                     validDirections.includes(item)
@@ -176,16 +209,17 @@ export default function useReviewSession() {
 
           data = normalizeN3KanjiReviewSession(res);
 
-          setSession(data);
+          data = prepareSession(data, config, examStartId);
 
-          persistSession(
+          const snapshot = await persistSession(
             config,
             data,
             res.progress,
             res.reviewId
           );
-
-          return data;
+          setSessionConfig(snapshot.config);
+          setSession(snapshot.session);
+          return snapshot.session;
         }
 
         /* =====================================
@@ -212,16 +246,17 @@ export default function useReviewSession() {
           );
         }
 
-        setSession(data);
+        data = prepareSession(data, config, examStartId);
 
-        persistSession(
+        const snapshot = await persistSession(
           config,
           data,
           res.progress,
           res.reviewId
         );
-
-        return data;
+        setSessionConfig(snapshot.config);
+        setSession(snapshot.session);
+        return snapshot.session;
 
       } catch (err) {
         console.error("loadReviewSession:", err);
@@ -251,12 +286,9 @@ export default function useReviewSession() {
     initializedRef.current = true;
 
     const initialize = async () => {
-      if (!reviewConfig) {
-        setLoading(false);
-        return;
-      }
-
-      const saved = getCurrentSavedSession();
+      const latest = getCurrentSavedSession();
+      const examId = examStart?.id ?? state?.resumeExamId ?? latest?.examSessionId;
+      const saved = examId ? readExamSnapshot(examId) : latest;
 
       /* Có phiên đã lưu */
       if (
@@ -271,23 +303,50 @@ export default function useReviewSession() {
           "Restored review session from LocalStorage"
         );
 
-        setSession(saved.session);
-        setError(null);
-        setLoading(false);
+        const config = resolveReviewConfig(saved.config) ?? draftConfig;
+        try {
+          const restored = (saved.session.mode || config?.mode) === "typing"
+            ? migrateTypingSnapshot(saved, config ?? {})
+            : saved;
+
+          if (restored !== saved) {
+            if (isN3Kanji) saveN3ReviewSession(restored);
+            else saveReviewSession(restored);
+          }
+
+          setSessionConfig(resolveReviewConfig(restored.config) ?? config);
+          setSession(restored.session);
+          setError(null);
+        } catch (err) {
+          console.error("Restore typing session:", err);
+          setError("Không thể khôi phục tiến độ ôn tập. Vui lòng thử lại.");
+        } finally {
+          setLoading(false);
+        }
 
         return;
       }
 
+      const config = resolveReviewConfig(examStart?.config) ?? draftConfig;
+      if (!config || state?.resumeN3Kanji !== undefined || (examId && !examStart)) {
+        if (examId) setError("Không tìm thấy bài kiểm tra đã lưu.");
+        setLoading(false);
+        return;
+      }
+
       /* Chưa có phiên thì mới gọi API */
-      if (isN3Kanji) {
-        clearN3FlashcardProgress();
-      } else {
-        clearFlashcardProgress();
+      if (!examStart) {
+        if (isN3Kanji) {
+          clearN3FlashcardProgress();
+        } else {
+          clearFlashcardProgress();
+        }
       }
 
       try {
         await loadSession({
-          config: reviewConfig,
+          config,
+          examStartId: examStart?.id,
         });
       } catch {
         // Error đã được cập nhật trong loadSession.
@@ -296,7 +355,7 @@ export default function useReviewSession() {
 
     initialize();
 
-  }, []);
+  }, [draftConfig, examStart, getCurrentSavedSession, isN3Kanji, loadSession, state]);
 
 
   /* =========================================

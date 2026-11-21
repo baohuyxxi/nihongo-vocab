@@ -11,6 +11,7 @@ export const N3_FLASHCARD_PROGRESS_KEY = "n3FlashcardProgress"
 
 const VALID_CURRICULUM_TABS = ["minna", "n3", "mixed"]
 const VALID_N3_SOURCES = ["mimi-kara", "sou-matome-kanji"]
+export const EXAM_DURATION_OPTIONS = [10, 20, 30, 60]
 
 const parseLocalStorageValue = (value, fallback = null) => {
   if (value === null || value === undefined) return fallback
@@ -96,6 +97,10 @@ export const resolveReviewConfig = (config) => {
       : getSavedCurriculumTab() || "minna",
     n3Source: normalizeN3Source(config.n3Source),
     mode: config.mode || "flashcard",
+    typingMode: config.typingMode === "exam" ? "exam" : "practice",
+    examDurationMinutes: EXAM_DURATION_OPTIONS.includes(config.examDurationMinutes)
+      ? config.examDurationMinutes
+      : 30,
     directions: normalizeDirections(config.directions),
     showFurigana:
       typeof config.showFurigana === "boolean"

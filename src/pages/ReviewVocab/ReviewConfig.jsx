@@ -22,6 +22,7 @@ export default function ReviewConfig({
 
   n3Source,
   setN3Source,
+  sessionN3Source,
 
   selectedPartsOfSpeech,
   setSelectedPartsOfSpeech,
@@ -34,6 +35,11 @@ export default function ReviewConfig({
 
   directions,
   setDirections,
+
+  typingMode,
+  setTypingMode,
+  examDurationMinutes,
+  setExamDurationMinutes,
 
   reviewLimit,
   setReviewLimit,
@@ -49,6 +55,7 @@ export default function ReviewConfig({
   const isDragging = useRef(false);
 
   const dragMode = useRef("add");
+  const isExamSelected = mode === "typing" && typingMode === "exam";
 
   return (
     <div className="space-y-6 sm:space-y-8 min-w-0 max-w-full overflow-x-hidden">
@@ -70,9 +77,13 @@ export default function ReviewConfig({
           setMode={setMode}
           directions={directions}
           setDirections={setDirections}
+          typingMode={typingMode}
+          setTypingMode={setTypingMode}
+          examDurationMinutes={examDurationMinutes}
+          setExamDurationMinutes={setExamDurationMinutes}
           reviewLimit={reviewLimit}
           setReviewLimit={setReviewLimit}
-          n3Source={n3Source}
+          n3Source={sessionN3Source}
           showFurigana={showFurigana}
           setShowFurigana={setShowFurigana}
         />
@@ -162,7 +173,7 @@ export default function ReviewConfig({
             sm:w-auto
           "
         >
-          🚀 Bắt đầu ôn mới
+          {isExamSelected ? "📝 Bắt đầu kiểm tra" : "🚀 Bắt đầu ôn mới"}
         </button>
       </div>
     </div>

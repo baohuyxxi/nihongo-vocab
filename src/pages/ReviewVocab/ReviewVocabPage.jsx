@@ -6,6 +6,8 @@ import ReviewConfig
 
 import useReviewConfig
   from "../../hooks/useReviewConfig"
+import { createTypingSessionId } from "../../utils/typingSession"
+import { resolveExamConfig } from "../../utils/typingExam"
 
 import {
   clearReviewSession,
@@ -25,11 +27,13 @@ export default function ReviewVocabPage() {
   const review =
     useReviewConfig()
 
-  const activeN3Source = review.n3Source ?? null
+  const sessionConfig = resolveExamConfig(review.config)
+  const activeN3Source = sessionConfig.n3Source ?? null
 
-  const hasReviewSession = activeN3Source === "sou-matome-kanji"
-    ? Boolean(getN3ReviewSession())
-    : Boolean(getReviewSession())
+  const savedSession = activeN3Source === "sou-matome-kanji"
+    ? getN3ReviewSession()
+    : getReviewSession()
+  const hasReviewSession = Boolean(savedSession)
 
   /* ======================
       START NEW
@@ -42,6 +46,13 @@ export default function ReviewVocabPage() {
     }
 
     review.saveConfig()
+
+    if (review.mode === "typing" && review.typingMode === "exam") {
+      navigate("/review-session", {
+        state: { examStart: { id: createTypingSessionId(), config: sessionConfig } },
+      })
+      return
+    }
 
     if (activeN3Source === "sou-matome-kanji") {
       clearN3ReviewSession()
@@ -60,8 +71,12 @@ export default function ReviewVocabPage() {
   ====================== */
 
   const onContinue = () => {
-    review.saveConfig()
-    navigate("/review-session")
+    navigate("/review-session", {
+      state: {
+        resumeN3Kanji: activeN3Source === "sou-matome-kanji",
+        resumeExamId: savedSession?.examSessionId,
+      },
+    })
   }
 
 
@@ -70,6 +85,7 @@ export default function ReviewVocabPage() {
     <ReviewConfig
 
       {...review}
+      sessionN3Source={activeN3Source}
 
       onStart={
         startReview

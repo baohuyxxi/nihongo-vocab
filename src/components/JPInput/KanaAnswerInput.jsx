@@ -1,6 +1,7 @@
 
 import {
   useEffect,
+  useLayoutEffect,
   useRef,
   useState,
 } from "react";
@@ -65,6 +66,7 @@ export default function KanaAnswerInput({
   canCheck = false,
   canHint = true,
   disabled = false,
+  showActions = true,
 
   resetKey,
 }) {
@@ -92,8 +94,10 @@ export default function KanaAnswerInput({
   const total = cells.length;
 
 
-  cellsRef.current = cells;
-  hintsRef.current = hints;
+  useLayoutEffect(() => {
+    cellsRef.current = cells;
+    hintsRef.current = hints;
+  }, [cells, hints]);
 
   const isDesktopKeyboard = () => {
     if (typeof window === "undefined") return false;
@@ -181,6 +185,7 @@ export default function KanaAnswerInput({
       (_, index) => !hintsRef.current.includes(index)
     );
 
+    // Keep the active cell and transient input state in sync with the question reset.
     setActive(first >= 0 ? first : 0);
 
     clearDraft();
@@ -211,6 +216,8 @@ export default function KanaAnswerInput({
 
     return () => cancelAnimationFrame(frame);
 
+    // The question reset must not run for a new render of the same inputs.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [resetKey, total]);
   // ======================================
   // DISABLED
@@ -219,6 +226,7 @@ export default function KanaAnswerInput({
   useEffect(() => {
     if (!disabled) return;
 
+    // Disabling an input clears its uncommitted composition and blurs the DOM field.
     clearDraft();
     setChoosingHint(false);
     setIsFocused(false);
@@ -455,7 +463,7 @@ export default function KanaAnswerInput({
   // ======================================
 
   const submitAnswer = () => {
-    if (disabled) return;
+    if (disabled || !showActions) return;
 
     // Đọc dữ liệu mới nhất trực tiếp từ ref.
     // Tránh trường hợp state React chưa kịp cập nhật.
@@ -496,7 +504,7 @@ export default function KanaAnswerInput({
 
     if (event.key === "Enter") {
       event.preventDefault();
-      submitAnswer();
+      if (showActions) submitAnswer();
       return;
     }
 
@@ -767,7 +775,7 @@ export default function KanaAnswerInput({
 
       {/* ACTIONS */}
 
-      <div className="
+      {showActions && <div className="
         mt-3 flex items-center
         justify-center gap-2.5
       ">
@@ -811,7 +819,7 @@ export default function KanaAnswerInput({
           Kiểm tra
         </button>
 
-      </div>
+      </div>}
 
     </div>
   );
