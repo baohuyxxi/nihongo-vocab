@@ -195,8 +195,8 @@ export default function KanaAnswerInput({
     setChoosingHint(false);
     setIsFocused(false);
 
-    scriptRef.current = "hiragana";
-    setScript("hiragana");
+    scriptRef.current = "auto";
+    setScript("auto");
 
     if (
       inputRefs.current.some(
@@ -205,7 +205,6 @@ export default function KanaAnswerInput({
     ) {
       document.activeElement.blur();
     }
-
     // Chỉ tự focus trên máy tính.
     // Không mở bàn phím ảo trên điện thoại/iPad.
     if (!isDesktopKeyboard() || first < 0) return;

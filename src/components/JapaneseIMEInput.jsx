@@ -2,7 +2,7 @@ import { forwardRef, useEffect, useRef } from "react"
 import { bind, unbind } from "wanakana"
 
 const JapaneseIMEInput = forwardRef(function JapaneseIMEInput(
-  { direction, value, onChange, onSubmit, disabled },
+  { direction, value, onChange, onSubmit, disabled, showSubmit = true, maxLength, id },
   ref
 ) {
   const boundRef = useRef(false)
@@ -51,10 +51,12 @@ const JapaneseIMEInput = forwardRef(function JapaneseIMEInput(
     <div className="space-y-3">
       <input
         ref={ref}
+        id={id}
         type="text"
         value={value ?? ""}
         onChange={handleChange}
         disabled={disabled}
+        maxLength={maxLength}
         lang={direction === "vi_jp" ? "ja" : "vi"}
         spellCheck={false}
         autoCorrect="off"
@@ -63,19 +65,20 @@ const JapaneseIMEInput = forwardRef(function JapaneseIMEInput(
         className={sharedInputClass}
         placeholder={direction === "vi_jp" ? "ひらがな / カタカナ" : "Nhập nghĩa tiếng Việt"}
         onKeyDown={(e) => {
-          if (direction === "vi_jp" && e.isComposing) return
+          if (direction === "vi_jp" && (e.nativeEvent.isComposing || e.keyCode === 229)) return
+          if (!showSubmit) return
           handleKeyDown(e)
         }}
       />
 
-      <button
+      {showSubmit && <button
         type="button"
         disabled={disabled}
         onClick={onSubmit}
         className="mx-auto block min-h-[48px] rounded-full bg-blue-600 px-6 py-3 text-sm font-semibold text-white shadow-sm transition hover:bg-blue-700 disabled:cursor-not-allowed disabled:opacity-50 sm:text-base"
       >
         Kiểm tra
-      </button>
+      </button>}
     </div>
   )
 })
